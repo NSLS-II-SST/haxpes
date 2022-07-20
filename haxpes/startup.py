@@ -6,7 +6,7 @@ from bluesky.plans import count, scan, rel_scan
 from bluesky.plan_stubs import mv
 from bluesky import RunEngine
 from bluesky.callbacks import LiveTable
-from .hax_ops import run_XPS
+from .hax_ops import run_XPS, withdraw_bar
 from .sample_handling import sample_list
 
 RE = RunEngine(call_returns_result=True)

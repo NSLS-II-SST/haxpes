@@ -8,6 +8,10 @@ class sample_list:
         self.all_samples = []
         self.index = 0
 
+    def clear_list(self):
+        self.all_samples = []
+        self.index = 0
+
     def add_sample(self,name,filename=None,xpos=None,ypos=None,zpos=None,rpos=None,regions=[]):
         """ adds sample to sample list.  If positions are not defined, they will be taken as the current motor positions """
         if not xpos:
@@ -56,20 +60,25 @@ class sample_list:
         self.all_samples[index]["regions"].append(region)
 
     def read_from_file(self,region_file,sample_file):
-        regnamelist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',dtype=str)[:,0]
-        centerlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t')[:,1]
-        widthlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t')[:,2]
-        passlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t')[:,3]
-        itlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t')[:,4]
-        steplist = np.genfromtxt(region_file,skip_header=1,delimiter='\t')[:,5]
+        self.clear_list()
+        self.append_from_file(region_file,sample_file)
 
-        namelist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str)[:,0]
-        xlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t')[:,1]
-        ylist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t')[:,2]
-        zlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t')[:,3]
-        rlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t')[:,4]
-        flist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str)[:,5]
-        reglist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str)[:,6]
+    def append_from_file(self,region_file,sample_file):
+        regnamelist = np.genfromtxt(
+            region_file,skip_header=1,delimiter='\t',dtype=str,usecols=0)
+        centerlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=1)
+        widthlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=2)
+        passlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=3)
+        itlist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=4)
+        steplist = np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=5)
+
+        namelist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str,usecols=0)
+        xlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',usecols=1)
+        ylist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',usecols=2)
+        zlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',usecols=3)
+        rlist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',usecols=4)
+        flist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str,usecols=5)
+        reglist = np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str,usecols=6)
         for i in range(0,namelist.shape[0]):
             region_list = reglist[i].split(", ")
             scanregions = []
