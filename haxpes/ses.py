@@ -21,6 +21,7 @@ class SES(Device):
     write_mode = Component(EpicsSignal, ':write_mode', string=True, kind='config')
     filename = Component(EpicsSignal, ':filename_SP', string=True, kind='config')
     region_name = Component(EpicsSignal, ':region_name_SP', string=True, kind='config')
+    stop_signal = Component(EpicsSignal, ':stop_request', kind='config')
    # write_directory = Component(EpicsSignal, ':savedir_SP')
 
 
@@ -60,6 +61,14 @@ class SES(Device):
         self.set_start.put(2)
         # And return the Status object, which the caller can use to
         # tell when the action is complete.
+        return status
+
+    def stop(self):
+        """
+        Force stops the scan and reads back status ...
+        """
+        status = DeviceStatus(self)
+        self.stop_signal.put(1)
         return status
 
     
