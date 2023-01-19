@@ -1,5 +1,6 @@
 from sst_base.shutters import EPS_Shutter
-
+from haxpes.pid_feedback import pid
+from ophyd import EpicsSignalRO, Signal
 
 # photon shutters ...
 
@@ -12,6 +13,11 @@ psh2 = EPS_Shutter("XF:07IDA-PPS{PSh:2}", name="Shutter 2", kind="hinted")
 psh2.shutter_type = "PH"
 psh2.openval = 0
 psh2.closeval = 1
+
+psh5 = EPS_Shutter("XF:07IDA-PPS{PSh:5}", name="Shutter 5", kind="hinted")
+psh5.shutter_type = "PH"
+psh5.openval = 0
+psh5.closeval = 1
 
 # gate valves ...
 
@@ -27,4 +33,10 @@ fs4.shutter_type = "FS"
 fs4.openval = 1
 fs4.closeval = 0
 
+# feedback PIDs:
+fbvert = pid("XF:07ID6-OP{Mono:DCM1-Fb:PF2}", name="vertical feedback")
+fbhor = pid("XF:07ID6-OP{Mono:DCM1-Fb:RF2}", name="horizontal feedback")
 
+# soft beam enable and beamline mode:
+softbeamenable = EpicsSignalRO("XF:07ID1-CT{Bl-Ctrl}Endstn-Sel",kind='config',string=True)
+beamselection = Signal(name="Beam Selection",kind="config",value="none")

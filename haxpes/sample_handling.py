@@ -1,6 +1,7 @@
 from .motors import sampx, sampy, sampz, sampr
 from bluesky.plan_stubs import mv
 import numpy as np
+from pandas import read_excel
 
 class sample_list:
     
@@ -8,6 +9,7 @@ class sample_list:
         self.all_samples = []
         self.region_list = []
         self.index = 0
+        self.en_cal = None
 
     def clear_sample_list(self):
         self.all_samples = []
@@ -31,13 +33,13 @@ class sample_list:
             filename = name.replace(" ","_")+"_"
 
         sample = {
-            "sample_name": name,
-            "x_position": xpos,
-            "y_position": ypos,
-            "z_position": zpos,
-            "r_position": rpos,
+            "Sample Name": name,
+            "X Position": xpos,
+            "Y Position": ypos,
+            "Z Position": zpos,
+            "Th Position": rpos,
             "sample_index": self.index,
-            "filename": filename,
+            "File Prefix": filename,
             "regions": regions
         }
         self.all_samples.append(sample)
@@ -48,34 +50,35 @@ class sample_list:
             print("Empty sample list")
         else:
             for s in self.all_samples:
-                print(str(s["sample_index"])+": "+s["sample_name"])
+                print(str(s["sample_index"])+": "+s["Sample Name"])
 
     def list_regions(self):
         if self.region_list == []:
             print("Empty region list")
         else:
             for r in self.region_list:
-                print(r["reg_name"])
+                print(r["Region Name"])
                 print(r)
 
     def goto_sample(self,index):
         sample = self.all_samples[index]
-        print("Moving to sample "+sample["sample_name"])
-        yield from mv(sampy,sample["y_position"])
+        print("Moving to sample "+str(sample["sample_index"])+": "+sample["Sample Name"])
+        yield from mv(sampy,sample["Y Position"])
         yield from mv(
-            sampx,sample["x_position"],
-            sampz,sample["z_position"],
-            sampr,sample["r_position"]
+            sampx,sample["X Position"],
+            sampz,sample["Z Position"],
+            sampr,sample["Th Position"]
         )
 
     def make_region(self,region_name=None,center_energy=None,width=None,iterations=None,pass_energy=None,step_size=50):
         region = {
-            "reg_name": region_name,
+            "Region Name": region_name,
             "center_en": center_energy,
             "width": width,
             "iterations": iterations,
             "pass_energy": pass_energy,
-            "step_size": step_size
+            "Step Size": step_size,
+            "Excitation Energy": self.en_cal
         }
         return region
 
@@ -84,46 +87,52 @@ class sample_list:
             self.region_list.append(region_dict)
         else:
             for i in range(len(self.region_list)):
-                if self.region_list[i]["reg_name"] == region_dict["reg_name"]:
+                if self.region_list[i]["Region Name"] == region_dict["Region Name"]:
                     self.region_list[i] = region_dict
                 else:
                     self.region_list.append(region_dict)
 
-    def read_regions_from_file(self,region_file):
+    def read_regions_from_text(self,region_file):
         self.clear_region_list()
         self.append_regions_from_file(region_file)
 
-    def append_regions_from_file(self,region_file):
-        regnamelist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',dtype=str,usecols=0))
-        centerlist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=1))
-        widthlist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=2))
-        passlist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=3))
-        itlist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=4))
-        steplist = np.atleast_1d(
-            np.genfromtxt(region_file,skip_header=1,delimiter='\t',usecols=5))
-
-        for i in range(regnamelist.size):
-            region = self.make_region(region_name=regnamelist[i],
-                center_energy=centerlist[i],
-                width=widthlist[i],
-                pass_energy=passlist[i],
-                iterations=itlist[i],
-                step_size=steplist[i]
-            )
-            self.append_region_to_list(region)
-
-    def read_from_file(self,region_file,sample_file):
+    def read_from_text(self,region_file,sample_file):
         self.clear_sample_list()
         self.clear_region_list()
         self.read_regions_from_file(region_file)
         self.append_from_file(sample_file)
 
-    def append_from_file(self,sample_file):
+    def read_from_file(self,excel_file):
+        self.clear_sample_list()
+        self.clear_region_list()
+        self.append_from_file(excel_file)
+        
+    def append_from_file(self,excel_file):
+        #read regions
+        dfRegions = read_excel(excel_file,sheet_name="Regions")
+        for index, row in dfRegions.iterrows():
+            rdict = row.to_dict()
+            rdict["Excitation Energy"] = self.en_cal
+            self.region_list.append(rdict)
+        #read samples ... 
+        dfSamples = read_excel(excel_file,sheet_name="Samples")
+        for index, row in dfSamples.iterrows():
+            sdict = row.dropna().to_dict()
+            sdict["regions"] = []
+            for r in ["Region 1", "Region 2", "Region 3", "Region 4", "Region 5", "Region 6", "Region 7", "Region 8", "Region 9", "Region 10"]:
+                if r in sdict:
+                    for rdict in self.region_list:
+                        if sdict[r] == rdict["Region Name"]:
+                            rdict["center_en"] = (rdict["Low Energy"] + rdict["High Energy"])/2
+                            rdict["width"] = np.abs(rdict["High Energy"] - rdict["Low Energy"])
+                            if rdict["Energy Type"] == "Binding":
+                                rdict["center_en"] = self.en_cal - rdict["center_en"]
+                            sdict["regions"].append(rdict)
+            sdict["sample_index"] = self.index
+            self.all_samples.append(sdict)
+            self.index = self.index+1
+
+    def append_from_text(self,sample_file):
         namelist = np.atleast_1d(
             np.genfromtxt(sample_file,skip_header=1,delimiter='\t',dtype=str,usecols=0))
         xlist = np.atleast_1d(
@@ -143,7 +152,7 @@ class sample_list:
             for sreg in sample_regions:
                 region_dicts = []
                 for reg in self.region_list:
-                    if sreg == reg["reg_name"]:
+                    if sreg == reg["Region Name"]:
                         region_dicts.append(reg)
             self.add_sample(
                 namelist[i],

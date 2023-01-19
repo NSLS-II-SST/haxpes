@@ -1,14 +1,27 @@
-from .energy import dcm, u42gap
-from .detectors import dm4_i400, dm3_f460, dm4_f460, dm5_f460
-from .motors import sampx, sampy, sampz, sampr, x2pitch
+#from .energy import dcm, u42gap
+from .detectors import dm3_f460, I0, Idrain
+from .motors import sampx, sampy, sampz, sampr, dm1, nBPM
 from .ses import ses
 from bluesky.plans import count, scan, rel_scan
 from bluesky.plan_stubs import mv
-from bluesky import RunEngine
+#from bluesky import RunEngine
+from .hax_runner import RE
 from bluesky.callbacks import LiveTable
-from .hax_ops import run_XPS, withdraw_bar
+from .hax_ops import run_XPS, align_beam_xps
 from .sample_handling import sample_list
+from .hax_suspenders import suspend_FEsh1, suspend_beamstat
+#from .energy_tender import mono,en,h,U42
+from .funcs import tune_x2pitch
+from .enabler import enable_soft_beam, enable_tender_beam, disable_soft_beam, disable_tender_beam, enable_both_beams, disable_both_beams, beamselection, enable_test_mode, disable_test_mode
 
-RE = RunEngine(call_returns_result=True)
 LiveTable._FMT_MAP['number'] = 'g'
 
+I0.set_exposure(1)
+Idrain.set_exposure(1)
+
+#common suspenders:
+RE.install_suspender(suspend_FEsh1)
+RE.install_suspender(suspend_beamstat)
+
+#by default, start in tender mode:
+enable_tender_beam()
