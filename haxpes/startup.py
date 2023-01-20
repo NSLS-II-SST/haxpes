@@ -1,5 +1,5 @@
 #from .energy import dcm, u42gap
-from .detectors import dm3_f460, I0, Idrain
+from .detectors import dm3_f460, I0, Idrain, Idm1
 from .motors import sampx, sampy, sampz, sampr, dm1, nBPM
 from .ses import ses
 from bluesky.plans import count, scan, rel_scan
@@ -18,6 +18,7 @@ LiveTable._FMT_MAP['number'] = 'g'
 
 I0.set_exposure(1)
 Idrain.set_exposure(1)
+Idm1.set_exposure(1)
 
 #common suspenders:
 RE.install_suspender(suspend_FEsh1)

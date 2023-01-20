@@ -1,6 +1,6 @@
 from .motors import x2pitch, x2roll, x2perp, dm1, x2finepitch
 from .optimizers_test import find_max, find_sp, find_centerofmass
-from .detectors import dm3_f460, I0
+from .detectors import Idm1, I0, BPM4cent
 from bluesky.plan_stubs import mv, sleep
 from bluesky.plans import scan, rel_scan
 from .detectors import BPM4cent
@@ -12,9 +12,9 @@ def tune_x2pitch():
     Tunes second crystal rocking curve.  Starts with broad scan, then narrows around max.
     """
     yield from mv(dm1,32)
-    max_channel = dm3_f460.i3.name #define channel for DM1 diode
-    yield from find_max(scan, [dm3_f460], x2pitch, -2.25, -1, 30, max_channel=max_channel)
-    yield from find_max(rel_scan, [dm3_f460], x2pitch, -0.075, 0.075, 30, max_channel = max_channel)
+    max_channel = Idm1.mean.name #define channel for DM1 diode
+    yield from find_max(scan, [Idm1], x2pitch, -2.25, -1, 30, max_channel=max_channel)
+    yield from find_max(rel_scan, [Idm1], x2pitch, -0.075, 0.075, 30, max_channel = max_channel)
 
 ###
 def xalign_fs4(spx=448):
