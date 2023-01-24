@@ -1,11 +1,14 @@
-from haxpes.dcm import dcm
-from haxpes.motors import u42gap, dm1
-from haxpes.detectors import dm3_f460
+from haxpes.motors import dm1
+from haxpes.energy_tender import mono, U42
+from haxpes.detectors import Idm1
 from bluesky.plan_stubs import mv
 from bluesky.plans import rel_scan
 import numpy as np
-from sst_funcs.plans.maximizers import find_max
+from haxpes.optimizers_test import find_max
 from os.path import isdir, isfile, dirname
+from haxpes.funcs import tune_x2pitch
+
+Idm1.set_exposure(1)
 
 def runcal(filepath,energy_range,u42start=None,overwrite=False):
 
@@ -26,25 +29,26 @@ def runcal(filepath,energy_range,u42start=None,overwrite=False):
     fobj.close()
 #    fobj = open(filepath,'a')
 
-    yield from mv(dcm.mode,"full")
+   # yield from mv(dcm.mode,"full")
 
     #put photodiode in place
     yield from mv(dm1,32)
 
     if u42start:
-        yield from mv(u42gap,u42start)
+        yield from mv(U42,u42start)
 
 #    u42max = []
 
     #move U42 to initial position, scan will be about position +/- 100 um ??
 #    yield from mv(u42gap,18078)
 
-    for en in energy_range:
-        yield from mv(dcm.energy, en)
-        yield from find_max(rel_scan,[dm3_f460],u42gap,-100,100,50,max_channel=dm3_f460.i3.name)
+    for E in energy_range:
+        yield from mv(mono.energy, E)
+        yield from tune_x2pitch()
+        yield from find_max(rel_scan,[Idm1],U42,-100,100,50,max_channel=Idm1.mean.name,hysteresis_correct=True)
         #u42max.append(u42gap.position)
 
-        writeline = str(en)+"\t"+str(u42gap.position)+"\n"
+        writeline = str(E)+"\t"+str(U42.position)+"\n"
         fobj = open(filepath,'a')  #open / close each step ... don't know if this is needed ...
         fobj.write(writeline)
         fobj.close()

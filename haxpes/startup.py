@@ -3,7 +3,7 @@ from .detectors import dm3_f460, I0, Idrain, Idm1
 from .motors import sampx, sampy, sampz, sampr, dm1, nBPM
 from .ses import ses
 from bluesky.plans import count, scan, rel_scan
-from bluesky.plan_stubs import mv
+from bluesky.plan_stubs import mv, sleep
 #from bluesky import RunEngine
 from .hax_runner import RE
 from bluesky.callbacks import LiveTable
