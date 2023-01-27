@@ -10,7 +10,10 @@ from haxpes.funcs import tune_x2pitch
 
 Idm1.set_exposure(1)
 
-def runcal(filepath,energy_range,u42start=None,overwrite=False):
+filepath = "/home/xf07id1/Documents/UserFiles/U42Cal/h11run.txt"
+U42range = np.arange(11500,13500,50)
+
+def runcal(filepath,U42_range,u42start=None,overwrite=False):
 
     #check direcotry is valid ...
     testpath = dirname(filepath)
@@ -42,13 +45,13 @@ def runcal(filepath,energy_range,u42start=None,overwrite=False):
     #move U42 to initial position, scan will be about position +/- 100 um ??
 #    yield from mv(u42gap,18078)
 
-    for E in energy_range:
-        yield from mv(mono.energy, E)
-        yield from tune_x2pitch()
-        yield from find_max(rel_scan,[Idm1],U42,-100,100,50,max_channel=Idm1.mean.name,hysteresis_correct=True)
+    for U in U42_range:
+        yield from mv(U42, U)
+        #yield from tune_x2pitch()
+        yield from find_max(rel_scan,[Idm1],mono.energy,-50,50,101,max_channel=Idm1.mean.name)
         #u42max.append(u42gap.position)
 
-        writeline = str(E)+"\t"+str(U42.position)+"\n"
+        writeline = str(mono.energy.position)+"\t"+str(U42.position)+"\n"
         fobj = open(filepath,'a')  #open / close each step ... don't know if this is needed ...
         fobj.write(writeline)
         fobj.close()

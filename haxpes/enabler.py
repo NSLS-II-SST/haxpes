@@ -28,7 +28,7 @@ def enable_tender_beam():
         return 0
     beamselection.set("Tender")
     RE.install_suspender(suspend_psh1)
-    RE.install_suspender(suspend_psh2)
+   #RE.install_suspender(suspend_psh2)
     from .energy_tender import mono,en,h,U42
     U42.tolerance.set(1)
     import IPython
@@ -77,7 +77,7 @@ def enable_both_beams():
     RE.install_suspender(suspend_psh4)
     RE.install_suspender(suspend_psh5)
     RE.install_suspender(suspend_psh1)
-    RE.install_suspender(suspend_psh2)
+    #RE.install_suspender(suspend_psh2)
     from .energy_tender import mono,en,h,U42
     U42.tolerance.set(1)
     import IPython
