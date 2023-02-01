@@ -1,5 +1,5 @@
 #from .energy import dcm, u42gap
-from .detectors import dm3_f460, I0, Idrain, Idm1
+from .detectors import dm3_f460, I0, Idrain, Idm1, pxiScalar, HAXDetectors
 from .motors import sampx, sampy, sampz, sampr, dm1, nBPM
 from .ses import ses
 from bluesky.plans import count, scan, rel_scan
