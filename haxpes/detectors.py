@@ -16,4 +16,4 @@ Idrain = ophScalar("XF:07ID-BI[ADC:1-Ch:0]Volt",name="Sample Drain Current")
 
 Idm1 = ophScalar("XF:07ID-BI{DM3:F4}Cur:I2-I",name="DM1 Photodiode")
 
-HAXDetectors = [Idrain, I0, pxiScalar]
+HAXDetectors = [Idrain, I0, pxiScalar, Idm1]

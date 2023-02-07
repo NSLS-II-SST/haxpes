@@ -20,6 +20,13 @@ def enable_soft_beam():
     ip.user_global_ns['pol'] = polsoft
     ip.user_global_ns['h'] = hsoft
     ip.user_global_ns['mono'] = monosoft
+    from haxpes.soft.motors import dm4, SlitAB
+    ip.user_global_ns['dm4'] = dm4
+    ip.user_global_ns['SlitAB'] = SlitAB
+    from haxpes.soft.detectors import M4Adrain
+    ip.user_global_ns['M4Adrain'] = M4Adrain
+    from haxpes.soft.getbeam import transfer_setup
+    ip.user_global_ns["transfer_setup"] = transfer_setup
     
 
 def enable_tender_beam():
@@ -51,6 +58,10 @@ def disable_soft_beam():
     ip.user_global_ns.pop('pol', None)
     ip.user_global_ns.pop('h', None)
     ip.user_global_ns.pop('mono', None)
+    ip.user_global_ns.pop('dm4', None)
+    ip.user_global_ns.pop('M4Adrain',None)
+    ip.user_global_ns.pop('transfer_setup')
+    ip.user_global_ns.pop('SlitAB')
 
 def disable_tender_beam(): 
     if beamselection.get() != "Tender":
@@ -70,7 +81,7 @@ def enable_both_beams():
     if beamselection.get() != "none":
         print("Stopping.  "+beamselection.get()+" beam enabled.  Disable first.")
         return 0
-    if softenable.get() != "HAXPES":
+    if softbeamenable.get() != "HAXPES":
         print("HAXPES endstation not selected for soft beam.  Cannot enable.")
         return 0
     beamselection.set("Soft & Tender")
@@ -91,11 +102,18 @@ def enable_both_beams():
     ip.user_global_ns['pol_s'] = polsoft
     ip.user_global_ns['h_s'] = hsoft
     ip.user_global_ns['mono_s'] = monosoft
-    
+    from haxpes.soft.motors import dm4, SlitAB
+    ip.user_global_ns['dm4'] = dm4
+    ip.user_global_ns['SlitAB'] = SlitAB
+    from haxpes.soft.detectors import M4Adrain
+    ip.user_global_ns['M4Adrain'] = M4Adrain
+    from haxpes.soft.getbeam import transfer_setup
+    ip.user_global_ns["transfer_setup"] = transfer_setup
+
 
 
 def disable_both_beams():
-    if beamelection.get() != "Soft & Tender":
+    if beamselection.get() != "Soft & Tender":
         print("Stopping.  Soft & Tender beams not enabled.  Currently "+beamselection.get()+" is enabled.")
         return 0
     beamselection.set("none")
@@ -113,6 +131,12 @@ def disable_both_beams():
     ip.user_global_ns.pop('pol_s', None)
     ip.user_global_ns.pop('h_s', None)
     ip.user_global_ns.pop('mono_s', None)
+    ip.user_global_ns.pop('dm4', None)
+    ip.user_global_ns.pop('M4Adrain',None)
+    ip.user_global_ns.pop('transfer_setup')
+    ip.user_global_ns.pop('SlitAB')
+
+
 
 def enable_test_mode():
     if beamselection.get() != "none":
