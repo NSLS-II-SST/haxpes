@@ -1,5 +1,6 @@
 from haxpes.soft.motors import M3AB, SlitAB, M4A
 from bluesky.plan_stubs import mv
+from haxpes.motors import haxslt
 
 #first check if HAXPES is enabled.
 
@@ -13,6 +14,9 @@ def transfer_setup():
     yield from mv(M3AB.yaw,0)
 
     #set to some nominal energy
+
+    #open haxpes slits:
+    yield from mv(haxslt.outboard,18.5,haxslt.inboard,-18.5,haxslt.vsize,2)
 
     #check slit positions
     yield from mv(SlitAB,75)

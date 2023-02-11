@@ -20,7 +20,7 @@ range4 = {
     "energymin": 4500,
     "energymax": 6000,
     "harmonic": 7,
-    "crystal": "Si(200)"
+    "crystal": "Si(220)"
 }
 range5 = {
     "energymin": 6000,

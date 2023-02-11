@@ -119,7 +119,7 @@ def rough_align_beam_xps(full_align=1):
     yield from xalign_fs4(spx=368)
 
 ###
-def set_photon_energy(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
+def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
     ###for 
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
