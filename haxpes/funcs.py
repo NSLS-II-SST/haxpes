@@ -1,4 +1,4 @@
-from .motors import x2pitch, x2roll, x2perp, dm1, x2finepitch
+from .motors import x2pitch, x2roll, x2perp, dm1, x2finepitch, x2fineroll
 from .optimizers_test import find_max, find_sp, find_centerofmass
 from .detectors import Idm1, I0, BPM4cent
 from bluesky.plan_stubs import mv, sleep
@@ -48,7 +48,7 @@ def ycoursealign_i0(steptime=1):
     yield from mv(I0.exposure_time,steptime)
     yield from fs4.open()
     ychannel = I0.mean.name
-    yield from find_centerofmass(rel_scan,[I0],x2pitch,-0.025,0.025, 25, max_channel=ychannel,hysteresis_correct=True)
+    yield from find_max(rel_scan,[I0],x2pitch,-0.025,0.025, 25, max_channel=ychannel,hysteresis_correct=True,invert=True)
 
 def yfinealign_i0(steptime=1):
     """
@@ -58,7 +58,7 @@ def yfinealign_i0(steptime=1):
     yield from mv(I0.exposure_time,steptime)
     yield from fs4.open()
     ychannel = I0.mean.name
-    yield from find_centerofmass(rel_scan,[I0],x2finepitch,-10,10, 25, max_channel=ychannel,hysteresis_correct=True)
+    yield from find_max(scan,[I0],x2finepitch,-10,10,41, max_channel=ychannel,hysteresis_correct=True,invert=True)
 
 ###
 def xcoursealign_i0(steptime=1):
@@ -68,7 +68,7 @@ def xcoursealign_i0(steptime=1):
     yield from mv(I0.exposure_time,steptime)
     yield from fs4.open()
     xchannel = I0.mean.name
-    yield from find_centerofmass(rel_scan,[I0], x2roll, -0.15,0.35,25,  max_channel=xchannel,hysteresis_correct=True)    
+    yield from find_max(rel_scan,[I0], x2roll, -0.1,0.1,41,  max_channel=xchannel,hysteresis_correct=True,invert=True)    
 
 def xfinealign_i0(steptime=1):
     """
@@ -78,7 +78,7 @@ def xfinealign_i0(steptime=1):
     yield from mv(I0.exposure_time,steptime)
     yield from fs4.open()
     xchannel = I0.mean.name
-    yield from find_centerofmass(rel_scan,[I0], x2roll, -0.025,0.025,25, max_channel=xchannel,hysteresis_correct=True)
+    yield from find_max(scan,[I0], x2fineroll, -25,25,51, max_channel=xchannel,hysteresis_correct=True,invert=True)
 
 ###
 def set_feedback(axis,set_new_sp=True):

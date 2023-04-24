@@ -8,7 +8,7 @@ from .detectors import BPM4cent
 from .dcm_settings import dcmranges
 from .energy_tender import en, h, mono as dcm
 
-def set_analyzer(filename,core_line):
+def set_analyzer(filename,core_line,en_cal):
     """ 
     ...
     """
@@ -18,12 +18,17 @@ def set_analyzer(filename,core_line):
     dacqmode = "swept"
     yield from abs_set(ses.filename,filename)
     yield from abs_set(ses.region_name,core_line["Region Name"])
-    yield from abs_set(ses.center_en_sp,core_line["center_en"])
+    if core_line["Energy Type"] == "Binding":
+       cent = en_cal - core_line["center_en"]
+       yield from abs_set(ses.center_en_sp,cent)
+    else:
+       yield from abs_set(ses.center_en_sp,core_line["center_en"])
+#    yield from abs_set(ses.center_en_sp,core_line["center_en"]) ### BE correction.  Above 5 lines for testing, this one commented out.
     yield from abs_set(ses.width_en_sp,core_line["width"])
     yield from abs_set(ses.iterations,core_line["Iterations"])
     yield from abs_set(ses.pass_en,core_line["Pass Energy"])
-    if "Excitation Energy" in core_line.keys():
-        yield from abs_set(ses.excitation_en,core_line["Excitation Energy"])
+    if "Photon Energy" in core_line.keys():
+        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])
     if "Step Size" in core_line.keys():
         yield from abs_set(ses.en_step,core_line["Step Size"])
     else:
@@ -72,8 +77,16 @@ def run_XPS(sample_list,close_shutter=False):
         if sample_list.all_samples[i]["To Run"]:
             print("Moving to sample "+str(i))
             yield from sample_list.goto_sample(i)
+            #set photon energy ...
+            current_en = en.position
+            if current_en >= sample_list.all_samples[i]["Photon Energy"]+0.05 or current_en <= sample_list.all_samples[i]["Photon Energy"]-0.05:
+                yield from set_photon_energy_tender(sample_list.all_samples[i]["Photon Energy"])
+                yield from align_beam_xps()
             for region in sample_list.all_samples[i]["regions"]:
-                yield from set_analyzer(sample_list.all_samples[i]["File Prefix"],region)
+                sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
+#                if region["Energy Type"] == "Binding":
+#                    sample_list.calc_KE(region)
+                yield from set_analyzer(sample_list.all_samples[i]["File Prefix"],region,sample_list.en_cal)
                 yield from fs4.open() #in case it is closed ...
                 yield from count([ses],1)
                 if close_shutter:
@@ -134,31 +147,33 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
     yield from mv(en,energySP)
     yield from tune_x2pitch()
     yield from mv(dm1,60)
+    #yield from align_beam_xps
     
 ###
-def align_beam_xps(hslitsize=0.5,vslitsize=0.1):
+def align_beam_xps():
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
-    yield from tune_x2pitch()
+ #   yield from tune_x2pitch()
     yield from fs4.close()
     yield from mv(dm1,60)
     yield from sleep(5.0)
     yield from BPM4cent.adjust_gain()
     yield from yalign_fs4_xps(spy=326)
-    yield from xalign_fs4(spx=448)
-    yield from mv(haxslt.hsize,1)
-    yield from mv(haxslt.vsize,0.5)
-    yield from ycoursealign_i0()
+    yield from xalign_fs4(spx=427)
+    yield from fs4.open()
+#    yield from mv(haxslt.hsize,1)
+#    yield from mv(haxslt.vsize,1)
+#    yield from ycoursealign_i0()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
-    yield from xcoursealign_i0()
-    yield from mv(haxslt.hsize,hslitsize,haxslt.vsize,vslitsize)
+#    yield from xcoursealign_i0()
+#    yield from mv(haxslt.hsize,hslitsize,haxslt.vsize,vslitsize)
 #    yield from ycoursealign_i0()
     yield from sleep(5.0) #necessary to make sure pitch motor has disabled prior to using piezo
     yield from yfinealign_i0()
     yield from xfinealign_i0()
-    yield from yfinealign_i0()
-    yield from xfinealign_i0()
+#    yield from yfinealign_i0()
+#    yield from xfinealign_i0()
     yield from sleep(5.0) #necessary to make sure roll motor has disabled prior to using piezo
     yield from set_feedback("vertical",set_new_sp=False)
-    yield from set_feedback("horizontal")
+    yield from set_feedback("horizontal",set_new_sp=False)

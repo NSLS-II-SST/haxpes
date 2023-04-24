@@ -20,6 +20,9 @@ class DCM(PseudoPositioner):
     done_value = 1
     stop_signal = Cpt(EpicsSignal, ":ENERGY_ST_CMD")
     crystal_move = Cpt(EpicsSignal, ":XTAL_CMD.PROC")
+    para_default = Cpt(Signal,value=7.5,kind="config")
+    crystalstatus = Cpt(EpicsSignalRO, ":XTAL_STS",kind="config")
+
 
     offsetdict = {
         "Si(111)": 10.829, 
@@ -60,16 +63,24 @@ class DCM(PseudoPositioner):
     #crystal set ... you shouldn't do this when shutter 1 is open ...
     def set_crystal(self,crystalSP,roll_correct=1):
         """ sets the crystal pair and moves to that value.
-        This should probably not be done when beam is in DCM."""
+        This automatically disables the PSH1 suspender and closes the shutter.
+        Suspender is re-enabled after move is complete."""
         if roll_correct:
             yield from mv(self.x2roll,self.rolldict[crystalSP])      
 #        self.bragg.user_offset.set(self.offsetdict[crystalSP])
         yield from mv(self.bragg.user_offset,self.offsetdict[crystalSP])
         yield from mv(self.crystal,crystalSP)
-        yield from mv(gonilateral,self.gonilatdict[crystalSP])
-#        yield from mv(self.crystal_move,1)
-#        self.crystal.put(crystalSP)
-#        self.crystal_move.put(1)
+        #check crystal status; 0 = Not In Position; 1 = In Position:
+        inpos = self.crystalstatus.get()
+        if inpos == 0:
+            from haxpes.hax_suspenders import suspend_psh1
+            from haxpes.hax_runner import RE
+            from haxpes.hax_hw import psh1
+            RE.remove_suspender(suspend_psh1)
+            yield from psh1.close()
+            yield from mv(gonilateral,self.gonilatdict[crystalSP])
+            yield from psh1.open()
+            RE.install_suspender(suspend_psh1)
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -94,7 +105,7 @@ class DCM(PseudoPositioner):
             return self.RealPosition(
                 bragg = asin(1000*self.hc.get()/(2*self.d.get()*pseudo_pos.energy))*180/pi, 
                 x2perp = self.beam_offset.get() / (2*cos(asin(1000*self.hc.get()/(2*self.d.get()*pseudo_pos.energy)))),
-                x2para = 7.5, ### think about this...
+                x2para = self.para_default.get(), ### think about this...
                 x2pitch = x2pitchcurrent,
                 x2roll = x2rollcurrent,
                 x2finepitch = x2finepitchcurrent,

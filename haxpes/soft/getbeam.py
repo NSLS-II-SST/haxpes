@@ -16,7 +16,8 @@ def transfer_setup():
     #set to some nominal energy
 
     #open haxpes slits:
-    yield from mv(haxslt.outboard,18.5,haxslt.inboard,-18.5,haxslt.vsize,2)
+    yield from mv(haxslt.outboard,18.5,haxslt.inboard,-18.5)
+    yield from mv(haxslt.vsize,2)
 
     #check slit positions
     yield from mv(SlitAB,75)

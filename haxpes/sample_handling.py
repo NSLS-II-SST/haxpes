@@ -125,12 +125,17 @@ class sample_list:
                         if sdict[r] == rdict["Region Name"]:
                             rdict["center_en"] = (rdict["Low Energy"] + rdict["High Energy"])/2
                             rdict["width"] = np.abs(rdict["High Energy"] - rdict["Low Energy"])
-                            if rdict["Energy Type"] == "Binding":
-                                rdict["center_en"] = self.en_cal - rdict["center_en"]
+                          #  if rdict["Energy Type"] == "Binding":
+                          #      self.calc_KE(rdict)
                             sdict["regions"].append(rdict)
             sdict["sample_index"] = self.index
             self.all_samples.append(sdict)
             self.index = self.index+1
+
+    def calc_KE(self,rdict):
+        rdict["center_en"] = self.en_cal - rdict["center_en"]
+#        rdict["center_KE"] = self.en_cal - rdict["center_en"]  ### to be tested ... comment out above line
+        #return rdict
 
     def append_from_text(self,sample_file):
         namelist = np.atleast_1d(
