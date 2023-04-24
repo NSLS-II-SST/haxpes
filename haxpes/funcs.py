@@ -1,6 +1,7 @@
-from .motors import x2pitch, x2roll, x2perp, dm1, x2finepitch, x2fineroll
+from .tender.motors import x2pitch, x2roll, x2perp, dm1, x2finepitch, x2fineroll
 from .optimizers_test import find_max, find_sp, find_centerofmass
-from .detectors import Idm1, I0, BPM4cent
+from .detectors import I0, BPM4cent
+from .tender.detectors import Idm1
 from bluesky.plan_stubs import mv, sleep
 from bluesky.plans import scan, rel_scan
 from .detectors import BPM4cent

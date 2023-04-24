@@ -1,4 +1,5 @@
-from .motors import sampx, sampy, sampz, sampr, dm1, x2finepitch, x2fineroll, haxslt
+from .motors import sampx, sampy, sampz, sampr, haxslt
+from .tender.motors import dm1, x2finepitch, x2fineroll
 from .ses import ses
 from bluesky.plan_stubs import abs_set, mv, sleep
 from bluesky.plans import count

@@ -51,6 +51,12 @@ def enable_tender_beam():
     ip.user_global_ns['set_photon_energy'] = set_photon_energy_tender
     from .hax_ops import align_beam_xps
     ip.user_global_ns['align_beam_xps'] = align_beam_xps
+    from haxpes.tender.detectors import Idm1
+    ip.user_global_ns['Idm1'] = Idm1
+    Idm1.set_exposure(1)
+    from haxpes.tender.motors import dm1, nBPM
+    ip.user_global_ns['dm1'] = dm1
+    ip.user_global_ns['nBPM'] = nBPM
 
 def disable_soft_beam():
     if beamselection.get() != "Soft":
@@ -86,6 +92,9 @@ def disable_tender_beam():
     ip.user_global_ns.pop('U42', None)
     ip.user_global_ns.pop('set_photon_energy',None)
     ip.user_global_ns.pop('align_beam_xps',None)
+    ip.user_global_ns.pop('Idm1',None)
+    ip.user_global_ns.pop('dm1',None)
+    ip.user_global_ns.pop('nBPM',None)
 
 def enable_both_beams():
     if beamselection.get() != "none":
@@ -125,6 +134,12 @@ def enable_both_beams():
     ip.user_global_ns["set_photon_energy_tender"] = set_photon_energy_tender
     from .hax_ops import align_beam_xps
     ip.user_global_ns['align_beam_xps_tender'] = align_beam_xps
+    from haxpes.tender.detectors import Idm1
+    ip.user_global_ns['Idm1'] = Idm1
+    Idm1.set_exposure(1)
+    from haxpes.tender.motors import dm1, nBPM
+    ip.user_global_ns['dm1'] = dm1
+    ip.user_global_ns['nBPM'] = nBPM
 
 
 def disable_both_beams():
@@ -153,7 +168,9 @@ def disable_both_beams():
     ip.user_global_ns.pop('set_photon_energy_soft',None)
     ip.user_global_ns.pop('set_photon_energy_tender',None)
     ip.user_global_ns.pop('align_beam_xps_tender',None)
-
+    ip.user_global_ns.pop('Idm1',None)
+    ip.user_global_ns.pop('dm1',None)
+    ip.user_global_ns.pop('nBPM',None)
 
 def enable_test_mode():
     if beamselection.get() != "none":
