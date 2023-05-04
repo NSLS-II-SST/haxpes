@@ -2,8 +2,6 @@ from .hax_suspenders import suspend_psh1, suspend_psh2, suspend_psh4, suspend_ps
 from .hax_runner import RE
 from .hax_hw import softbeamenable, beamselection
 
-
-
 def enable_soft_beam():
     if beamselection.get() != "none":
         print("Stopping.  "+beamselection.get()+" beam enabled.  Disable first.")
@@ -28,9 +26,9 @@ def enable_soft_beam():
     ip.user_global_ns['M4Adrain'] = M4Adrain
     from haxpes.soft.getbeam import transfer_setup
     ip.user_global_ns["transfer_setup"] = transfer_setup
-    from haxpes.soft.soft_ops import set_photon_energy_soft
+    from haxpes.soft.soft_ops import set_photon_energy_soft, run_XPS_soft
     ip.user_global_ns["set_photon_energy"] = set_photon_energy_soft
-    
+   
 
 def enable_tender_beam():
     if beamselection.get() != "none":
@@ -47,9 +45,9 @@ def enable_tender_beam():
     ip.user_global_ns['h'] = h
     ip.user_global_ns['mono'] = mono
     ip.user_global_ns['U42'] = U42
-    from haxpes.hax_ops import set_photon_energy_tender
+    from haxpes.tender.tender_ops import set_photon_energy_tender, run_XPS_tender, align_beam_xps
     ip.user_global_ns['set_photon_energy'] = set_photon_energy_tender
-    from .hax_ops import align_beam_xps
+    ip.user_global_ns['run_XPS'] = run_XPS_tender
     ip.user_global_ns['align_beam_xps'] = align_beam_xps
     from haxpes.tender.detectors import Idm1
     ip.user_global_ns['Idm1'] = Idm1
@@ -57,6 +55,8 @@ def enable_tender_beam():
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
+    from haxpes.tender.funcs import tune_x2pitch
+    ip.user_global_ns['tune_x2pitch'] = tune_x2pitch
 
 def disable_soft_beam():
     if beamselection.get() != "Soft":
@@ -76,6 +76,7 @@ def disable_soft_beam():
     ip.user_global_ns.pop('transfer_setup',None)
     ip.user_global_ns.pop('SlitAB',None)
     ip.user_global_ns.pop('set_photon_energy',None)
+    ip.user_global_ns.pop('run_XPS')
 
 def disable_tender_beam(): 
     if beamselection.get() != "Tender":
@@ -91,10 +92,12 @@ def disable_tender_beam():
     ip.user_global_ns.pop('mono', None)
     ip.user_global_ns.pop('U42', None)
     ip.user_global_ns.pop('set_photon_energy',None)
+    ip.user_global_ns.pop('run_XPS_tender',None)
     ip.user_global_ns.pop('align_beam_xps',None)
     ip.user_global_ns.pop('Idm1',None)
     ip.user_global_ns.pop('dm1',None)
     ip.user_global_ns.pop('nBPM',None)
+    ip.user_global_ns.pop('tune_x2pitch',None)
 
 def enable_both_beams():
     if beamselection.get() != "none":
@@ -128,18 +131,21 @@ def enable_both_beams():
     ip.user_global_ns['M4Adrain'] = M4Adrain
     from haxpes.soft.getbeam import transfer_setup
     ip.user_global_ns["transfer_setup"] = transfer_setup
-    from haxpes.hax_ops import set_photon_energy_tender
-    from haxpes.soft.soft_ops import set_photon_energy_soft
+    from haxpes.tender.tender_ops import set_photon_energy_tender, align_beam_xps, run_XPS_tender
+    from haxpes.soft.soft_ops import set_photon_energy_soft, run_XPS_soft
     ip.user_global_ns["set_photon_energy_soft"] = set_photon_energy_soft
     ip.user_global_ns["set_photon_energy_tender"] = set_photon_energy_tender
-    from .hax_ops import align_beam_xps
     ip.user_global_ns['align_beam_xps_tender'] = align_beam_xps
+    ip.user_global_ns['run_XPS_soft'] = run_XPS_soft
+    ip.user_global_ns['run_XPS_tender'] = run_XPS_tender
     from haxpes.tender.detectors import Idm1
     ip.user_global_ns['Idm1'] = Idm1
     Idm1.set_exposure(1)
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
+    from haxpes.tender.funcs import tune_x2pitch
+    ip.user_global_ns['tune_x2picth'] = tune_x2pitch
 
 
 def disable_both_beams():
@@ -171,6 +177,9 @@ def disable_both_beams():
     ip.user_global_ns.pop('Idm1',None)
     ip.user_global_ns.pop('dm1',None)
     ip.user_global_ns.pop('nBPM',None)
+    ip.user_global_ns.pop('run_XPS_tender',None)
+    ip.user_global_ns.pop('run_XPS_soft',None)
+    ip.user_global_ns.pop('tune_x2pitch',None)
 
 def enable_test_mode():
     if beamselection.get() != "none":

@@ -1,11 +1,11 @@
-from .tender.motors import x2pitch, x2roll, x2perp, dm1, x2finepitch, x2fineroll
-from .optimizers_test import find_max, find_sp, find_centerofmass
-from .detectors import I0, BPM4cent
-from .tender.detectors import Idm1
+from haxpes.tender.motors import x2pitch, x2roll, x2perp, dm1, x2finepitch, x2fineroll
+from haxpes.optimizers_test import find_max, find_sp, find_centerofmass
+from haxpes.detectors import I0, BPM4cent
+from haxpes.tender.detectors import Idm1
 from bluesky.plan_stubs import mv, sleep
 from bluesky.plans import scan, rel_scan
-from .detectors import BPM4cent
-from .hax_hw import fs4, psh2, fbvert, fbhor
+from haxpes.detectors import BPM4cent
+from haxpes.hax_hw import fs4, psh2, fbvert, fbhor
 
 ####
 def tune_x2pitch():
