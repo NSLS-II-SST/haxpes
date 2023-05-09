@@ -4,6 +4,7 @@ from bluesky.plan_stubs import mv
 from haxpes.tender.motors import x2finepitch, x2fineroll, dm1
 from haxpes.dcm_settings import dcmranges
 from haxpes.energy_tender import en, h, U42, mono as dcm
+from bluesky.plans import count
 
 def run_XPS_tender(sample_list,close_shutter=False):
     yield from psh2.open() #in case it is closed.  It should be open.
