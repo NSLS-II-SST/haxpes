@@ -105,3 +105,11 @@ def stop_feedback():
     """
     yield from mv(fbvert.pidcontrol,0)
     yield from mv(fbhor.pidcontrol,0)
+
+def reset_feedback():
+    """
+    Resets the latching permit.
+    """
+    yield from mv(fbvert.permitlatch,1)
+    yield from mv(fbhor.permitlatch,1)
+

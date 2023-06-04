@@ -1,5 +1,5 @@
 from haxpes.hax_ops import set_analyzer
-from haxpes.tender.funcs import tune_x2pitch, xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback
+from haxpes.tender.funcs import tune_x2pitch, xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback, reset_feedback
 from bluesky.plan_stubs import mv, sleep
 from haxpes.tender.motors import x2finepitch, x2fineroll, dm1
 from haxpes.dcm_settings import dcmranges
@@ -54,6 +54,7 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
 ###
 def align_beam_xps():
     yield from stop_feedback()
+    yield from reset_feedback() #resets permit latch in case shutter was closed
     yield from mv(x2finepitch,0,x2fineroll,0)
  #   yield from tune_x2pitch()
     yield from fs4.close()

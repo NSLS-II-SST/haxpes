@@ -15,3 +15,5 @@ class pid(Device):
     out_high = Component(EpicsSignal,"Out-HighLim",kind='config')
     pid_out = Component(EpicsSignalRO,"PID.OVAL",kind='hinted')
     mtr_out = Component(EpicsSignalRO,"Val:OBuf3.OVAL",kind='hinted')
+    permitlatch = Component(EpicsSignal,"Perm-Ltch",kind='config')
+
