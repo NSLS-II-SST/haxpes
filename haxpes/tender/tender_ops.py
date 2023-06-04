@@ -1,10 +1,13 @@
 from haxpes.hax_ops import set_analyzer
 from haxpes.tender.funcs import tune_x2pitch, xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback
-from bluesky.plan_stubs import mv
+from bluesky.plan_stubs import mv, sleep
 from haxpes.tender.motors import x2finepitch, x2fineroll, dm1
 from haxpes.dcm_settings import dcmranges
 from haxpes.energy_tender import en, h, U42, mono as dcm
 from bluesky.plans import count
+from haxpes.hax_hw import fs4, psh2
+from haxpes.detectors import BPM4cent
+from haxpes.ses import ses
 
 def run_XPS_tender(sample_list,close_shutter=False):
     yield from psh2.open() #in case it is closed.  It should be open.

@@ -5,7 +5,6 @@ from haxpes.motors import sampr
 
 enpos = EnPos("", rotation_motor=sampr, name="en")
 enpos.scanlock.set(1)
-enpos.polarization.set(0)
 
 ensoft = enpos.energy
 polsoft = enpos.polarization
