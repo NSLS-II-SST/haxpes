@@ -52,31 +52,24 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
     #yield from align_beam_xps
     
 ###
-def align_beam_xps():
+def align_beam_xps(PlaneMirror=False):
     yield from stop_feedback()
     yield from reset_feedback() #resets permit latch in case shutter was closed
     yield from mv(x2finepitch,0,x2fineroll,0)
- #   yield from tune_x2pitch()
-    yield from fs4.close()
-    yield from mv(dm1,60)
-    yield from sleep(5.0)
-    yield from BPM4cent.adjust_gain()
-    yield from yalign_fs4_xps(spy=326)
-    yield from xalign_fs4(spx=427)
+    if not PlaneMirror:
+        yield from fs4.close()
+        yield from mv(dm1,60)
+        yield from sleep(5.0)
+        yield from BPM4cent.adjust_gain()
+        yield from yalign_fs4_xps(spy=326)
+        yield from xalign_fs4(spx=427)
     yield from fs4.open()
-#    yield from mv(haxslt.hsize,1)
-#    yield from mv(haxslt.vsize,1)
-#    yield from ycoursealign_i0()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
-#    yield from xcoursealign_i0()
-#    yield from mv(haxslt.hsize,hslitsize,haxslt.vsize,vslitsize)
-#    yield from ycoursealign_i0()
     yield from sleep(5.0) #necessary to make sure pitch motor has disabled prior to using piezo
-    yield from yfinealign_i0()
-    yield from xfinealign_i0()
-#    yield from yfinealign_i0()
-#    yield from xfinealign_i0()
-    yield from sleep(5.0) #necessary to make sure roll motor has disabled prior to using piezo
+    if not PlaneMirror:
+        yield from yfinealign_i0()
+        yield from xfinealign_i0()
+        yield from sleep(5.0) #necessary to make sure roll motor has disabled prior to using piezo
     yield from set_feedback("vertical",set_new_sp=False)
     yield from set_feedback("horizontal",set_new_sp=False)
