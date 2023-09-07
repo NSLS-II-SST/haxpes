@@ -28,8 +28,10 @@ def set_analyzer(filename,core_line,en_cal):
     yield from abs_set(ses.width_en_sp,core_line["width"])
     yield from abs_set(ses.iterations,core_line["Iterations"])
     yield from abs_set(ses.pass_en,core_line["Pass Energy"])
-    if "Photon Energy" in core_line.keys():
-        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])
+    yield from abs_set(ses.excitation_en,en_cal) # added 2023-08-02; NOT TESTED YET CW
+    print(en_cal)
+#    if "Photon Energy" in core_line.keys():  #commented out 2023-08-02 CW
+#        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])  #commented out 2023-08-02 CW
     if "Step Size" in core_line.keys():
         yield from abs_set(ses.en_step,core_line["Step Size"])
     else:
