@@ -28,6 +28,7 @@ def enable_soft_beam():
     ip.user_global_ns["transfer_setup"] = transfer_setup
     from haxpes.soft.soft_ops import set_photon_energy_soft, run_XPS_soft
     ip.user_global_ns["set_photon_energy"] = set_photon_energy_soft
+    ip.user_global_ns["run_XPS"] = run_XPS_soft
    
 
 def enable_tender_beam():
@@ -76,7 +77,7 @@ def disable_soft_beam():
     ip.user_global_ns.pop('transfer_setup',None)
     ip.user_global_ns.pop('SlitAB',None)
     ip.user_global_ns.pop('set_photon_energy',None)
-    ip.user_global_ns.pop('run_XPS')
+    ip.user_global_ns.pop('run_XPS',None)
 
 def disable_tender_beam(): 
     if beamselection.get() != "Tender":
@@ -98,6 +99,7 @@ def disable_tender_beam():
     ip.user_global_ns.pop('dm1',None)
     ip.user_global_ns.pop('nBPM',None)
     ip.user_global_ns.pop('tune_x2pitch',None)
+    ip.user_global_ns.pop('run_XPS',None)
 
 def enable_both_beams():
     if beamselection.get() != "none":

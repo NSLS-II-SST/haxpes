@@ -21,7 +21,8 @@ class simpleBPM(Device):
         if scale == 0: #UInt8
             datamax = 255
         elif scale == 1: #UInt16
-            datamax = 65535
+#            datamax = 65535
+            datamax = 4095 #cameras are 12-bit, but only can choose 16 or 8
         m = self.maxval.get()
         while  m >= datamax:
             current_acqtime = self.acqtime.get()

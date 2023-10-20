@@ -9,7 +9,7 @@ def transfer_setup():
     yield from mv(M3AB.x,-28)
     yield from mv(M3AB.y,18)
     yield from mv(M3AB.z,0)
-    yield from mv(M3AB.pitch,5.64)
+    yield from mv(M3AB.pitch,5.575)
     yield from mv(M3AB.roll,0)
     yield from mv(M3AB.yaw,0)
 

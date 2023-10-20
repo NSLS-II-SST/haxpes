@@ -1,6 +1,9 @@
-from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft
+from haxpes.energy_soft import ensoft as en, polsoft, hsoft, monosoft
 from haxpes.soft.pgm_settings import pgmranges
 from bluesky.plan_stubs import mv
+from haxpes.hax_hw import psh5
+from bluesky.plans import count
+from haxpes.ses import ses
 
 from haxpes.hax_ops import set_analyzer
 
@@ -30,7 +33,7 @@ def run_XPS_soft(sample_list):
 #                if region["Energy Type"] == "Binding":
 #                    sample_list.calc_KE(region)
                 yield from set_analyzer(sample_list.all_samples[i]["File Prefix"],region,sample_list.en_cal)
-                yield from fs4.open() #in case it is closed ...
+               #yield from fs4.open() #in case it is closed ...
                 yield from count([ses],1)
         else:
             print("Skipping sample "+str(i))
