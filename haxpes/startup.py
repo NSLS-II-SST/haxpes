@@ -21,7 +21,7 @@ Idrain.set_exposure(1)
 #Idm1.set_exposure(1)
 
 #common suspenders:
-RE.install_suspender(suspend_FEsh1)
+#RE.install_suspender(suspend_FEsh1)
 #RE.install_suspender(suspend_beamstat)
 
 #by default, start in tender mode:

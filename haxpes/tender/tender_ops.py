@@ -1,14 +1,39 @@
 from haxpes.hax_ops import set_analyzer
-from haxpes.tender.funcs import tune_x2pitch, xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback, reset_feedback
+from haxpes.tender.funcs import xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback, reset_feedback
 from bluesky.plan_stubs import mv, sleep
-from haxpes.tender.motors import x2finepitch, x2fineroll, dm1
+from haxpes.tender.motors import x2finepitch, x2fineroll, dm1, x2pitch
 from haxpes.dcm_settings import dcmranges
 from haxpes.energy_tender import en, h, U42, mono as dcm
 from bluesky.plans import count
 from haxpes.hax_hw import fs4, psh2
 from haxpes.detectors import BPM4cent
+from haxpes.tender.detectors import Idm1
 from haxpes.ses import ses
+from haxpes.optimizers_test import find_max
+from bluesky.plans import scan, rel_scan
 
+from bluesky.preprocessors import suspend_decorator
+from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2
+
+suspendList = [suspend_FEsh1]
+suspendList.append(suspend_psh1)
+#suspendList.append(suspend_beamstat)
+
+####
+@suspend_decorator(suspendList)
+def tune_x2pitch():
+    """
+    Tunes second crystal rocking curve.  Starts with broad scan, then narrows around max.
+    """
+    yield from mv(dm1,32)
+    max_channel = Idm1.mean.name #define channel for DM1 diode
+    yield from find_max(scan, [Idm1], x2pitch, -2.25, -1, 30, max_channel=max_channel)
+    yield from find_max(rel_scan, [Idm1], x2pitch, -0.075, 0.075, 30, max_channel = max_channel)
+
+###
+
+
+@suspend_decorator(suspendList)
 def run_XPS_tender(sample_list,close_shutter=False):
     yield from psh2.open() #in case it is closed.  It should be open.
     if close_shutter:
@@ -34,6 +59,7 @@ def run_XPS_tender(sample_list,close_shutter=False):
         else:
             print("Skipping sample "+str(i))
 
+@suspend_decorator(suspendList)
 def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
     ###for 
     yield from stop_feedback()
@@ -52,6 +78,7 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
     #yield from align_beam_xps
     
 ###
+@suspend_decorator(suspendList)
 def align_beam_xps(PlaneMirror=False):
     yield from stop_feedback()
     yield from reset_feedback() #resets permit latch in case shutter was closed

@@ -7,9 +7,16 @@ from haxpes.ses import ses
 
 from haxpes.hax_ops import set_analyzer
 
-#... check beam status ...
+from bluesky.preprocessors import suspend_decorator
+from haxpes.hax_suspenders import suspend_FEsh1, suspend_beamstat, suspend_psh5, suspend_psh4
+
+suspendList = [suspend_FEsh1]
+suspendList.append(suspend_psh4)
+suspendList.append(suspend_psh5)
+suspendList.append(suspend_beamstat)
 
 
+@suspend_decorator(suspendList)
 def set_photon_energy_soft(energySP,use_optimal_harmonic=True):
     if use_optimal_harmonic:
         for r in pgmranges:
@@ -17,7 +24,7 @@ def set_photon_energy_soft(energySP,use_optimal_harmonic=True):
                 yield from mv(hsoft,r["harmonic"])
     yield from mv(ensoft,energySP)
 
-
+@suspend_decorator(suspendList)
 def run_XPS_soft(sample_list):
     yield from psh5.open() #in case it is closed.  It should be open.
     for i in range(sample_list.index):

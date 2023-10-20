@@ -10,8 +10,8 @@ def enable_soft_beam():
         print("HAXPES endstation not selected for soft beam.  Cannot enable.")
         return 0
     beamselection.set("Soft")
-    RE.install_suspender(suspend_psh4)
-    RE.install_suspender(suspend_psh5)
+    #RE.install_suspender(suspend_psh4)
+    #RE.install_suspender(suspend_psh5)
     import IPython
     from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft
     ip = IPython.get_ipython()
@@ -36,7 +36,7 @@ def enable_tender_beam():
         print("Stopping.  "+beamselection.get()+" beam enabled.  Disable first.")
         return 0
     beamselection.set("Tender")
-    RE.install_suspender(suspend_psh1)
+   #RE.install_suspender(suspend_psh1)
    #RE.install_suspender(suspend_psh2)
     from .energy_tender import mono,en,h,U42
     U42.tolerance.set(1)
@@ -46,26 +46,26 @@ def enable_tender_beam():
     ip.user_global_ns['h'] = h
     ip.user_global_ns['mono'] = mono
     ip.user_global_ns['U42'] = U42
-    from haxpes.tender.tender_ops import set_photon_energy_tender, run_XPS_tender, align_beam_xps
+    from haxpes.tender.tender_ops import set_photon_energy_tender, run_XPS_tender, align_beam_xps, tune_x2pitch
     ip.user_global_ns['set_photon_energy'] = set_photon_energy_tender
     ip.user_global_ns['run_XPS'] = run_XPS_tender
     ip.user_global_ns['align_beam_xps'] = align_beam_xps
+    ip.user_global_ns['tune_x2pitch'] = tune_x2pitch
     from haxpes.tender.detectors import Idm1
     ip.user_global_ns['Idm1'] = Idm1
     Idm1.set_exposure(1)
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
-    from haxpes.tender.funcs import tune_x2pitch
-    ip.user_global_ns['tune_x2pitch'] = tune_x2pitch
+
 
 def disable_soft_beam():
     if beamselection.get() != "Soft":
         print("Stopping.  Soft beam not enabled.  Currently "+beamselection.get()+" is enabled.")
         return 0
     beamselection.set("none")
-    RE.remove_suspender(suspend_psh4)
-    RE.remove_suspender(suspend_psh5)
+    #RE.remove_suspender(suspend_psh4)
+    #RE.remove_suspender(suspend_psh5)
     import IPython
     ip = IPython.get_ipython()
     ip.user_global_ns.pop('en', None)
@@ -84,8 +84,8 @@ def disable_tender_beam():
         print("Stopping.  Tender beam not enabled.  Currently "+beamselection.get()+" is enabled.")
         return 0
     beamselection.set("none")
-    RE.remove_suspender(suspend_psh1)
-    RE.remove_suspender(suspend_psh2)
+    #RE.remove_suspender(suspend_psh1)
+    #RE.remove_suspender(suspend_psh2)
     import IPython
     ip = IPython.get_ipython()
     ip.user_global_ns.pop('en', None)
@@ -109,9 +109,9 @@ def enable_both_beams():
         print("HAXPES endstation not selected for soft beam.  Cannot enable.")
         return 0
     beamselection.set("Soft & Tender")
-    RE.install_suspender(suspend_psh4)
-    RE.install_suspender(suspend_psh5)
-    RE.install_suspender(suspend_psh1)
+    #RE.install_suspender(suspend_psh4)
+    #RE.install_suspender(suspend_psh5)
+    #RE.install_suspender(suspend_psh1)
     #RE.install_suspender(suspend_psh2)
     from .energy_tender import mono,en,h,U42
     U42.tolerance.set(1)
@@ -155,10 +155,10 @@ def disable_both_beams():
         print("Stopping.  Soft & Tender beams not enabled.  Currently "+beamselection.get()+" is enabled.")
         return 0
     beamselection.set("none")
-    RE.remove_suspender(suspend_psh4)
-    RE.remove_suspender(suspend_psh5)
-    RE.remove_suspender(suspend_psh1)
-    RE.remove_suspender(suspend_psh2)
+    #RE.remove_suspender(suspend_psh4)
+    #RE.remove_suspender(suspend_psh5)
+    #RE.remove_suspender(suspend_psh1)
+    #RE.remove_suspender(suspend_psh2)
     import IPython
     ip = IPython.get_ipython()
     ip.user_global_ns.pop('en_t', None)

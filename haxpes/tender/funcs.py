@@ -7,17 +7,7 @@ from bluesky.plans import scan, rel_scan
 from haxpes.detectors import BPM4cent
 from haxpes.hax_hw import fs4, psh2, fbvert, fbhor
 
-####
-def tune_x2pitch():
-    """
-    Tunes second crystal rocking curve.  Starts with broad scan, then narrows around max.
-    """
-    yield from mv(dm1,32)
-    max_channel = Idm1.mean.name #define channel for DM1 diode
-    yield from find_max(scan, [Idm1], x2pitch, -2.25, -1, 30, max_channel=max_channel)
-    yield from find_max(rel_scan, [Idm1], x2pitch, -0.075, 0.075, 30, max_channel = max_channel)
 
-###
 def xalign_fs4(spx=448):
     """ 
     Tunes second crystal roll to align beam centroid at spx
