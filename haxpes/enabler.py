@@ -13,12 +13,13 @@ def enable_soft_beam():
     #RE.install_suspender(suspend_psh4)
     #RE.install_suspender(suspend_psh5)
     import IPython
-    from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft
+    from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft, epuoffset
     ip = IPython.get_ipython()
     ip.user_global_ns['en'] = ensoft
     ip.user_global_ns['pol'] = polsoft
     ip.user_global_ns['h'] = hsoft
     ip.user_global_ns['mono'] = monosoft
+    ip.user_global_ns['gapoffset'] = epuoffset
     from haxpes.soft.motors import dm4, SlitAB
     ip.user_global_ns['dm4'] = dm4
     ip.user_global_ns['SlitAB'] = SlitAB
@@ -38,7 +39,7 @@ def enable_tender_beam():
     beamselection.set("Tender")
    #RE.install_suspender(suspend_psh1)
    #RE.install_suspender(suspend_psh2)
-    from .energy_tender import mono,en,h,U42
+    from .energy_tender import mono,en,h,U42,gapoffset
     U42.tolerance.set(1)
     import IPython
     ip = IPython.get_ipython()
@@ -46,6 +47,7 @@ def enable_tender_beam():
     ip.user_global_ns['h'] = h
     ip.user_global_ns['mono'] = mono
     ip.user_global_ns['U42'] = U42
+    ip.user_global_ns['gapoffset'] = gapoffset
     from haxpes.tender.tender_ops import set_photon_energy_tender, run_XPS_tender, align_beam_xps, tune_x2pitch
     ip.user_global_ns['set_photon_energy'] = set_photon_energy_tender
     ip.user_global_ns['run_XPS'] = run_XPS_tender
@@ -78,6 +80,7 @@ def disable_soft_beam():
     ip.user_global_ns.pop('SlitAB',None)
     ip.user_global_ns.pop('set_photon_energy',None)
     ip.user_global_ns.pop('run_XPS',None)
+    ip.user_global_ns.pop('gapoffset')
 
 def disable_tender_beam(): 
     if beamselection.get() != "Tender":
@@ -100,6 +103,7 @@ def disable_tender_beam():
     ip.user_global_ns.pop('nBPM',None)
     ip.user_global_ns.pop('tune_x2pitch',None)
     ip.user_global_ns.pop('run_XPS',None)
+    ip.user_global_ns.pop('gapoffset')
 
 def enable_both_beams():
     if beamselection.get() != "none":
@@ -113,7 +117,7 @@ def enable_both_beams():
     #RE.install_suspender(suspend_psh5)
     #RE.install_suspender(suspend_psh1)
     #RE.install_suspender(suspend_psh2)
-    from .energy_tender import mono,en,h,U42
+    from .energy_tender import mono,en,h,U42,gapoffset
     U42.tolerance.set(1)
     import IPython
     ip = IPython.get_ipython()
@@ -121,11 +125,13 @@ def enable_both_beams():
     ip.user_global_ns['h_t'] = h
     ip.user_global_ns['mono_t'] = mono
     ip.user_global_ns['U42'] = U42
-    from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft
+    ip.user_global_ns['U42offset'] = gapoffset
+    from haxpes.energy_soft import ensoft, polsoft, hsoft, monosoft, epuoffset
     ip.user_global_ns['en_s'] = ensoft
     ip.user_global_ns['pol_s'] = polsoft
     ip.user_global_ns['h_s'] = hsoft
     ip.user_global_ns['mono_s'] = monosoft
+    ip.user_global_ns['EPUoffset'] = epuoffset
     from haxpes.soft.motors import dm4, SlitAB
     ip.user_global_ns['dm4'] = dm4
     ip.user_global_ns['SlitAB'] = SlitAB
@@ -133,7 +139,7 @@ def enable_both_beams():
     ip.user_global_ns['M4Adrain'] = M4Adrain
     from haxpes.soft.getbeam import transfer_setup
     ip.user_global_ns["transfer_setup"] = transfer_setup
-    from haxpes.tender.tender_ops import set_photon_energy_tender, align_beam_xps, run_XPS_tender
+    from haxpes.tender.tender_ops import set_photon_energy_tender, run_XPS_tender, align_beam_xps, tune_x2pitch
     from haxpes.soft.soft_ops import set_photon_energy_soft, run_XPS_soft
     ip.user_global_ns["set_photon_energy_soft"] = set_photon_energy_soft
     ip.user_global_ns["set_photon_energy_tender"] = set_photon_energy_tender
@@ -146,7 +152,6 @@ def enable_both_beams():
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
-    from haxpes.tender.funcs import tune_x2pitch
     ip.user_global_ns['tune_x2picth'] = tune_x2pitch
 
 
@@ -182,6 +187,8 @@ def disable_both_beams():
     ip.user_global_ns.pop('run_XPS_tender',None)
     ip.user_global_ns.pop('run_XPS_soft',None)
     ip.user_global_ns.pop('tune_x2pitch',None)
+    ip.user_global_ns.pop('EPUoffset',None)
+    ip.user_global_ns.pop('U42offset',None)
 
 def enable_test_mode():
     if beamselection.get() != "none":

@@ -11,3 +11,4 @@ polsoft = enpos.polarization
 hsoft = enpos.harmonic
 monosoft = enpos.monoen
 undulatorgapsoft = enpos.epugap
+epuoffset = enpos.offset_gap

@@ -16,6 +16,8 @@ class energypos(PseudoPositioner):
     u42 = Cpt(UndulatorMotor,"SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr", kind="config", name="U42 Gap")
     u42val = Cpt(Signal,kind="config",name="U42 Gap Calculation")
 
+    offset_gap = Cpt(Signal,value=0,name="U42 Gap Offset",kind="config")
+
     def set_mono_mode(self,mono_mode):
         self.mono.mode.set(mono_mode)
 
@@ -41,7 +43,7 @@ class energypos(PseudoPositioner):
             gap = max(lims)
             print("Warning, undulator value is above calibrated region.")
         self.u42val.set(gap)
-        return gap
+        return gap+self.offset_gap
         
 
     @pseudo_position_argument
@@ -60,3 +62,4 @@ en = enpos.energy
 mono = enpos.mono
 h = enpos.harmonic
 U42 = enpos.u42
+gapoffset = enpos.offset_gap
