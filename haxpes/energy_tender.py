@@ -43,7 +43,7 @@ class energypos(PseudoPositioner):
             gap = max(lims)
             print("Warning, undulator value is above calibrated region.")
         self.u42val.set(gap)
-        return gap+self.offset_gap
+        return gap+self.offset_gap.get()
         
 
     @pseudo_position_argument
