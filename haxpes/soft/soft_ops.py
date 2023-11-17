@@ -22,7 +22,7 @@ def set_photon_energy_soft(energySP,use_optimal_harmonic=True):
         for r in pgmranges:
             if r["energymin"] <= energySP < r["energymax"]:
                 yield from mv(hsoft,r["harmonic"])
-    yield from mv(ensoft,energySP)
+    yield from mv(en,energySP)
 
 @suspend_decorator(suspendList)
 def run_XPS_soft(sample_list):
