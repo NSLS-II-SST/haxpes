@@ -17,7 +17,7 @@ from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat,
 
 suspendList = [suspend_FEsh1]
 suspendList.append(suspend_psh1)
-#suspendList.append(suspend_beamstat)
+suspendList.append(suspend_beamstat)
 
 ####
 @suspend_decorator(suspendList)
