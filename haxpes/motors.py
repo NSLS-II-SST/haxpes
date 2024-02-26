@@ -28,5 +28,5 @@ sampr = manipulator.r
 # HAXPES slits (SLT12)
 haxslt = Slits("XF:07ID2-OP{Slt:12-Ax:",name="HAXPES slits",kind="hinted",concurrent=1)
 
-
-
+# DM1 slits (SLT1)
+slt_dm1 = Slits("XF:07ID6-OP{Slt:03-Ax:",name="DM1_slits",kind="hinted",concurrent=1)

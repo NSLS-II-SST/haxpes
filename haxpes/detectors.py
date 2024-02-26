@@ -14,4 +14,7 @@ BPM4cent = simpleBPM("XF:07ID-BI{BPM:4}",name = "BPM4 Centroid")
 I0 = ophScalar("XF:07ID-BI[ADC:1-Ch:1]Volt",name="I0 ADC")
 Idrain = ophScalar("XF:07ID-BI[ADC:1-Ch:0]Volt",name="Sample Drain Current")
 
+IK2600 = ophScalar("XF:07ID1{K2601B:1}RB-MeasI",name="K2600_current")
+PEY = ophScalar("XF:07ID-RBD:1:I",name="PEY_current")
+
 HAXDetectors = [Idrain, I0]
