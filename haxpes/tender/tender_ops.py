@@ -109,7 +109,7 @@ def optimizeL1():
     yield from mv(dm1,32)
     #TO DO: turn off feedback and zero
     max_channel = Idm1.mean.name #define channel for DM1 diode
-    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,0.9,41,max_channel=max_channel,hexapod=True)
+    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,1.0,21,max_channel=max_channel,hexapod=True)
 
 ###
 def optimizeL2():
