@@ -31,6 +31,8 @@ class PeakAnalyzer(Device):
     lens_mode = Cpt(Signal,name="lens_mode",kind="config")
     acq_mode = Cpt(Signal,name="acquisition_mode",kind="config")
     dwell_time = Cpt(Signal,name="dwell_time",kind="config")
+    region_name = Cpt(Signal,name="region_name",kind="config",value="Region")
+    description = Cpt(Signal,name="description",kind="config",value="Description")
 
     #energy region:
     energy_center = Cpt(Signal,name="energy_center",kind="config",value=2000)
@@ -73,6 +75,8 @@ class PeakAnalyzer(Device):
         self.lens_mode.put(specdef.lens_mode_name)
         self.exposure_time.put(specdef.acquisition_time)
         self.dwell_time.put(specdef.dwell_time)
+        self.region_name.put(specdef.name)
+        self.description.put(specdef.description)
         if PeakAxis.X in specdef.fixed_axes:
             self.scan_mode.put("fixed")
         if PeakAxis.X in specdef.sweep_axes:
@@ -95,6 +99,8 @@ class PeakAnalyzer(Device):
         self._acqclient.set_lens_mode(self.lens_mode.get())
         self._acqclient.set_acquisition_mode(PeakAcquisitionMode(self.acq_mode.get()))
         self._acqclient.set_dwell_time(self.dwell_time.get())
+        self._acqclient.set_name(self.region_name.get())
+        self._acqclient.set_description(self.description.get())
         if self.scan_mode.get() == "swept":
             print("setting energy step size to "+str(self.energy_step.get())+" eV.")
             self._acqclient.set_x_axis_delta(self.energy_step.get())
