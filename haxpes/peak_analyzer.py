@@ -53,6 +53,7 @@ class PeakAnalyzer(Device):
         self._acqclient = peak.AcquireSpectrumClient(self._peakclient)
         self._acqclient.connect()
         self._getparameters()
+        self._multisweep = False
         
     def _activate_analyzer(self):
         if self._acqclient.get_state() == "Ready":
@@ -126,6 +127,8 @@ class PeakAnalyzer(Device):
         self.edc.put(specdat.data.sum(axis=0))
 #        self.imagedata.put(specdat.data)
         _updater.stop()
+        if not self._multisweep:
+            self._acqclient.clear_spectrum()
         return status
         
     def unstage(self):
