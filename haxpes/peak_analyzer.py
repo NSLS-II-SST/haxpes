@@ -76,7 +76,7 @@ class PeakAnalyzer(Device):
         self.exposure_time.put(specdef.acquisition_time)
         self.dwell_time.put(specdef.dwell_time)
         self.region_name.put(specdef.name)
-        self.description.put(specdef.description)
+     #   self.description.put(specdef.description)
         if PeakAxis.X in specdef.fixed_axes:
             self.scan_mode.put("fixed")
         if PeakAxis.X in specdef.sweep_axes:
@@ -114,6 +114,9 @@ class PeakAnalyzer(Device):
             self._acqclient.set_acquisition_time(self.exposure_time.get())
         self._acqclient.setup_spectrum()
         self._getparameters()
+
+    def set_exposure(self,exposure_time):
+        self.exposure_time.set(exposure_time)
 
     def stage(self):
         self._activate_analyzer()
