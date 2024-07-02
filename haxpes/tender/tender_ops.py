@@ -27,8 +27,10 @@ def tune_x2pitch():
     """
     yield from mv(dm1,32)
     max_channel = Idm1.mean.name #define channel for DM1 diode
-    yield from find_max(scan, [Idm1], x2pitch, -2.25, -1, 30, max_channel=max_channel)
-    yield from find_max(rel_scan, [Idm1], x2pitch, -0.075, 0.075, 30, max_channel = max_channel)
+    md = {}
+    md["purpose"] = "alignment"
+    yield from find_max(scan, [Idm1], x2pitch, -2.25, -1, 30, max_channel=max_channel,md=md)
+    yield from find_max(rel_scan, [Idm1], x2pitch, -0.075, 0.075, 30, max_channel = max_channel,md=md)
 
 ###
 
@@ -109,7 +111,9 @@ def optimizeL1():
     yield from mv(dm1,32)
     #TO DO: turn off feedback and zero
     max_channel = Idm1.mean.name #define channel for DM1 diode
-    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,1.0,21,max_channel=max_channel,hexapod=True)
+    md = {}
+    md["purpose"] = "alignment"
+    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,1.0,21,max_channel=max_channel,hexapod=True,md=md)
 
 ###
 def optimizeL2():
@@ -117,7 +121,9 @@ def optimizeL2():
     yield from mv(dm1,32)
     #TO DO: turn off feedback and zero
     max_channel = Idm1.mean.name #define channel for DM1 diode
-    yield from find_centerofmass(scan, [Idm1], L2pitch,9,10.5,31,max_channel=max_channel,hexapod=True)
+    md = {}
+    md["purpose"] = "alignment"
+    yield from find_centerofmass(scan, [Idm1], L2pitch,9,10.5,31,max_channel=max_channel,hexapod=True,md=md)
 
 ###
 @suspend_decorator(suspendList)

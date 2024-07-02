@@ -6,7 +6,7 @@ from bluesky.plans import count
 import numpy as np
 
 
-def find_max(plan, dets, *args, max_channel=None, invert=False, hysteresis_correct=False,hexapod=False):
+def find_max(plan, dets, *args, max_channel=None, invert=False, hysteresis_correct=False,hexapod=False, **kwargs):
     """
     invert turns find_max into find_min
     """
@@ -14,7 +14,7 @@ def find_max(plan, dets, *args, max_channel=None, invert=False, hysteresis_corre
 
     @bpp.subs_decorator(dc)
     def inner_maximizer():
-        yield from plan(dets, *args)
+        yield from plan(dets, *args, **kwargs)
         run = BlueskyRun(dc)
         table = run.primary.read()
         motor_names = run.metadata['start']['motors']
@@ -46,13 +46,13 @@ def find_max(plan, dets, *args, max_channel=None, invert=False, hysteresis_corre
     return (yield from inner_maximizer())
 
 ######################
-def find_centerofmass(plan, dets, *args, max_channel=None, hysteresis_correct=False,hexapod=False):
+def find_centerofmass(plan, dets, *args, max_channel=None, hysteresis_correct=False,hexapod=False, **kwargs):
 
     dc = DocumentCache()
 
     @bpp.subs_decorator(dc)
     def inner_maximizer():
-        yield from plan(dets, *args)
+        yield from plan(dets, *args, **kwargs)
         run = BlueskyRun(dc)
         table = run.primary.read()
         motor_names = run.metadata['start']['motors']
@@ -78,13 +78,13 @@ def find_centerofmass(plan, dets, *args, max_channel=None, hysteresis_correct=Fa
     return (yield from inner_maximizer())
 
 ######################
-def find_sp(plan, dets, *args, sp=0, max_channel=None, hysteresis_correct=False,hexapod=False):
+def find_sp(plan, dets, *args, sp=0, max_channel=None, hysteresis_correct=False,hexapod=False, **kwargs):
 
     dc = DocumentCache()
 
     @bpp.subs_decorator(dc)
     def inner_maximizer():
-        yield from plan(dets, *args)
+        yield from plan(dets, *args, **kwargs)
         run = BlueskyRun(dc)
         table = run.primary.read()
         motor_names = run.metadata['start']['motors']
