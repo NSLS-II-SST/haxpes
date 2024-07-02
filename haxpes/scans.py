@@ -1,28 +1,3 @@
-#XPS scan:
-# Inputs:
-# - energy region:
-#   - energy center
-#   - energy width
-#   - energy step
-# - analyzer settings:
-#   - swept mode !
-#   - pass energy
-#   - dwell time (default = 0.1)
-#   - lens mode (default = "Angular")
-#   - acquisition mode (default = "Image")
-# - number of sweeps
-# Signals:
-# - peak_analyzer
-# - I0
-# - drain current (**)
-# - Keithley bias
-# Other thoughts:
-# - get analyzer and detector settings before scan??
-# - bs scan is 'count'
-
-# region name = acqClient.spectrum_definition.name
-# comments = acqClient.spectrum_definition.description
-
 from haxpes.peak_analyzer import peak_analyzer
 from haxpes.detectors import I0, IK2600
 from bluesky.plans import count, scan, list_scan
@@ -34,7 +9,7 @@ default_dwell_time = 0.1
 default_lens_mode = "Angular"
 default_acq_mode = "Image"
 
-def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings):
+def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration=1):
     """performs XPS sweep.  
     region_dictionary should contain keys "energy center", "energy width", "energy step", "region name".
     energies are in Kinetic energy!  conversion from binding energy should be done externally.
@@ -70,7 +45,9 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings):
 
     # TO DO:estimate scan time and set other exposures to estimated scan time.
 
-    yield from count([peak_analyzer,I0,IK2600],number_of_sweeps)
+    I0.set_exposure(I0_integration)
+
+    yield from count([I0,peak_analyzer],number_of_sweeps)
 
 
 def XAS_setup(detector_list,exposure_time):
@@ -110,32 +87,3 @@ def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1):
     for sweep in range(n_sweeps):
         yield from list_scan(detector_list,en,en_list)
 
-
-#XAS scan:
-# inputs:
-# - energy points ...
-# - detector settings
-# - number of sweeps
-# - detector settings:
-#   - peak_analzyer:
-#     - exposure time
-#     - fixed mode !
-#     - dwell time (default = exposure time)
-#     - lens mode (default = "Angular")
-#     - acq. mode (default = "Image")
-#     - energy center
-#     - pass energy
-#   - Keithley:
-#     - measure current range
-#     - measure voltage range
-#     - exposure time
-#   - I0:
-#     - range (*)
-#     - exposure time 
-# Signals:
-# - peak_analzyer
-# - I0
-# - drain current (**)
-# - Keithley bias 
-# Other thoughts:
-# - get analyzer and detector settings before scan ??
