@@ -6,7 +6,14 @@ catalog = from_profile("haxpes")
 def write_xps_file(uid,filename=None,sum_sweeps=True):
     #grab the run by UID
     run = catalog[uid]
+
+    uid_str = run.start['uid']
     
+    #check if "XPS scan"
+    if run.start["purpose"] != "XPS Data":
+        print("Not XPS data.  No data will be written.")
+        return 0
+
     #get PEAK analyzer config data:
     configdat = run.primary.descriptors[0]['configuration']
     peak_config = configdat['PeakAnalyzer']['data']
@@ -32,14 +39,20 @@ def write_xps_file(uid,filename=None,sum_sweeps=True):
         edc = np.transpose(imdat)
     output_array = np.column_stack((energy_axis,edc))
 
+    if "excitation energy" in run.start.keys():
+        hv = str(run.start["excitation energy"])
+    else:
+        hv = "0"
+
     I0_data = str(run.primary.read()["I0 ADC"].data)
     
     #write to file ...
     if not filename:
-        filename = "HAXPES_"+str(uid)+".txt"
+        filename = "HAXPES_"+uid_str+".xy"
     
-    header = "[Metadata]\n"+\
-"Region Name="+reg_name+\
+    header = "[Metadata]"+\
+"\nRegion Name="+reg_name+\
+"\nScan UID="+uid_str+\
 "\nPass Energy="+pass_energy+\
 "\nLens Mode="+lens_mode+\
 "\nAcquisition Mode="+acq_mode+\
@@ -47,8 +60,9 @@ def write_xps_file(uid,filename=None,sum_sweeps=True):
 "\nEnergy Scale=Kinetic"+\
 "\nComments="+file_comment+\
 "\nNumber of Sweeps="+nsweeps+\
+"\nExcitation Energy = "+hv+\
 "\nI0="+I0_data+\
 "\n\n[Data]"
 
-    np.savetxt(filename,output_array,delimiter='\t',header=header,comments='')
+    np.savetxt(filename,output_array,delimiter='\t',header=header)
 

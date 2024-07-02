@@ -47,7 +47,12 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration
 
     I0.set_exposure(I0_integration)
 
-    yield from count([I0,peak_analyzer],number_of_sweeps)
+    #metadata for XPS scan:
+    md = {}
+    md["excitation energy"] = en.position
+    md["purpose"] = "XPS Data"
+    
+    yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
 
 
 def XAS_setup(detector_list,exposure_time):
