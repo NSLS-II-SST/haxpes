@@ -3,7 +3,7 @@ from tiled.client import from_profile
 
 catalog = from_profile("haxpes")
 
-def write_xps_file(uid,filename=None):
+def write_xps_file(uid,filename=None,sum_sweeps=True):
     #grab the run by UID
     run = catalog[uid]
     
@@ -26,7 +26,10 @@ def write_xps_file(uid,filename=None):
     energy_axis = run.primary.read()["PeakAnalyzer_xaxis"].data[0,:]  #use only the first xaxis, they all should be the same
     imdat = run.primary.read()["PeakAnalyzer_edc"].data 
     nsweeps = str(imdat.shape[0])
-    edc = imdat.sum(axis=0)
+    if sum_sweeps:
+        edc = imdat.sum(axis=0)
+    else:
+        edc = np.transpose(imdat)
     output_array = np.column_stack((energy_axis,edc))
 
     I0_data = str(run.primary.read()["I0 ADC"].data)
@@ -35,8 +38,7 @@ def write_xps_file(uid,filename=None):
     if not filename:
         filename = "HAXPES_"+str(uid)+".txt"
     
-    #make header ... try to format so it can be opened in casaXPS
-    header = "[Info]\n"+\
+    header = "[Metadata]\n"+\
 "Region Name="+reg_name+\
 "\nPass Energy="+pass_energy+\
 "\nLens Mode="+lens_mode+\
@@ -46,7 +48,7 @@ def write_xps_file(uid,filename=None):
 "\nComments="+file_comment+\
 "\nNumber of Sweeps="+nsweeps+\
 "\nI0="+I0_data+\
-"\n\n[Data 1]"
+"\n\n[Data]"
 
     np.savetxt(filename,output_array,delimiter='\t',header=header,comments='')
 
