@@ -18,9 +18,16 @@ default_dwell_time = 0.1
 default_lens_mode = "Angular"
 default_acq_mode = "Image"
 
+detector_widths = {
+    '500' : 40.,
+    '200' : 16.,
+    '100' : 8.,
+    '50'  : 4.,
+    '20'  : 1.6
+}    
 
 @suspend_decorator(suspendList)
-def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration=1):
+def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None):
     """performs XPS sweep.  
     region_dictionary should contain keys "energy center", "energy width", "energy step", "region name".
     energies are in Kinetic energy!  conversion from binding energy should be done externally.
@@ -54,14 +61,18 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration
         acqmode = default_acq_mode
     yield from mv(peak_analyzer.acq_mode,acqmode)
 
-    # TO DO:estimate scan time and set other exposures to estimated scan time.
-
-    I0.set_exposure(I0_integration)
+    #estimate time for scan.  Set I0 integration time to the time per scan.
+    num_points = (region_dictionary["energy width"]+detector_widths[str(analyzer_settings["pass energy"])])/region_dictionary["energy step"]
+    est_time = num_points*dwelltime 
+    print("Estimated sweep time is "+str(est_time)+" s.  Setting I0 integration to "+str(est_time)+".")
+    print("Estimated total time is "+str((est_time*number_of_sweeps)/60)+" min.")
+    I0.set_exposure(est_time)
 
     #metadata for XPS scan:
     md = {}
     md["excitation energy"] = en.position
     md["purpose"] = "XPS Data"
+    md["export filename"] = export_filename
    
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
 

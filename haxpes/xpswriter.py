@@ -3,7 +3,7 @@ from tiled.client import from_profile
 
 catalog = from_profile("haxpes")
 
-def write_xps_file(uid,filename=None,sum_sweeps=True):
+def write_xps_file(uid,sum_sweeps=True):
     #grab the run by UID
     run = catalog[uid]
 
@@ -49,10 +49,12 @@ def write_xps_file(uid,filename=None,sum_sweeps=True):
         hv = "0"
 
     I0_data = str(run.primary.read()["I0 ADC"].data)
-    
-    #write to file ...
-    if not filename:
-        filename = "HAXPES_"+uid_str+".xy"
+
+    #check if export filename given, otherwise use UID ...:
+    if "export filename" in run.start.keys() and run.start["export filename"] != None:
+        filename = run.start["export filename"]
+    else:
+        filename = "HAXPES_scan"+str(run.start["scan_id"])+"_"+reg_name+".xy"
     
     header = "[Metadata]"+\
 "\nRegion Name="+reg_name+\

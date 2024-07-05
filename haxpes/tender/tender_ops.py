@@ -82,6 +82,9 @@ def run_peakXPS_tender(sample_list,close_shutter=False):
                 if settingdict["name"] == ansetname:
                     anset = settingdict
             for region in sample_list.all_samples[i]["regions"]:
+                #get filename ... 
+                fn = sample_list.all_samples[i]["File Prefix"]+\
+str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]+".xy"
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open() #in case it is closed ...
                 reg = {}
@@ -95,7 +98,7 @@ def run_peakXPS_tender(sample_list,close_shutter=False):
                 if sample_list.all_samples[i]["File Comments"] != "":
                     reg["description"] = sample_list.all_samples[i]["File Comments"]
                 iterations = region["Iterations"]
-                yield from XPS_scan(reg,iterations,anset)
+                yield from XPS_scan(reg,iterations,anset,export_filename=fn) #TO DO: add filename
                 if close_shutter:
                     yield from fs4.close()
         else:

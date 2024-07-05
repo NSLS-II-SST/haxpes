@@ -169,4 +169,54 @@ class sample_list:
                 regions=region_dicts
             )
 
-            
+    def estimate_ses_time(self):
+        detector_widths = {
+            '500' : 40.,
+            '200' : 16.,
+            '100' : 8.,
+            '50'  : 4.,
+            '20'  : 1.6
+        }    
+        t_total = 0
+        for sample in self.all_samples:
+            if sample["To Run"]:
+                t_sample = 0
+                for regdict in sample["regions"]:
+                    PE_str = str(regdict["Pass Energy"])
+                    total_width = regdict["width"]+detector_widths[PE_str]
+                    t_region = 0.1*total_width/(regdict["Step Size"]/1000.) #0.1 s is the dwell time.
+                    t_region = t_region*regdict["Iterations"]
+                    t_region = t_region/60
+                    t_sample = t_sample+t_region
+                print("Run time for "+sample["Sample Name"]+" = "+str(t_sample)+" min.")
+                t_total = t_total+t_sample
+        t_hrs = t_total/60
+        print("Total run time is "+str(t_total)+" minutes ("+str(t_hrs)+" hours).")
+                    
+
+    def estimate_peak_time(self):
+        detector_widths = {
+            'Transmission500' : 40.,
+            'Transmission200' : 16.,
+            'Transmission100' : 8.,
+            'Transmission50'  : 4.,
+            'Transmission20'  : 1.6,
+            'Angular200': 16.,
+            'Angular100': 8.,
+            'Angular50': 4.,
+            'Angular20': 1.6
+        }    
+        t_total = 0
+        for sample in self.all_samples:
+            if sample["To Run"]:
+                t_sample = 0
+                for regdict in sample["regions"]:
+                    total_width = regdict["width"]+detector_widths[sample["AnalyzerSettings"]]
+                    t_region = 0.1*total_width/regdict["Step Size"] #0.1 s is the dwell time.
+                    t_region = t_region*regdict["Iterations"]
+                    t_region = t_region/60
+                    t_sample = t_sample+t_region
+                print("Run time for "+sample["Sample Name"]+" = "+str(t_sample)+" min.")
+                t_total = t_total+t_sample
+        t_hrs = t_total/60
+        print("Total run time is "+str(t_total)+" minutes ("+str(t_hrs)+" hours).")
