@@ -1,5 +1,5 @@
 from bluesky.suspenders import SuspendBoolHigh, SuspendBoolLow
-from .hax_hw import psh2, psh1, psh5
+from .hax_hw import psh2, psh1, psh5, fs4
 from sst_hw.shutters import FEsh1, psh4
 from .ses import ses
 from bluesky.plan_stubs import mv
@@ -54,4 +54,10 @@ suspend_psh5 = SuspendBoolHigh(
     tripped_message = "Shutter 5 is closed.  Waiting for it to re-open."
     )
 
+suspend_fs4a = SuspendBoolLow(
+    fs4.state,
+    sleep=10,
+    pre_plan = stop_SES,
+    tripped_message = "FS4A is closed.  Waiting for it to re-open"
+    )
 #suspend_softstatus = ...(

@@ -10,7 +10,7 @@ def write_xps_file(uid,filename=None,sum_sweeps=True):
     uid_str = run.start['uid']
     
     #check if "XPS scan"
-    if "pupose" not in run.start.keys():
+    if "purpose" not in run.start.keys():
         print("Data Type Unclear.  No data will be written.")
         return 0
     else:

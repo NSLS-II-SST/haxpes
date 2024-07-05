@@ -3,25 +3,11 @@ import peak
 from peak.types.peak_axis_mode import PeakAxisMode
 from peak.types.peak_axis import PeakAxis
 from peak.types.peak_acquisition_mode import PeakAcquisitionMode
-from ophyd.status import SubscriptionStatus
+#from ophyd.status import SubscriptionStatus
+from ophyd.status import DeviceStatus
 from time import sleep
 import threading
 import numpy as np
-
-class _updatemonitor(threading.Thread):
-    def __init__(self, statussignal, client, updatetime=0.1):
-        super().__init__()
-        self._stop_event = threading.Event()
-        self.statussignal = statussignal
-        self.client = client
-
-    def stop(self):
-        self._stop_event.set()
-
-    def run(self):
-        while not self._stop_event.is_set():
-            self.statussignal.put(self.client.get_state())
-
 
 class PeakAnalyzer(Device):
     #general parameters:
@@ -43,10 +29,18 @@ class PeakAnalyzer(Device):
     #for fixed mode:
     exposure_time = Cpt(Signal,name="exposure_time", kind="config")    
 
+    #y axis for image mode ...:
+    yaxis = Cpt(Signal,name="y_axis")
+
     #returned data:
     total_counts = Cpt(Signal,name="total_counts",kind="hinted")
     xaxis = Cpt(Signal,name="x_axis")        
     edc = Cpt(Signal,name="spetrum_data")
+    y_CoM = Cpt(Signal,name="y_axis_center_of_mass",value=0)
+
+    #optimization function for alignment:
+    opt_val = Cpt(Signal,name="alignment optimizer",value=0)
+    opt_par = Cpt(Signal,name="optimization parameter",value=0.5)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args,**kwargs)
@@ -84,6 +78,9 @@ class PeakAnalyzer(Device):
         self.energy_center.put(self._acqclient.current_x_axis.center)
         self.energy_width.put(self._acqclient.current_x_axis.width)
         self.energy_step.put(self._acqclient.current_x_axis.delta)
+        #Y axis should always be fixed, right?
+        self.yaxis.put(np.linspace(start=self._acqclient.current_y_axis.minimum,\
+stop=self._acqclient.current_y_axis.maximum,num=self._acqclient.current_y_axis.count))
 
     def setfixedmode(self):
         self._acqclient.set_x_axis_mode(PeakAxisMode("Fixed"))
@@ -122,23 +119,27 @@ class PeakAnalyzer(Device):
         self._activate_analyzer()
         self._setanalyzer()
 
-    def trigger(self):
-        _updater = _updatemonitor(self.measurement_state,self._acqclient)
-        _updater.start()
-        def check_value(*, old_value, value, **kwargs):
-            return (old_value == "Acquiring" and value == "Measuring")
-
-        status = SubscriptionStatus(self.measurement_state,check_value)
+    def _acquire(self,status):
         self._acqclient.acquire_spectrum()
         specdat = self._acqclient.get_spectrum()
         self.total_counts.put(specdat.data.sum())
- #       self.xaxis.put(np.arange(specdat.x_axis.minimum,specdat.x_axis.maximum,specdat.x_axis.delta))
-        self.xaxis.put(np.linspace(start=specdat.x_axis.minimum,stop=specdat.x_axis.maximum,num=specdat.x_axis.count))
+        self.xaxis.put(np.linspace(start=specdat.x_axis.minimum,\
+stop=specdat.x_axis.maximum,num=specdat.x_axis.count))
+        self.yaxis.put(np.linspace(start=specdat.y_axis.minimum,\
+stop=specdat.y_axis.maximum,num=specdat.y_axis.count))
         self.edc.put(specdat.data.sum(axis=0))
 #        self.imagedata.put(specdat.data)
-        _updater.stop()
+        yspec = specdat.data.sum(axis=1)
+        self.y_CoM.put(np.average(self.yaxis.get(),weights=yspec))
+        self.opt_val.put(specdat.data.sum()-self.opt_par.get()*np.abs(self.y_CoM.get()))
         if not self._multisweep:
             self._acqclient.clear_spectrum()
+        status.set_finished()
+  
+    def trigger(self):
+#      status = SubscriptionStatus(self.measurement_state,check_value)
+        status = DeviceStatus(self)
+        threading.Thread(target=self._acquire,args=(status,),daemon=True).start()
         return status
         
     def unstage(self):

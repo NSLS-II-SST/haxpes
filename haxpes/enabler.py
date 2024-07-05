@@ -59,6 +59,10 @@ def enable_tender_beam():
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
+    from haxpes.tender.tender_ops import setL1, setL2_plane, setL2_toroid
+    ip.user_global_ns["setL1"] = setL1
+    ip.user_global_ns["setL2_plane"] = setL2_plane
+    ip.user_global_ns["setL2_toroid"] = setL2_toroid
 
 
 def disable_soft_beam():
@@ -104,6 +108,9 @@ def disable_tender_beam():
     ip.user_global_ns.pop('tune_x2pitch',None)
     ip.user_global_ns.pop('run_XPS',None)
     ip.user_global_ns.pop('gapoffset')
+    ip.user_global_ns.pop('setL1')
+    ip.user_global_ns.pop('setL2_toroid')
+    ip.user_global_ns.pop('setL2_plane')
 
 def enable_both_beams():
     if beamselection.get() != "none":
@@ -153,6 +160,10 @@ def enable_both_beams():
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
     ip.user_global_ns['tune_x2picth'] = tune_x2pitch
+    from haxpes.tender.tender_ops import setL1, setL2_plane, setL2_toroid
+    ip.user_global_ns["setL1"] = setL1
+    ip.user_global_ns["setL2_plane"] = setL2_plane
+    ip.user_global_ns["setL2_toroid"] = setL2_toroid
 
 
 def disable_both_beams():
@@ -189,6 +200,9 @@ def disable_both_beams():
     ip.user_global_ns.pop('tune_x2pitch',None)
     ip.user_global_ns.pop('EPUoffset',None)
     ip.user_global_ns.pop('U42offset',None)
+    ip.user_global_ns.pop('setL1')
+    ip.user_global_ns.pop('setL2_toroid')
+    ip.user_global_ns.pop('setL2_plane')
 
 def enable_test_mode():
     if beamselection.get() != "none":

@@ -2,7 +2,7 @@ from .motors import sampx, sampy, sampz, sampr, haxslt
 from .tender.motors import dm1, x2finepitch, x2fineroll
 from .ses import ses
 from bluesky.plan_stubs import abs_set, mv, sleep
-from bluesky.plans import count
+from bluesky.plans import count, rel_scan
 from .hax_hw import fs4, psh2, gv10
 #from .funcs import tune_x2pitch, xalign_fs4, yalign_fs4_xps, xcoursealign_i0, ycoursealign_i0, xfinealign_i0, yfinealign_i0, stop_feedback, set_feedback
 from .detectors import BPM4cent
@@ -89,3 +89,17 @@ def rough_align_beam_xps(full_align=1):
 
 ###
 
+def align_sample_xps(optimization_parameter=10):
+    """function for aligning sample x position with analyzer counts.
+    optimization_paramter weights the centering of the detector image vs. intensity.
+    it probably needs to be quite large to actually matter ... REQUIRES TESTING.
+    Only works for PEAK analyzer, not for SES.
+    """
+    from haxpes.peak_analyzer import peak_analyzer
+    from haxpes.optimizers_test import find_max
+    peak_analyzer._getparameters() #get current live values ...
+    yield from mv(peak_analyzer.opt_par,optimization_parameter) #set optimization parameter
+    peak_analyzer.set_exposure(1) #set exposure time to 1s
+    md = {}
+    md["purpose"] = "alignment"
+    yield from find_max(rel_scan,[peak_analyzer],sampx,-1,1,41,max_channel="PeakAnalyzer_opt_val",md=md)

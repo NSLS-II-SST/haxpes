@@ -5,10 +5,21 @@ from bluesky.plan_stubs import mv
 from haxpes.energy_tender import en
 import numpy as np
 
+from bluesky.preprocessors import suspend_decorator
+from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
+
+suspendList = [suspend_FEsh1]
+suspendList.append(suspend_psh1)
+suspendList.append(suspend_beamstat)
+suspendList.append(suspend_psh2)
+suspendList.append(suspend_fs4a)
+
 default_dwell_time = 0.1
 default_lens_mode = "Angular"
 default_acq_mode = "Image"
 
+
+@suspend_decorator(suspendList)
 def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration=1):
     """performs XPS sweep.  
     region_dictionary should contain keys "energy center", "energy width", "energy step", "region name".
@@ -51,7 +62,7 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,I0_integration
     md = {}
     md["excitation energy"] = en.position
     md["purpose"] = "XPS Data"
-    
+   
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
 
 

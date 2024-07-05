@@ -11,6 +11,8 @@ from haxpes.tender.detectors import Idm1
 from haxpes.ses import ses
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
+from haxpes.scans import XPS_scan
+from haxpes.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
 from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2
@@ -56,6 +58,44 @@ def run_XPS_tender(sample_list,close_shutter=False):
                 yield from set_analyzer(sample_list.all_samples[i]["File Prefix"],region,sample_list.en_cal)
                 yield from fs4.open() #in case it is closed ...
                 yield from count([ses],1)
+                if close_shutter:
+                    yield from fs4.close()
+        else:
+            print("Skipping sample "+str(i))
+
+#note: no suspenders here, suspenders were placed on scan.
+def run_peakXPS_tender(sample_list,close_shutter=False):
+    yield from psh2.open() #in case it is closed.  It should be open.
+    if close_shutter:
+        yield from fs4.close()
+    for i in range(sample_list.index):
+        if sample_list.all_samples[i]["To Run"]:
+            print("Moving to sample "+str(i))
+            yield from sample_list.goto_sample(i)
+            #set photon energy ...
+            current_en = en.position
+            if current_en >= sample_list.all_samples[i]["Photon Energy"]+0.05 or current_en <= sample_list.all_samples[i]["Photon Energy"]-0.05:
+                yield from set_photon_energy_tender(sample_list.all_samples[i]["Photon Energy"])
+                yield from align_beam_xps()
+            ansetname = sample_list.all_samples[i]["AnalyzerSettings"]
+            for settingdict in analyzer_sets:
+                if settingdict["name"] == ansetname:
+                    anset = settingdict
+            for region in sample_list.all_samples[i]["regions"]:
+                sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
+                yield from fs4.open() #in case it is closed ...
+                reg = {}
+                if region["Energy Type"] == "Binding":
+                    reg["energy center"] = sample_list.en_cal - region["center_en"]
+                else:
+                    reg["energy center"] = region["center_en"]           
+                reg["energy step"] = region["Step Size"]
+                reg["region name"] = region["Region Name"]
+                reg["energy width"] = float(region["width"])
+                if sample_list.all_samples[i]["File Comments"] != "":
+                    reg["description"] = sample_list.all_samples[i]["File Comments"]
+                iterations = region["Iterations"]
+                yield from XPS_scan(reg,iterations,anset)
                 if close_shutter:
                     yield from fs4.close()
         else:
