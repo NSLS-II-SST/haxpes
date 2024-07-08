@@ -84,7 +84,7 @@ def run_peakXPS_tender(sample_list,close_shutter=False):
             for region in sample_list.all_samples[i]["regions"]:
                 #get filename ... 
                 fn = sample_list.all_samples[i]["File Prefix"]+\
-str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]+".xy"
+str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open() #in case it is closed ...
                 reg = {}
