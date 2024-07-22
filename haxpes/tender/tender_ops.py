@@ -11,7 +11,7 @@ from haxpes.tender.detectors import Idm1
 from haxpes.ses import ses
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
-from haxpes.scans import XPS_scan
+#from haxpes.scans import XPS_scan
 from haxpes.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
@@ -65,6 +65,7 @@ def run_XPS_tender(sample_list,close_shutter=False):
 
 #note: no suspenders here, suspenders were placed on scan.
 def run_peakXPS_tender(sample_list,close_shutter=False):
+    from haxpes.scans import XPS_scan #import here for now, in case peak servers are not running
     yield from psh2.open() #in case it is closed.  It should be open.
     if close_shutter:
         yield from fs4.close()

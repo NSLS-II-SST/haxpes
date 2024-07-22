@@ -27,16 +27,7 @@ detector_widths = {
     '20'  : 1.6
 }    
 
-@suspend_decorator(suspendList)
-def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None):
-    """performs XPS sweep.  
-    region_dictionary should contain keys "energy center", "energy width", "energy step", "region name".
-    energies are in Kinetic energy!  conversion from binding energy should be done externally.
-    region_dictionary has optional key "description" for sample comments but this can be left empty.
-    analyzer_settings should be dictionary with keys "pass energy"
-    analyzer_settings has optional keys "dwell time", "lens mode", and "acquisition mode.  These will default to default values if they are not set."
-    number of sweeps must be an integer.
-    """
+def setup_XPS(region_dictionary,analyzer_settings):
     peak_analyzer.setsweptmode()
     yield from mv(peak_analyzer.energy_center,region_dictionary["energy center"])
     yield from mv(peak_analyzer.energy_step,region_dictionary["energy step"])
@@ -62,11 +53,22 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
         acqmode = default_acq_mode
     yield from mv(peak_analyzer.acq_mode,acqmode)
 
-    #estimate time for scan.  Set I0 integration time to the time per scan.
+
+def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
+    if "dwell time" in analyzer_settings.keys():
+        dwelltime = analyzer_settings["dwell time"]
+    else:
+        dwelltime = default_dwell_time
     num_points = (region_dictionary["energy width"]+detector_widths[str(analyzer_settings["pass energy"])])/region_dictionary["energy step"]
     est_time = num_points*dwelltime 
     print("Estimated sweep time is "+str(est_time)+" s.  Setting I0 integration to "+str(est_time)+".")
     print("Estimated total time is "+str((est_time*number_of_sweeps)/60)+" min.")
+    return est_time
+
+@suspend_decorator(suspendList)
+def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None):
+    yield from setup_XPS(region_dictionary,analyzer_settings)
+    est_time = estimate_time(region_dictionary,analyzer_settings,number_of_sweeps)
     I0.set_exposure(est_time)
 
     #metadata for XPS scan:
@@ -74,6 +76,7 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
     md["excitation energy"] = en.position
     md["purpose"] = "XPS Data"
     md["export filename"] = export_filename
+    #input sample positions; note these should probably be put in generally.
     md["Sample X"] = sampx.position
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
@@ -81,6 +84,48 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
    
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
 
+
+@suspend_decorator(suspendList)
+def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None):
+    """performs resonance scan using PEAK analyzer.
+    Currently records only peak analyzer and I0.  
+    TO DO: add other detectors
+    Currently only performs 1 XPS sweep per energy.  
+    TODO: figure out multiple sweeps
+    XPSregion is a dictionary which should contain keys "energy center", "energy width", "energy step", "region name".
+    XPSregion has optional key "description" for sample comments but this can be left empty.
+    analyzer_settings should be dictionary with keys "pass energy"
+    analyzer_settings has optional keys "dwell time", "lens mode", and "acquisition mode.  These will default to default values if they are not set."
+    EnergyRegion is a dictionary with keys:
+    - n_regions (integer)
+    - start_<n> where <n> is the region number starting from 0 for each region.
+    - stop_<n> where <n> is the region number starting from 0 for each region.
+    - step_<n> where <n> is the region number start from 0 for each region.
+    """
+    yield from setup_XPS(XPSregion,analyzer_settings)
+    est_time = estimate_time(XPSregion,analyzer_settings,1)
+    I0.set_exposure(est_time)
+    fullrange = np.empty(0,)
+    for reg in range(EnergyRegion["n_regions"]):
+        start_energy = EnergyRegion["start_"+str(reg)]
+        stop_energy = EnergyRegion["stop_"+str(reg)]
+        step_size = EnergyRegion["step_"+str(reg)]
+        reg_range = np.arange(start_energy,stop_energy,step_size)
+        fullrange = np.concatenate((fullrange,reg_range),axis=0)
+    en_list = fullrange.tolist()
+    #medata
+    md = {}
+    md["purpose"] = "Resonant XPS Data"
+    md["export_filename"] = export_filename
+    md["Sample X"] = sampx.position
+    md["Sample Y"] = sampy.position
+    md["Sample Z"] = sampz.position
+    md["Sample Theta"] = sampr.position
+
+    for sweep in range(n_sweeps):
+        yield from list_scan([I0,peak_analyzer],en,en_list,md=md)
+
+    
 
 #TO DO: XAS Scan ... think of how to include Scienta settings.
 #NOTE: For alignment scans, this is also important ...
