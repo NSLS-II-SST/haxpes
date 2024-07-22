@@ -26,3 +26,5 @@ Idrain.set_exposure(1)
 
 #by default, start in tender mode:
 enable_tender_beam()
+
+from haxpes.motors import haxslt
