@@ -53,9 +53,11 @@ def enable_tender_beam():
     ip.user_global_ns['run_XPS'] = run_XPS_tender
     ip.user_global_ns['align_beam_xps'] = align_beam_xps
     ip.user_global_ns['tune_x2pitch'] = tune_x2pitch
-    from haxpes.tender.detectors import Idm1
+    from haxpes.tender.detectors import Idm1, I1
     ip.user_global_ns['Idm1'] = Idm1
+    ip.user_global_ns['I1'] = I1
     Idm1.set_exposure(1)
+    I1.set_exposure(1)
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
@@ -111,6 +113,7 @@ def disable_tender_beam():
     ip.user_global_ns.pop('setL1')
     ip.user_global_ns.pop('setL2_toroid')
     ip.user_global_ns.pop('setL2_plane')
+    ip.user_global_ns.pop('I1')
 
 def enable_both_beams():
     if beamselection.get() != "none":
@@ -153,9 +156,11 @@ def enable_both_beams():
     ip.user_global_ns['align_beam_xps_tender'] = align_beam_xps
     ip.user_global_ns['run_XPS_soft'] = run_XPS_soft
     ip.user_global_ns['run_XPS_tender'] = run_XPS_tender
-    from haxpes.tender.detectors import Idm1
+    from haxpes.tender.detectors import Idm1, I1
     ip.user_global_ns['Idm1'] = Idm1
+    ip.user_global_ns['I1'] = I1
     Idm1.set_exposure(1)
+    I1.set_exposure(1)
     from haxpes.tender.motors import dm1, nBPM
     ip.user_global_ns['dm1'] = dm1
     ip.user_global_ns['nBPM'] = nBPM
@@ -203,6 +208,7 @@ def disable_both_beams():
     ip.user_global_ns.pop('setL1')
     ip.user_global_ns.pop('setL2_toroid')
     ip.user_global_ns.pop('setL2_plane')
+    ip.user_global_ns.pop('I1')
 
 def enable_test_mode():
     if beamselection.get() != "none":
