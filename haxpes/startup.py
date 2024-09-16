@@ -1,5 +1,6 @@
 #from .energy import dcm, u42gap
-from .detectors import I0, Idrain, HAXDetectors
+from .detectors import I0, Idrain, IK2600
+from .tender.detectors import I1
 from .motors import sampx, sampy, sampz, sampr
 from .ses import ses
 from bluesky.plans import count, scan, rel_scan
@@ -18,7 +19,8 @@ LiveTable._FMT_MAP['number'] = 'g'
 
 I0.set_exposure(1)
 Idrain.set_exposure(1)
-#Idm1.set_exposure(1)
+IK2600.set_exposure(1)
+I1.set_exposure(1)
 
 #common suspenders:
 #RE.install_suspender(suspend_FEsh1)
@@ -26,5 +28,7 @@ Idrain.set_exposure(1)
 
 #by default, start in tender mode:
 enable_tender_beam()
+
+from haxpes.getXASregionsfromfile import DefaultRegions
 
 from haxpes.motors import haxslt

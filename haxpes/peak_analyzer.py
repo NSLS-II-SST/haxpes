@@ -9,6 +9,10 @@ from time import sleep
 import threading
 import numpy as np
 
+default_dwell_time = 0.1
+default_lens_mode = "Angular"
+default_acq_mode = "Image"
+
 class PeakAnalyzer(Device):
     #general parameters:
     scan_mode = Cpt(Signal,name="energy_mode",kind="config")
@@ -145,5 +149,42 @@ stop=specdat.y_axis.maximum,num=specdat.y_axis.count))
     def unstage(self):
         self._acqclient.finish_measurement()
         self._deactivate_analyzer()
+
+    def setup_from_dictionary(self,region_dictionary,analyzer_settings,scan_type):
+        """performs analyzer setup from dictionary settings """
+        if scan_type == "XPS":
+            self.setsweptmode()
+            self.energy_center.put(region_dictionary["energy center"])
+            self.energy_step.put(region_dictionary["energy step"])
+            self.energy_width.put(region_dictionary["energy width"])
+
+        elif scan_type == "XAS":
+            self.setfixedmode()
+            self.energy_center.put(region_dictionary["energy center"])
+
+        #TO DO: error handling
+        else:
+            print("WOWOOWOW")
+
+        self.region_name.put(region_dictionary["region name"])
+        if "description" in region_dictionary.keys():
+            self.description.put(region_dictionary["description"])
+
+        self.pass_energy.put(analyzer_settings["pass energy"])
+        if "dwell time" in analyzer_settings.keys():
+            dwelltime = analyzer_settings["dwell time"]
+        else:
+            dwelltime = default_dwell_time
+        self.dwell_time.put(dwelltime)
+        if "lens mode" in analyzer_settings.keys():
+            lensmode = analyzer_settings["lens mode"]
+        else:
+            lensmode = default_lens_mode 
+        self.lens_mode.put(lensmode)
+        if "acquisition mode" in analyzer_settings.keys():
+            acqmode = analyzer_settings["acquisition mode"]
+        else:
+            acqmode = default_acq_mode
+        self.acq_mode.put(acqmode)
 
 peak_analyzer = PeakAnalyzer(name="PeakAnalyzer")
