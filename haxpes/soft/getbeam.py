@@ -24,9 +24,9 @@ def transfer_setup():
 
     #move M4A into place
     yield from mv(M4A.x, 1.95)
-    yield from mv(M4A.y, -0.25)
+    yield from mv(M4A.y, 0.8)
     yield from mv(M4A.z, 0)
-    yield from mv(M4A.pitch, -0.731)
+    yield from mv(M4A.pitch, -0.611)
     yield from mv(M4A.roll, 0)
     yield from mv(M4A.yaw, 1)
 
