@@ -104,7 +104,7 @@ def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
     return est_time
 
 @suspend_decorator(suspendList)
-def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None):
+def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None,comments=None):
     from haxpes.peak_analyzer import peak_analyzer
     peak_analyzer.setup_from_dictionary(region_dictionary,analyzer_settings,"XPS")
 #    yield from setup_peak(region_dictionary,analyzer_settings,"XPS")
@@ -121,12 +121,14 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
     md["Sample Theta"] = sampr.position
+    if comments:
+        md["Comments"] = comments
    
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
 
 
 @suspend_decorator(suspendList)
-def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None,settle_time=0):
+def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None,settle_time=0.5,comments=None):
     """performs resonance scan using PEAK analyzer.
     Currently records only peak analyzer and I0.  
     TO DO: add other detectors
@@ -162,6 +164,8 @@ def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filenam
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
     md["Sample Theta"] = sampr.position
+    if comments:
+        md["Comments"] = comments
 
     from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
     def per_step(detectors,step,pos_cache,take_readings=trigger_and_read):
@@ -193,14 +197,13 @@ def XAS_setup(detector_list,exposure_time):
 #edge_dictionary["stop_energy"],edge_dictionary["n_steps"])
 
 @suspend_decorator(suspendList)
-def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=0,export_filename=None):
+def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=0.5,export_filename=None,comments=None):
     """ peforms XAS scan with multiple regions
     edge_dictionary should have have keys:
     - n_regions (integer)
     - start_<n> where <n> is the region number starting from 0 for each region.
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
-    If peak_analyzer is one of the detectors, you must specify the region dictionary and analyzer settings keyword arguments
     """
     from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
     def per_step(detectors,step,pos_cache,take_readings=trigger_and_read):
@@ -213,6 +216,8 @@ def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=
     md = {}
     md["purpose"] = "XAS Data"
     md["export_filename"] = export_filename
+    if comments:
+        md["Comments"] = comments
     md["Sample X"] = sampx.position
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
