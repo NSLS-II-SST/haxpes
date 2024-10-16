@@ -32,3 +32,6 @@ enable_tender_beam()
 from haxpes.getXASregionsfromfile import DefaultRegions
 
 from haxpes.motors import haxslt
+
+from haxpes.hax_hw import floodgun, haxSMU
+haxSMU.set_voltage(0)

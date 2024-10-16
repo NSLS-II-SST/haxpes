@@ -19,23 +19,21 @@ def write_xps_file(uid,sum_sweeps=True):
             print("Not XPS data.  No data will be written.")
             return 0
 
-    #record sample positions:
-    if "Sample X" in run.start.keys():
-        xpos = str(run.start["Sample X"])
-    else:
-        xpos = "Unknown"
-    if "Sample Y" in run.start.keys():
-        ypos = str(run.start["Sample Y"])
-    else:
-        ypos = "Unknown"
-    if "Sample Z" in run.start.keys():
-        zpos = str(run.start["Sample Z"])
-    else:
-        zpos = "Unknown"
-    if "Sample Theta" in run.start.keys():
-        thpos = str(run.start["Sample Theta"])
-    else:
-        thpos = "Unknown"
+    #record metadata:
+    def get_md(md_key):
+        if md_key in run.start.keys():
+            return str(run.start[md_key])
+        else:
+            return "Unknown"
+
+    xpos = get_md("Sample X")
+    ypos = get_md("Sample Y")
+    zpos = get_md("Sample Z")
+    thpos = get_md("Sample Theta")
+    E_fg = get_md("FG Energy")
+    V_fg = get_md("FG V_grid")
+    I_fg = get_md("FG I_emit")
+    cal_hv = get_md("Calibrated Photon Energy")
 
     #get PEAK analyzer config data:
     configdat = run.primary.descriptors[0]['configuration']
@@ -91,14 +89,25 @@ def write_xps_file(uid,sum_sweeps=True):
 "\nEnergy Scale=Kinetic"+\
 "\nComments="+file_comment+\
 "\nNumber of Sweeps="+nsweeps+\
+"\nFloodGun Emission="+I_fg+\
+"\nFloodGun Energy="+E_fg+\
+"\nFloodGun Grid Voltage="+V_fg+\
 "\nSample X Position="+xpos+\
 "\nSample Y Position="+ypos+\
 "\nSample Z Position="+zpos+\
 "\nSample Theta Position="+thpos+\
 "\nExcitation Energy="+hv+\
+"\nCalibrated Excitation Energy="+cal_hv+\
 "\nI0 Integration Time="+I0_exposure_time+\
 "\nI0="+I0_data+\
 "\n\n[Data]"
 
     np.savetxt(filename,output_array,delimiter='\t',header=header)
+
+
+def xpswrite_wrapper(func):
+    def wrapper(*args, **kwargs):
+        yield from func(*args, **kwargs)
+        write_xps_file(-1)
+    return wrapper
 

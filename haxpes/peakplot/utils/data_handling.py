@@ -52,7 +52,7 @@ class DataObject:
                     self.comment = line[line.index('=')+1:-1]
                 if "Number of Sweeps" in line:
                     self.n_sweeps = int(float(line[line.index('=')+1:-1]))
-                if "Excitation Energy" in line:
+                if line.startswith("Excitation Energy"):
                     self.excitation_energy = float(line[line.index('=')+1:-1])
                     self.excitation_energy_raw = self.excitation_energy
 

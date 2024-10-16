@@ -3,6 +3,7 @@ import peak
 from peak.types.peak_axis_mode import PeakAxisMode
 from peak.types.peak_axis import PeakAxis
 from peak.types.peak_acquisition_mode import PeakAcquisitionMode
+from peak.types.peak_energy_mode import PeakEnergyMode
 #from ophyd.status import SubscriptionStatus
 from ophyd.status import DeviceStatus
 from time import sleep
@@ -52,8 +53,10 @@ class PeakAnalyzer(Device):
         self._peakclient.connect()
         self._acqclient = peak.AcquireSpectrumClient(self._peakclient)
         self._acqclient.connect()
+        self._anclient = peak.AnalyserControlClient(self._peakclient)
         self._getparameters()
         self._multisweep = False
+        self._livemode = False
         
     def _activate_analyzer(self):
         if self._acqclient.get_state() == "Ready":
@@ -134,7 +137,10 @@ stop=specdat.y_axis.maximum,num=specdat.y_axis.count))
         self.edc.put(specdat.data.sum(axis=0))
 #        self.imagedata.put(specdat.data)
         yspec = specdat.data.sum(axis=1)
-        self.y_CoM.put(np.average(self.yaxis.get(),weights=yspec))
+        try:
+            self.y_CoM.put(np.average(self.yaxis.get(),weights=yspec))
+        except ZeroDivisionError:
+            self.y_CoM.put(50) #CoM greater than yaxis size; this will occur when sample is too far away to get counts
         self.opt_val.put(specdat.data.sum()-self.opt_par.get()*np.abs(self.y_CoM.get()))
         if not self._multisweep:
             self._acqclient.clear_spectrum()
@@ -147,7 +153,12 @@ stop=specdat.y_axis.maximum,num=specdat.y_axis.count))
         return status
         
     def unstage(self):
-        self._acqclient.finish_measurement()
+        state = self._acqclient.get_state()
+        while state == "Acquiring":
+            sleep(0.5)
+            state = self._acqclient.get_state()
+        if state == "Measuring":
+            self._acqclient.finish_measurement()
         self._deactivate_analyzer()
 
     def setup_from_dictionary(self,region_dictionary,analyzer_settings,scan_type):
@@ -186,5 +197,36 @@ stop=specdat.y_axis.maximum,num=specdat.y_axis.count))
         else:
             acqmode = default_acq_mode
         self.acq_mode.put(acqmode)
+
+    def start_live_mode(self):
+        self._livemode = True
+        self._anclient.connect()
+        self._activate_analyzer()
+
+    def stop_live_mode(self):
+        #self._anclient.disconnect()
+        self._livemode = False
+        self._deactivate_analyzer()
+
+    def set_live_pass_energy(self,pass_energy):
+        if self._livemode:
+            self._anclient.set_pass_energy(pass_energy)
+            self.pass_energy.put(pass_energy)
+
+    def set_live_dwell_time(self,dwell_time):
+        if self._livemode:
+            self._anclient.set_dwell_time(dwell_time)
+            self.dwell_time.put(dwell_time)
+
+    def set_live_lens_mode(self,lens_mode):
+        if self._livemode:
+            self._anclient.set_lens_mode(lens_mode)
+            self.lens_mode.put(lens_mode)
+
+    def set_live_energy_center(self,kinetic_energy):
+        if self._livemode:
+            self._anclient.set_analyser_energy(kinetic_energy,PeakEnergyMode("Kinetic"))
+        
+        
 
 peak_analyzer = PeakAnalyzer(name="PeakAnalyzer")

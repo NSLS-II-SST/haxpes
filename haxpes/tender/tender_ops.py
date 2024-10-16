@@ -15,11 +15,26 @@ from bluesky.plans import scan, rel_scan
 from haxpes.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
-from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2
+from haxpes.hax_suspenders import *
 
 suspendList = [suspend_FEsh1]
 suspendList.append(suspend_psh1)
 suspendList.append(suspend_beamstat)
+
+suspendListSES = [suspend_FEsh1_SES]
+suspendListSES.append(suspend_psh1_SES)
+suspendListSES.append(suspend_beamstat_SES)
+suspendListSES.append(suspend_psh2_SES)
+suspendListSES.append(suspend_fs4a_SES)
+
+suspendListPeak = suspendList
+suspendListPeak.append(suspend_psh2)
+suspendListPeak.append(suspend_fs4a)
+
+##### TEMP START for writing to log file #####
+from tiled.client import from_profile
+catalog = from_profile("haxpes")
+##### TEMP END #####
 
 ####
 @suspend_decorator(suspendList)
@@ -37,7 +52,7 @@ def tune_x2pitch():
 ###
 
 
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListSES)
 def run_XPS_tender(sample_list,close_shutter=False):
     yield from psh2.open() #in case it is closed.  It should be open.
     if close_shutter:
@@ -63,7 +78,7 @@ def run_XPS_tender(sample_list,close_shutter=False):
         else:
             print("Skipping sample "+str(i))
 
-#note: no suspenders here, suspenders were placed on scan.
+@suspend_decorator(suspendListPeak)
 def run_peakXPS_tender(sample_list,close_shutter=False):
     from haxpes.scans import XPS_scan #import here for now, in case peak servers are not running
     yield from psh2.open() #in case it is closed.  It should be open.
@@ -85,7 +100,7 @@ def run_peakXPS_tender(sample_list,close_shutter=False):
             for region in sample_list.all_samples[i]["regions"]:
                 #get filename ... 
                 fn = sample_list.all_samples[i]["File Prefix"]+\
-str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]
+str(round(sample_list.all_samples[i]["Photon Energy"]))+"eV_"+region["Region Name"]
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open() #in case it is closed ...
                 reg = {}
@@ -99,7 +114,7 @@ str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]
                 if sample_list.all_samples[i]["File Comments"] != "":
                     reg["description"] = sample_list.all_samples[i]["File Comments"]
                 iterations = region["Iterations"]
-                yield from XPS_scan(reg,iterations,anset,export_filename=fn) #TO DO: add filename
+                yield from XPS_scan(reg,iterations,anset,export_filename=fn) 
                 if close_shutter:
                     yield from fs4.close()
         else:
@@ -107,7 +122,6 @@ str(sample_list.all_samples[i]["Photon Energy"])+"eV_"+region["Region Name"]
 
 @suspend_decorator(suspendList)
 def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
-    ###for 
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
     if use_optimal_harmonic:

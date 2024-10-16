@@ -4,10 +4,14 @@ from bluesky.plans import count, scan, list_scan
 from bluesky.plan_stubs import mv
 from haxpes.energy_tender import en
 import numpy as np
+#for metadata ...
 from haxpes.motors import sampx, sampy, sampz, sampr
-
+from haxpes.hax_hw import floodgun, haxSMU
+#
 from bluesky.preprocessors import suspend_decorator
 from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
+
+from haxpes.xpswriter import xpswrite_wrapper
 
 suspendList = [suspend_FEsh1]
 suspendList.append(suspend_psh1)
@@ -27,71 +31,6 @@ detector_widths = {
     '20'  : 1.6
 }    
 
-#def setup_XPS(region_dictionary,analyzer_settings):
-#    from haxpes.peak_analyzer import peak_analyzer
-#    peak_analyzer.setsweptmode()
-#   yield from mv(peak_analyzer.energy_center,region_dictionary["energy center"])
-#   yield from mv(peak_analyzer.energy_step,region_dictionary["energy step"])
-#   yield from mv(peak_analyzer.energy_width,region_dictionary["energy width"])
-#   yield from mv(peak_analyzer.region_name,region_dictionary["region name"])
-#   if "description" in region_dictionary.keys():
-#        yield from mv(peak_analyzer.description,region_dictionary["description"])
-#
-#    yield from mv(peak_analyzer.pass_energy,analyzer_settings["pass energy"])
-#    if "dwell time" in analyzer_settings.keys():
-#       dwelltime = analyzer_settings["dwell time"]
-#    else:
-#        dwelltime = default_dwell_time
-#    yield from mv(peak_analyzer.dwell_time,dwelltime)
-#    if "lens mode" in analyzer_settings.keys():
-#        lensmode = analyzer_settings["lens mode"]
-#    else:
-#        lensmode = default_lens_mode 
-#   yield from mv(peak_analyzer.lens_mode,lensmode)
-#    if "acquisition mode" in analyzer_settings.keys():
-#        acqmode = analyzer_settings["acquisition mode"]
-#    else:
-#        acqmode = default_acq_mode
-#    yield from mv(peak_analyzer.acq_mode,acqmode)
-
-#def setup_peak(region_dictinoary,analyzer_settings,scan_type):
-#    from haxpes.peak_analyzer import peak_analyzer
-#    print("scan type: "+scan_type)
-#    if scan_type == "XPS":
-#        peak_analyzer.setsweptmode()
-#        yield from mv(peak_analyzer.energy_center,region_dictionary["energy center"])
-#        yield from mv(peak_analyzer.energy_step,region_dictionary["energy step"])
-#        yield from mv(peak_analyzer.energy_width,region_dictionary["energy width"])
-#
-#    elif scan_type == "XAS":
-#        peak_analyzer.setfixedmode()
-#        yield from mv(peak_analzyer.energy_center,region_dictionary["energy center"])
-#
-#   else:
-#        print("WOWOOWOW")
-#
-#    yield from mv(peak_analyzer.region_name,region_dictionary["region name"])
-#    if "description" in region_dictionary.keys():
-#        yield from mv(peak_analyzer.description,region_dictionary["description"])
-#
-#    yield from mv(peak_analyzer.pass_energy,analyzer_settings["pass energy"])
-#    if "dwell time" in analyzer_settings.keys():
-#        dwelltime = analyzer_settings["dwell time"]
-#    else:
-#        dwelltime = default_dwell_time
-#    yield from mv(peak_analyzer.dwell_time,dwelltime)
-#    if "lens mode" in analyzer_settings.keys():
-#        lensmode = analyzer_settings["lens mode"]
-#    else:
-#        lensmode = default_lens_mode 
-#    yield from mv(peak_analyzer.lens_mode,lensmode)
-#    if "acquisition mode" in analyzer_settings.keys():
-#        acqmode = analyzer_settings["acquisition mode"]
-#    else:
-#        acqmode = default_acq_mode
-#    yield from mv(peak_analyzer.acq_mode,acqmode)
-
-
 def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
     if "dwell time" in analyzer_settings.keys():
         dwelltime = analyzer_settings["dwell time"]
@@ -103,9 +42,11 @@ def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
     print("Estimated total time is "+str((est_time*number_of_sweeps)/60)+" min.")
     return est_time
 
-@suspend_decorator(suspendList)
-def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None,comments=None):
+@suspend_decorator(suspendList) #think about removing ...
+@xpswrite_wrapper
+def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None,comments=None,calibrated_hv=None):
     from haxpes.peak_analyzer import peak_analyzer
+    number_of_sweeps = int(number_of_sweeps)
     peak_analyzer.setup_from_dictionary(region_dictionary,analyzer_settings,"XPS")
 #    yield from setup_peak(region_dictionary,analyzer_settings,"XPS")
     est_time = estimate_time(region_dictionary,analyzer_settings,number_of_sweeps)
@@ -121,11 +62,15 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
     md["Sample Theta"] = sampr.position
+    md["FG Energy"] = floodgun.energy.get()
+    md["FG V_grid"] = floodgun.Vgrid.get()
+    md["FG I_emit"] = floodgun.Iemis.get()
     if comments:
         md["Comments"] = comments
+    if calibrated_hv:
+        md["Calibrated Photon Energy"] = calibrated_hv
    
-    yield from count([I0,peak_analyzer],number_of_sweeps,md=md)
-
+    yield from count([I0,peak_analyzer],number_of_sweeps,md=md) 
 
 @suspend_decorator(suspendList)
 def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None,settle_time=0.5,comments=None):
@@ -164,6 +109,9 @@ def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filenam
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
     md["Sample Theta"] = sampr.position
+    md["FG Energy"] = floodgun.energy.get()
+    md["FG V_grid"] = floodgun.Vgrid.get()
+    md["FG I_emit"] = floodgun.Iemis.get()
     if comments:
         md["Comments"] = comments
 
@@ -212,16 +160,20 @@ def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=
         yield from bs_sleep(settle_time)
         yield from take_readings(list(detectors) + list(motors))
 
-    #md
+    #md to add: integration times
     md = {}
     md["purpose"] = "XAS Data"
     md["export_filename"] = export_filename
     if comments:
         md["Comments"] = comments
+    md["FG Energy"] = floodgun.energy.get()
+    md["FG V_grid"] = floodgun.Vgrid.get()
+    md["FG I_emit"] = floodgun.Iemis.get()
     md["Sample X"] = sampx.position
     md["Sample Y"] = sampy.position
     md["Sample Z"] = sampz.position
     md["Sample Theta"] = sampr.position
+    md["Applied Bias"] = haxSMU.VSource.get()
 
     fullrange = np.empty(0,)
     for reg in range(edge_dictionary["n_regions"]):
