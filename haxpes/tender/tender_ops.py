@@ -27,7 +27,9 @@ suspendListSES.append(suspend_beamstat_SES)
 suspendListSES.append(suspend_psh2_SES)
 suspendListSES.append(suspend_fs4a_SES)
 
-suspendListPeak = suspendList
+suspendListPeak = [suspend_FEsh1]
+suspendListPeak.append(suspend_psh1)
+suspendListPeak.append(suspend_beamstat)
 suspendListPeak.append(suspend_psh2)
 suspendListPeak.append(suspend_fs4a)
 
