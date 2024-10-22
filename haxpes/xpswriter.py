@@ -102,7 +102,7 @@ def write_xps_file(uid,sum_sweeps=True):
 "\nI0="+I0_data+\
 "\n\n[Data]"
 
-    np.savetxt(filename,output_array,delimiter='\t',header=header)
+    np.savetxt(filename,output_array,delimiter=',',header=header)
 
 
 def xpswrite_wrapper(func):
