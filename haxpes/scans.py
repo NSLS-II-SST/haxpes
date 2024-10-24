@@ -45,6 +45,9 @@ def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
 @suspend_decorator(suspendList) #think about removing ...
 @xpswrite_wrapper
 def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None,comments=None,calibrated_hv=None):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "XPS Peak":
+        run_mode.current_mode.put("XPS Peak")
     from haxpes.peak_analyzer import peak_analyzer
     number_of_sweeps = int(number_of_sweeps)
     peak_analyzer.setup_from_dictionary(region_dictionary,analyzer_settings,"XPS")
@@ -89,6 +92,9 @@ def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filenam
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
     """
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "ResPES":
+        run_mode.current_mode.put("ResPES")
     from haxpes.peak_analyzer import peak_analyzer
     peak_analyzer.setup_from_dictionary(XPSregion,analyzer_settings,"XPS")
     est_time = estimate_time(XPSregion,analyzer_settings,1)
@@ -153,6 +159,9 @@ def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
     """
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "XAS":
+        run_mode.current_mode.put("XAS")
     from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
     def per_step(detectors,step,pos_cache,take_readings=trigger_and_read):
         motors = step.keys()

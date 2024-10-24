@@ -17,21 +17,15 @@ from haxpes.peak_settings import analyzer_sets
 from bluesky.preprocessors import suspend_decorator
 from haxpes.hax_suspenders import *
 
-suspendList = [suspend_FEsh1]
-suspendList.append(suspend_psh1)
-suspendList.append(suspend_beamstat)
+suspendListUS = [suspend_FEsh1]
+suspendListUS.append(suspend_psh1)
+suspendListUS.append(suspend_beamstat)
 
-suspendListSES = [suspend_FEsh1_SES]
-suspendListSES.append(suspend_psh1_SES)
-suspendListSES.append(suspend_beamstat_SES)
-suspendListSES.append(suspend_psh2_SES)
-suspendListSES.append(suspend_fs4a_SES)
-
-suspendListPeak = [suspend_FEsh1]
-suspendListPeak.append(suspend_psh1)
-suspendListPeak.append(suspend_beamstat)
-suspendListPeak.append(suspend_psh2)
-suspendListPeak.append(suspend_fs4a)
+suspendListHAX = [suspend_FEsh1]
+suspendListHAX.append(suspend_psh1)
+suspendListHAX.append(suspend_beamstat)
+suspendListHAX.append(suspend_psh2)
+suspendListHAX.append(suspend_fs4a)
 
 ##### TEMP START for writing to log file #####
 from tiled.client import from_profile
@@ -39,11 +33,14 @@ catalog = from_profile("haxpes")
 ##### TEMP END #####
 
 ####
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def tune_x2pitch():
     """
     Tunes second crystal rocking curve.  Starts with broad scan, then narrows around max.
     """
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     yield from mv(dm1,32)
     max_channel = Idm1.mean.name #define channel for DM1 diode
     md = {}
@@ -54,8 +51,11 @@ def tune_x2pitch():
 ###
 
 
-@suspend_decorator(suspendListSES)
+@suspend_decorator(suspendListHAX)
 def run_XPS_tender(sample_list,close_shutter=False):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "XPS SES":
+        run_mode.current_mode.put("XPS SES")
     yield from psh2.open() #in case it is closed.  It should be open.
     if close_shutter:
         yield from fs4.close()
@@ -80,8 +80,11 @@ def run_XPS_tender(sample_list,close_shutter=False):
         else:
             print("Skipping sample "+str(i))
 
-@suspend_decorator(suspendListPeak)
+@suspend_decorator(suspendListHAX)
 def run_peakXPS_tender(sample_list,close_shutter=False):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "XPS Peak":
+        run_mode.current_mode.put("XPS Peak")
     from haxpes.scans import XPS_scan #import here for now, in case peak servers are not running
     yield from psh2.open() #in case it is closed.  It should be open.
     if close_shutter:
@@ -122,8 +125,11 @@ str(round(sample_list.all_samples[i]["Photon Energy"]))+"eV_"+region["Region Nam
         else:
             print("Skipping sample "+str(i))
 
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
     if use_optimal_harmonic:
@@ -140,8 +146,11 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
     #yield from align_beam_xps
     
 ###
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def align_beam_xps(PlaneMirror=False):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     yield from stop_feedback()
     yield from reset_feedback() #resets permit latch in case shutter was closed
     yield from mv(x2finepitch,0,x2fineroll,0)
@@ -186,9 +195,12 @@ def optimizeL2():
     yield from find_centerofmass(scan, [Idm1], L2pitch,9,10.5,31,max_channel=max_channel,hexapod=True,md=md)
 
 ###
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def setL1(stripe):
     #stop feedback and zero piezos:
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
     if stripe == "gold" or stripe == "Au":
@@ -201,8 +213,11 @@ def setL1(stripe):
     yield from mv(L1.y,y_sp) #only move y motor.  Assume others are fine.  
     yield from optimizeL1()
 
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def setL2_plane(stripe):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     #stop feedback and zero piezos:
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
@@ -221,8 +236,11 @@ def setL2_plane(stripe):
     yield from mv(L2AB.roll,roll_sp)
     yield from optimizeL2()
 
-@suspend_decorator(suspendList)
+@suspend_decorator(suspendListUS)
 def setL2_toroid(stripe):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Align":
+        run_mode.current_mode.put("Align")
     #stop feedback and zero piezos:
     yield from stop_feedback()
     yield from mv(x2finepitch,0,x2fineroll,0)
@@ -240,3 +258,6 @@ def setL2_toroid(stripe):
     yield from mv(L2AB.x,x_sp)
     yield from mv(L2AB.roll,roll_sp)
     yield from optimizeL2()
+
+###
+

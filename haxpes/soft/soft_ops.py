@@ -15,11 +15,6 @@ suspendList.append(suspend_psh4)
 suspendList.append(suspend_psh5)
 suspendList.append(suspend_beamstat)
 
-suspendListSES = [suspend_FEsh1_SES]
-suspendListSES.append(suspend_psh4_SES)
-suspendListSES.append(suspend_psh5_SES)
-suspendListSES.append(suspend_beamstat_SES)
-
 @suspend_decorator(suspendList)
 def set_photon_energy_soft(energySP,use_optimal_harmonic=True):
     if use_optimal_harmonic:
@@ -28,8 +23,11 @@ def set_photon_energy_soft(energySP,use_optimal_harmonic=True):
                 yield from mv(hsoft,r["harmonic"])
     yield from mv(en,energySP)
 
-@suspend_decorator(suspendListSES)
+@suspend_decorator(suspendList)
 def run_XPS_soft(sample_list):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Soft Beam":
+        run_mode.current_mode.put("Soft Beam")
     yield from psh5.open() #in case it is closed.  It should be open.
     for i in range(sample_list.index):
         if sample_list.all_samples[i]["To Run"]:
@@ -52,6 +50,9 @@ def run_XPS_soft(sample_list):
 
 @suspend_decorator(suspendList)
 def run_peakXPS_soft(sample_list):
+    from haxpes.hax_monitors import run_mode
+    if run_mode.current_mode.get() != "Soft Beam":
+        run_mode.current_mode.put("Soft Beam")
     from haxpes.scans import XPS_scan #import here for now, in case peak servers are not running
     for i in range(sample_list.index):
         if sample_list.all_samples[i]["To Run"]:

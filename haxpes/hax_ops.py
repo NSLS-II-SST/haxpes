@@ -74,6 +74,10 @@ def stop_SES():
     yield from mv(ses.stop_signal, 1)
 
 ###
+def start_SES():
+    yield from mv(ses.stop_signal, 0)
+
+###
 def rough_align_beam_xps(full_align=1):
     yield from stop_feedback()
     if full_align:
@@ -109,3 +113,10 @@ def align_sample_xps(analyzer_KE,anset,optimization_parameter=10):
     md = {}
     md["purpose"] = "alignment"
     yield from find_max(rel_scan,[peak_analyzer],sampx,-1,1,41,max_channel="PeakAnalyzer_opt_val",md=md)
+
+###
+
+
+        
+    
+
