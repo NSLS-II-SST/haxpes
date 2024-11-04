@@ -52,6 +52,7 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
     peak_analyzer.setup_from_dictionary(region_dictionary,analyzer_settings,"XPS")
 #    yield from setup_peak(region_dictionary,analyzer_settings,"XPS")
     est_time = estimate_time(region_dictionary,analyzer_settings,number_of_sweeps)
+    I0initexp = I0.exposure_time.get()
     I0.set_exposure(est_time)
 
     #metadata for XPS scan:
@@ -73,6 +74,7 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
         md["Calibrated Photon Energy"] = calibrated_hv
    
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md) 
+    I0.set_exposure(I0initexp) #reset I0 exposure time
 
 def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None,settle_time=0.5,comments=None):
     """performs resonance scan using PEAK analyzer.
