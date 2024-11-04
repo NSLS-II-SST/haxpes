@@ -27,12 +27,18 @@ class DataObject:
         self.ysum = self.multiplier*np.sum(self.ycurrent,axis=1)
         self.yavg = self.multiplier*np.mean(self.ycurrent,axis=1)
         
-    def load_from_ascii(self,filepath):
+    def load_from_ascii(self,filepath,dataformat):
         self.inputfile = filepath
         self.name = basename(self.inputfile)
         self.label = basename(self.inputfile)
-        self.xraw = np.genfromtxt(self.inputfile)[:,0]
-        self.yraw = np.genfromtxt(self.inputfile)[:,1:]
+        if dataformat == "csv":
+            delim = ","
+        elif dataformat == "peak" or dataformat == "ses":
+            delim = "\t"
+        else:
+            delim = "\t"
+        self.xraw = np.genfromtxt(self.inputfile,delimiter=delim)[:,0]
+        self.yraw = np.genfromtxt(self.inputfile,delimiter=delim)[:,1:]
         self._revert_data()
         self.n_col = self.ycurrent.shape[1]
         self._read_header()

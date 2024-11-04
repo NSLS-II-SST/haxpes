@@ -1,4 +1,4 @@
-from .hax_suspenders import suspend_psh1, suspend_psh2, suspend_psh4, suspend_psh5, suspend_FEsh1, suspend_beamstat
+#from .hax_suspenders import suspend_psh1, suspend_psh2, suspend_psh4, suspend_psh5, suspend_FEsh1, suspend_beamstat
 from .hax_runner import RE
 from .hax_hw import softbeamenable, beamselection
 
@@ -215,13 +215,13 @@ def enable_test_mode():
         print("Stopping.  "+beamselection.get()+" beam enabled.  Disable first.")
         return 0
     beamselection.set("testing")
-    RE.remove_suspender(suspend_FEsh1)
-    RE.remove_suspender(suspend_beamstat)
+    #RE.remove_suspender(suspend_FEsh1)
+    #RE.remove_suspender(suspend_beamstat)
 
 def disable_test_mode():
     if beamselection.get() != "testing":
         print("Stopping.  "+beamselection.get()+" beam enabled.  Disable first.")
         return 0
     beamselection.set("none")
-    RE.install_suspender(suspend_FEsh1)
-    RE.install_suspender(suspend_beamstat)
+    #RE.install_suspender(suspend_FEsh1)
+    #RE.install_suspender(suspend_beamstat)

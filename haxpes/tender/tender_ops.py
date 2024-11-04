@@ -15,25 +15,21 @@ from bluesky.plans import scan, rel_scan
 from haxpes.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
-from haxpes.hax_suspenders import *
+from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender
 
-suspendListUS = [suspend_FEsh1]
-suspendListUS.append(suspend_psh1)
-suspendListUS.append(suspend_beamstat)
+#upstream suspender list:
+#suspendListUS = [suspend_FEsh1]
+#suspendListUS.append(suspend_psh1)
+#suspendListUS.append(suspend_beamstat)
 
-suspendListHAX = [suspend_FEsh1]
-suspendListHAX.append(suspend_psh1)
-suspendListHAX.append(suspend_beamstat)
-suspendListHAX.append(suspend_psh2)
-suspendListHAX.append(suspend_fs4a)
+#HAXPES suspender list:
+#suspendListHAX = [s for s in suspendListUS]
+#suspendListHAX.append(suspend_psh2)
+#suspendListHAX.append(suspend_fs4a)
 
-##### TEMP START for writing to log file #####
-from tiled.client import from_profile
-catalog = from_profile("haxpes")
-##### TEMP END #####
 
 ####
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def tune_x2pitch():
     """
     Tunes second crystal rocking curve.  Starts with broad scan, then narrows around max.
@@ -51,7 +47,7 @@ def tune_x2pitch():
 ###
 
 
-@suspend_decorator(suspendListHAX)
+@suspend_decorator(suspendHAX_tender)
 def run_XPS_tender(sample_list,close_shutter=False):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "XPS SES":
@@ -80,7 +76,7 @@ def run_XPS_tender(sample_list,close_shutter=False):
         else:
             print("Skipping sample "+str(i))
 
-@suspend_decorator(suspendListHAX)
+@suspend_decorator(suspendHAX_tender)
 def run_peakXPS_tender(sample_list,close_shutter=False):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "XPS Peak":
@@ -125,7 +121,7 @@ str(round(sample_list.all_samples[i]["Photon Energy"]))+"eV_"+region["Region Nam
         else:
             print("Skipping sample "+str(i))
 
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crystal=True):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "Align":
@@ -146,7 +142,7 @@ def set_photon_energy_tender(energySP,use_optimal_harmonic=True,use_optimal_crys
     #yield from align_beam_xps
     
 ###
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def align_beam_xps(PlaneMirror=False):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "Align":
@@ -182,7 +178,7 @@ def optimizeL1():
     max_channel = Idm1.mean.name #define channel for DM1 diode
     md = {}
     md["purpose"] = "alignment"
-    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,1.0,21,max_channel=max_channel,hexapod=True,md=md)
+    yield from find_centerofmass(scan, [Idm1], L1.pitch, 0.5,1.25,31,max_channel=max_channel,hexapod=True,md=md)
 
 ###
 def optimizeL2():
@@ -195,7 +191,7 @@ def optimizeL2():
     yield from find_centerofmass(scan, [Idm1], L2pitch,9,10.5,31,max_channel=max_channel,hexapod=True,md=md)
 
 ###
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def setL1(stripe):
     #stop feedback and zero piezos:
     from haxpes.hax_monitors import run_mode
@@ -213,7 +209,7 @@ def setL1(stripe):
     yield from mv(L1.y,y_sp) #only move y motor.  Assume others are fine.  
     yield from optimizeL1()
 
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def setL2_plane(stripe):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "Align":
@@ -236,7 +232,7 @@ def setL2_plane(stripe):
     yield from mv(L2AB.roll,roll_sp)
     yield from optimizeL2()
 
-@suspend_decorator(suspendListUS)
+@suspend_decorator(suspendUS_tender)
 def setL2_toroid(stripe):
     from haxpes.hax_monitors import run_mode
     if run_mode.current_mode.get() != "Align":
@@ -251,7 +247,7 @@ def setL2_toroid(stripe):
     if stripe == "nickel" or stripe == "Ni":
         y_sp = 12.5
         roll_sp = -16.5
-        x_sp = 4.8
+        x_sp = 2.9
     #TO DO:  error out if not proper stripe name
     yield from mv(L2wedge,35)
     yield from mv(L2AB.y,y_sp)

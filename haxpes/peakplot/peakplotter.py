@@ -43,6 +43,8 @@ class PeakPlottingProgramMain(QDialog):
         self.opensesbutton.clicked.connect(lambda: self.load_data("ses"))
         self.openxybutton = QPushButton('Load XY Data')
         self.openxybutton.clicked.connect(lambda: self.load_data("peak"))
+        self.opencsvbutton = QPushButton('Load CSV Data')
+        self.opencsvbutton.clicked.connect(lambda: self.load_data("csv"))
         self.clearbutton = QPushButton('Remove All')
         self.clearbutton.clicked.connect(lambda: self.clear_data())
         self.removeselbutton = QPushButton('Remove Selected')
@@ -58,6 +60,7 @@ class PeakPlottingProgramMain(QDialog):
         data_layout = QVBoxLayout()
         data_layout.addWidget(self.opensesbutton)
         data_layout.addWidget(self.openxybutton)
+        data_layout.addWidget(self.opencsvbutton)
         data_layout.addWidget(self.selectallbutton)
         data_layout.addWidget(self.exportbutton)
         data_layout.addWidget(self.mdbutton)
@@ -114,7 +117,7 @@ class PeakPlottingProgramMain(QDialog):
         filelist = QFileDialog.getOpenFileNames(self,'Select Files')[0] #TO DO: filters
         for fpath in filelist:
             D = DataObject()
-            D.load_from_ascii(fpath)
+            D.load_from_ascii(fpath,dataformat)
             self.ddict.append_data(D.name,D)
             self.datalist.addItem(D.name)
 

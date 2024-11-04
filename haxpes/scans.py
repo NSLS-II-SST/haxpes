@@ -9,15 +9,15 @@ from haxpes.motors import sampx, sampy, sampz, sampr
 from haxpes.hax_hw import floodgun, haxSMU
 #
 from bluesky.preprocessors import suspend_decorator
-from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
+#from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
 
 from haxpes.xpswriter import xpswrite_wrapper
 
-suspendList = [suspend_FEsh1]
-suspendList.append(suspend_psh1)
-suspendList.append(suspend_beamstat)
-suspendList.append(suspend_psh2)
-suspendList.append(suspend_fs4a)
+#suspendList = [suspend_FEsh1]
+#suspendList.append(suspend_psh1)
+#suspendList.append(suspend_beamstat)
+#suspendList.append(suspend_psh2)
+#suspendList.append(suspend_fs4a)
 
 default_dwell_time = 0.1
 default_lens_mode = "Angular"
@@ -42,7 +42,6 @@ def estimate_time(region_dictionary,analyzer_settings,number_of_sweeps):
     print("Estimated total time is "+str((est_time*number_of_sweeps)/60)+" min.")
     return est_time
 
-@suspend_decorator(suspendList) #think about removing ...
 @xpswrite_wrapper
 def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filename=None,comments=None,calibrated_hv=None):
     from haxpes.hax_monitors import run_mode
@@ -75,7 +74,6 @@ def XPS_scan(region_dictionary,number_of_sweeps,analyzer_settings,export_filenam
    
     yield from count([I0,peak_analyzer],number_of_sweeps,md=md) 
 
-@suspend_decorator(suspendList)
 def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filename=None,settle_time=0.5,comments=None):
     """performs resonance scan using PEAK analyzer.
     Currently records only peak analyzer and I0.  
@@ -92,44 +90,62 @@ def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filenam
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
     """
-    from haxpes.hax_monitors import run_mode
-    if run_mode.current_mode.get() != "ResPES":
-        run_mode.current_mode.put("ResPES")
-    from haxpes.peak_analyzer import peak_analyzer
-    peak_analyzer.setup_from_dictionary(XPSregion,analyzer_settings,"XPS")
-    est_time = estimate_time(XPSregion,analyzer_settings,1)
-    I0.set_exposure(est_time)
-    fullrange = np.empty(0,)
-    for reg in range(EnergyRegion["n_regions"]):
-        start_energy = EnergyRegion["start_"+str(reg)]
-        stop_energy = EnergyRegion["stop_"+str(reg)]
-        step_size = EnergyRegion["step_"+str(reg)]
-        reg_range = np.arange(start_energy,stop_energy,step_size)
-        fullrange = np.concatenate((fullrange,reg_range),axis=0)
-    en_list = fullrange.tolist()
-    #medata
-    md = {}
-    md["purpose"] = "Resonant XPS Data"
-    md["export_filename"] = export_filename
-    md["Sample X"] = sampx.position
-    md["Sample Y"] = sampy.position
-    md["Sample Z"] = sampz.position
-    md["Sample Theta"] = sampr.position
-    md["FG Energy"] = floodgun.energy.get()
-    md["FG V_grid"] = floodgun.Vgrid.get()
-    md["FG I_emit"] = floodgun.Iemis.get()
-    if comments:
-        md["Comments"] = comments
+    #first which beam and implement suspenders
+    from haxpes.hax_hw import beamselection
+    from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
+    if beamselection.get() == "Tender":
+        suspendList = suspendHAX_tender
+    elif beamselection.get() == "Soft":
+        suspendList = suspendHAX_soft
+    elif beamselection.get() == "Soft & Tender":
+        supendList = suspendHAX_soft + suspendHAX_tender
+    else:
+        suspendList = None
+    #install suspenders
 
-    from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
-    def per_step(detectors,step,pos_cache,take_readings=trigger_and_read):
-        motors = step.keys()
-        yield from move_per_step(step,pos_cache)
-        yield from bs_sleep(settle_time)
-        yield from take_readings(list(detectors) + list(motors))
-    
-    for sweep in range(n_sweeps):
-        yield from list_scan([I0,peak_analyzer],en,en_list,per_step=per_step,md=md)
+    @suspend_decorator(suspendList)
+    def inner_function(*args,**kw_args):
+        from haxpes.hax_monitors import run_mode
+        if run_mode.current_mode.get() != "ResPES":
+            run_mode.current_mode.put("ResPES")
+        from haxpes.peak_analyzer import peak_analyzer
+        peak_analyzer.setup_from_dictionary(XPSregion,analyzer_settings,"XPS")
+        est_time = estimate_time(XPSregion,analyzer_settings,1)
+        I0.set_exposure(est_time)
+        fullrange = np.empty(0,)
+        for reg in range(EnergyRegion["n_regions"]):
+            start_energy = EnergyRegion["start_"+str(reg)]
+            stop_energy = EnergyRegion["stop_"+str(reg)]
+            step_size = EnergyRegion["step_"+str(reg)]
+            reg_range = np.arange(start_energy,stop_energy,step_size)
+            fullrange = np.concatenate((fullrange,reg_range),axis=0)
+        en_list = fullrange.tolist()
+        #medata
+        md = {}
+        md["purpose"] = "Resonant XPS Data"
+        md["export_filename"] = export_filename
+        md["Sample X"] = sampx.position
+        md["Sample Y"] = sampy.position
+        md["Sample Z"] = sampz.position
+        md["Sample Theta"] = sampr.position
+        md["FG Energy"] = floodgun.energy.get()
+        md["FG V_grid"] = floodgun.Vgrid.get()
+        md["FG I_emit"] = floodgun.Iemis.get()
+        if comments:
+            md["Comments"] = comments
+
+        from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
+        def per_step(detectors,step,pos_cache,take_readings=trigger_and_read):
+            motors = step.keys()
+            yield from move_per_step(step,pos_cache)
+            yield from bs_sleep(settle_time)
+            yield from take_readings(list(detectors) + list(motors))
+        
+        for sweep in range(n_sweeps):
+            yield from list_scan([I0,peak_analyzer],en,en_list,per_step=per_step,md=md)
+        return
+
+    yield from inner_function(*args, **kw_args)
 
     
 
@@ -150,7 +166,6 @@ def XAS_setup(detector_list,exposure_time):
 #        yield from scan(detector_list,en,edge_dictionary["start_energy"],\
 #edge_dictionary["stop_energy"],edge_dictionary["n_steps"])
 
-@suspend_decorator(suspendList)
 def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=0.5,export_filename=None,comments=None):
     """ peforms XAS scan with multiple regions
     edge_dictionary should have have keys:

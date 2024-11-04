@@ -2,7 +2,7 @@ import numpy as np
 from tiled.client import from_profile
 from os.path import isfile
 
-catalog = from_profile("haxpes")
+catalog = from_profile("nsls2")['haxpes']['raw']
 
 def write_xps_file(uid,sum_sweeps=True):
     #grab the run by UID

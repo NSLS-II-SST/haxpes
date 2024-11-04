@@ -26,18 +26,24 @@ def pre_plan():
 def post_plan():
     """ checks current run mode, then makes decision based on said run mode """
     from haxpes.tender.tender_ops import reset_feedback
+    reset_feedback()
     if run_mode.current_mode.get() == "Align":
-        pass
+        pass #nothing special
     elif run_mode.current_mode.get() == "XPS Peak":
-        reset_feedback()
+        print('woopdeedoo!')
+        pass #check I0 and re-align beam       
     elif run_mode.current_mode.get() == "XPS SES":
         yield from start_SES()
+        #check I0 and re-align beam
     elif run_mode.current_mode.get() == "ResPES":
         pass
+        #check i0 and re-align beam ?
     elif run_mode.current_mode.get() == "Soft Beam":
         pass
+        #nothing special
     elif run_mode.current_mode.get() == "XAS":
         pass
+        # ?
     else:
         pass
 
@@ -96,3 +102,10 @@ suspend_fs4a = SuspendBoolLow(
     post_plan = post_plan(),    
     tripped_message = "FS4A is closed.  Waiting for it to re-open"
     )
+
+#suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
+#suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
+suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
+suspendUS_tender = [suspend_FEsh1, suspend_psh1]
+suspendHAX_tender = [suspend_FEsh1, suspend_psh1, suspend_psh2]
+
