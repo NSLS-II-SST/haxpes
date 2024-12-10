@@ -103,9 +103,9 @@ suspend_fs4a = SuspendBoolLow(
     tripped_message = "FS4A is closed.  Waiting for it to re-open"
     )
 
-#suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
-#suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
+suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
+suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
 suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
-suspendUS_tender = [suspend_FEsh1, suspend_psh1]
-suspendHAX_tender = [suspend_FEsh1, suspend_psh1, suspend_psh2]
+#suspendUS_tender = [suspend_FEsh1, suspend_psh1]
+#suspendHAX_tender = [suspend_FEsh1, suspend_psh1, suspend_psh2]
 

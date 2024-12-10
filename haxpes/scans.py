@@ -12,6 +12,7 @@ from bluesky.preprocessors import suspend_decorator
 #from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
 
 from haxpes.xpswriter import xpswrite_wrapper
+from haxpes.xaswriter import xaswrite_wrapper
 
 #suspendList = [suspend_FEsh1]
 #suspendList.append(suspend_psh1)
@@ -147,7 +148,7 @@ def ResPES_scan(XPSregion,EnergyRegion,analyzer_settings,n_sweeps,export_filenam
             yield from list_scan([I0,peak_analyzer],en,en_list,per_step=per_step,md=md)
         return
 
-    yield from inner_function(*args, **kw_args)
+    yield from inner_function(XPSregion,EnergyRegion,analyzer_settings,n_sweeps, export_filename=export_filename,settle_time=settle_time,comments=comments)
 
     
 
@@ -168,6 +169,7 @@ def XAS_setup(detector_list,exposure_time):
 #        yield from scan(detector_list,en,edge_dictionary["start_energy"],\
 #edge_dictionary["stop_energy"],edge_dictionary["n_steps"])
 
+@xaswrite_wrapper
 def XAS_scan(edge_dictionary,detector_list,exposure_time,n_sweeps=1,settle_time=0.5,export_filename=None,comments=None):
     """ peforms XAS scan with multiple regions
     edge_dictionary should have have keys:

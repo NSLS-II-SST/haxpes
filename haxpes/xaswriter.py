@@ -61,8 +61,12 @@ def write_xas_file(uid,sum_sweeps=True):
     det_header = "\nEnergy"
     
     for detector_name in run.metadata["start"]["detectors"]:
+        if detector_name == "PeakAnalyzer":
+            dstr = "PeakAnalyzer_total_counts"
+        else:
+            dstr = detector_name
         det_header = det_header+"\t"+detector_name.replace(" ","_")
-        det_data = run.primary.read()[detector_name]
+        det_data = run.primary.read()[dstr].data
         data_array = np.column_stack((data_array,det_data))
 
     #check if export filename given, otherwise use UID ...:
@@ -94,4 +98,10 @@ def write_xas_file(uid,sum_sweeps=True):
 det_header
 
     np.savetxt(filename,data_array,delimiter='\t',header=header)
+
+def xaswrite_wrapper(func):
+    def wrapper(*args, **kwargs):
+        yield from func(*args, **kwargs)
+        write_xas_file(-1)
+    return wrapper
 
