@@ -2,13 +2,7 @@
 #from .energy import dcm, u42gap
 from .detectors import I0, Idrain, IK2600
 from .tender.detectors import I1
-from .motors import sampx, sampy, sampz, sampr
 from .ses import ses
-from bluesky.plans import count, scan, rel_scan
-from bluesky.plan_stubs import mv, sleep
-#from bluesky import RunEngine
-from .hax_runner import RE
-from bluesky.callbacks import LiveTable
 #from .hax_ops import run_XPS, align_beam_xps #####
 from .sample_handling import sample_list
 from .hax_suspenders import suspend_FEsh1, suspend_beamstat
