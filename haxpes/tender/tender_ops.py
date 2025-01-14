@@ -17,7 +17,7 @@ from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
 
 # from haxpes.scans import XPS_scan
-from haxpes.peak_settings import analyzer_sets
+from haxpes.devices.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
 from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender
