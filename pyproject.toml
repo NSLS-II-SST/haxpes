@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "haxpes"
+authors = [
+    {name = "Charles Titus", email = "ctitus@bnl.gov"},
+    {name = "Conan Weiland", email = "cweiland@bnl.gov"},
+]
+description = "Beamline Framework"
+dynamic = ["version", "dependencies"]
+
+[tool.setuptools]
+packages = ["haxpes"]
+
+[tool.setuptools_scm]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.entry-points."nbs_gui.plans"]
+haxpes-xps = "haxpes.qt.plans.xpsScan:XPSPlanWidget"
+haxpes-respes = "haxpes.qt.plans.xpsScan:RESPESPlanWidget"

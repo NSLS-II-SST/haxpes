@@ -1,7 +1,5 @@
 from bluesky.suspenders import SuspendBoolHigh, SuspendBoolLow
-from .hax_hw import psh2, psh1, psh5, fs4
-from nbs_bl.hw import FEsh1, psh4
-from .ses import ses
+from nbs_bl.hw import FEsh1, psh4, psh2, psh1, psh5, fs4
 from bluesky.plan_stubs import mv
 from .hax_ops import stop_SES  # start_SES
 from .hax_monitors import beamon, run_mode

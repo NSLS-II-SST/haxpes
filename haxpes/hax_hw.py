@@ -1,7 +1,7 @@
 from sst_base.shutters import EPS_Shutter
-from haxpes.pid_feedback import pid
+from haxpes.devices.pid_feedback import pid
 from ophyd import EpicsSignalRO, Signal
-from haxpes.floodgun import FloodGun
+from haxpes.devices.floodgun import FloodGun
 
 # photon shutters ...
 
@@ -39,12 +39,15 @@ fbvert = pid("XF:07ID6-OP{Mono:DCM1-Fb:PF2}", name="vertical feedback")
 fbhor = pid("XF:07ID6-OP{Mono:DCM1-Fb:RF2}", name="horizontal feedback")
 
 # soft beam enable and beamline mode:
-softbeamenable = EpicsSignalRO("XF:07ID1-CT{Bl-Ctrl}Endstn-Sel",kind='config',string=True)
-beamselection = Signal(name="Beam Selection",kind="config",value="none")
+softbeamenable = EpicsSignalRO(
+    "XF:07ID1-CT{Bl-Ctrl}Endstn-Sel", kind="config", string=True
+)
+beamselection = Signal(name="Beam Selection", kind="config", value="none")
 
-#flood gun
-floodgun = FloodGun('XF:07ID-EGPS:1:',name="FloodGun")
+# flood gun
+floodgun = FloodGun("XF:07ID-EGPS:1:", name="FloodGun")
 
-#SMU
-from haxpes.k2600b import SMU
-haxSMU = SMU('XF:07ID1{K2601B:1}', name='K2601B')
+# SMU
+from haxpes.devices.k2600b import SMU
+
+haxSMU = SMU("XF:07ID1{K2601B:1}", name="K2601B")
