@@ -1,10 +1,17 @@
-from haxpes.soft.motors import M3AB, SlitAB, M4A
+#from haxpes.soft.motors import M3AB, SlitAB, M4A
 from bluesky.plan_stubs import mv
-from haxpes.motors import haxslt
+#from haxpes.motors import haxslt
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 
 #first check if HAXPES is enabled.
 
 def transfer_setup():
+
+    M3AB = bl["M3AB"]
+    M4A = bl["M4A"]
+    SlitAB = bl["SlitAB"]
+    haxslt = bl["haxslt"]
+    
     #move M3 into starting place
     yield from mv(M3AB.x,-28)
     yield from mv(M3AB.y,18)

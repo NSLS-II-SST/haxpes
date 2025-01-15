@@ -11,7 +11,7 @@ from haxpes.tender.funcs import (
     reset_feedback,
 )
 from bluesky.plan_stubs import mv, sleep
-from haxpes.dcm_settings import dcmranges
+from haxpes.devices.dcm_settings import dcmranges
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan

@@ -52,10 +52,6 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     return est_time
 
 
-def newXPS():
-    pass
-
-
 @xpswrite_wrapper
 def XPS_scan(
     region_dictionary,

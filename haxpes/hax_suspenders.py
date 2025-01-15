@@ -1,18 +1,19 @@
 from bluesky.suspenders import SuspendBoolHigh, SuspendBoolLow
 from nbs_bl.hw import FEsh1, psh4, psh2, psh1, psh5, fs4
 from bluesky.plan_stubs import mv
-from .hax_ops import stop_SES  # start_SES
+#from .hax_ops import stop_SES  # start_SES
 from .hax_monitors import beamon, run_mode
-
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 
 def pre_plan():
     """checks current run mode, then makes decision based on said run mode"""
+    ses = bl["ses"]
     if run_mode.current_mode.get() == "Align":
         pass
     elif run_mode.current_mode.get() == "XPS Peak":
         pass
     elif run_mode.current_mode.get() == "XPS SES":
-        yield from stop_SES()
+        yield from ses.stop()
     elif run_mode.current_mode.get() == "ResPES":
         pass
     elif run_mode.current_mode.get() == "Soft Beam":
@@ -26,7 +27,7 @@ def pre_plan():
 def post_plan():
     """checks current run mode, then makes decision based on said run mode"""
     from haxpes.tender.tender_ops import reset_feedback
-
+    ses = bl["ses"]
     reset_feedback()
     if run_mode.current_mode.get() == "Align":
         pass  # nothing special
@@ -34,7 +35,7 @@ def post_plan():
         print("woopdeedoo!")
         pass  # check I0 and re-align beam
     elif run_mode.current_mode.get() == "XPS SES":
-        yield from start_SES()
+        yield from ses.reset()
         # check I0 and re-align beam
     elif run_mode.current_mode.get() == "ResPES":
         pass

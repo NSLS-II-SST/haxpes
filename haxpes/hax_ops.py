@@ -3,87 +3,15 @@ from bluesky.plans import count, rel_scan
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 
 
-def set_analyzer(filename, core_line, en_cal):
-    """
-    ...
-    """
-    dstepsize = 50
-    dlensmode = "Angular"
-    dsteptime = 0.1
-    dacqmode = "swept"
 
-    ses = bl["ses"]
-
-    yield from abs_set(ses.filename, filename)
-    yield from abs_set(ses.region_name, core_line["Region Name"])
-    if core_line["Energy Type"] == "Binding":
-        cent = en_cal - core_line["center_en"]
-        yield from abs_set(ses.center_en_sp, cent)
-    else:
-        yield from abs_set(ses.center_en_sp, core_line["center_en"])
-    #    yield from abs_set(ses.center_en_sp,core_line["center_en"]) ### BE correction.  Above 5 lines for testing, this one commented out.
-    yield from abs_set(ses.width_en_sp, core_line["width"])
-    yield from abs_set(ses.iterations, core_line["Iterations"])
-    yield from abs_set(ses.pass_en, core_line["Pass Energy"])
-    yield from abs_set(ses.excitation_en, en_cal)  # added 2023-08-02; NOT TESTED YET CW
-    print(en_cal)
-    #    if "Photon Energy" in core_line.keys():  #commented out 2023-08-02 CW
-    #        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])  #commented out 2023-08-02 CW
-    if "Step Size" in core_line.keys():
-        yield from abs_set(ses.en_step, core_line["Step Size"])
-    else:
-        yield from abs_set(ses.en_step, dstepsize)
-    if "Lens Mode" in core_line.keys():
-        yield from abs_set(ses.lens_mode, core_line["Lens Mode"])
-    else:
-        yield from abs_set(ses.lens_mode, dlensmode)
-    if "steptime" in core_line.keys():
-        yield from abs_set(ses.steptime, core_line["steptime"])
-    else:
-        yield from abs_set(ses.steptime, dsteptime)
-    if "acq_mode" in core_line.keys():
-        yield from abs_set(ses.acq_mode, core_line["acq_mode"])
-    else:
-        yield from abs_set(ses.acq_mode, dacqmode)
 
 
 ###
 
 
-def withdraw_bar(heating_stage=0, close_valves=1):
-    sampx = bl["sampx"]
-    sampy = bl["sampy"]
-    sampz = bl["sampz"]
-    sampr = bl["sampr"]
-    psh2 = bl["psh2"]
-    gv10 = bl["gv10"]
-    if heating_stage:
-        y_out = 435
-    else:
-        y_out = 535
-    yield from mv(sampx, 0, sampz, 0, sampr, 0)
-    yield from mv(sampy, y_out)
-    if close_valves:
-        yield from psh2.close()
-        yield from gv10.close()
-        print("Please close manual valve GV9A")
-
-
 ###
-def stop_SES():
-    ses = bl["ses"]
-
-    yield from mv(ses.stop_signal, 1)
-
-
-###
-def start_SES():
-    ses = bl["ses"]
-
-    yield from mv(ses.stop_signal, 0)
-
-
-###
+"""
+Commented out below ...
 def rough_align_beam_xps(full_align=1):
     from .devices.detectors import BPM4cent
 
@@ -101,7 +29,7 @@ def rough_align_beam_xps(full_align=1):
     yield from BPM4cent.adjust_gain()
     yield from yalign_fs4_xps(spy=153)
     yield from xalign_fs4(spx=368)
-
+"""
 
 ###
 
