@@ -5,6 +5,7 @@ from nbs_gui.plans.scanModifier import ScanModifierParam, BeamlineModifierParam
 from nbs_gui.plans.variableStepPlan import VariableStepParam
 from .xpsParams import XPSParam, AnalyzerParam
 from qtpy.QtWidgets import QGridLayout, QWidget, QHBoxLayout, QVBoxLayout
+from bluesky_queueserver_api import BPlan
 
 
 class XPSPlanWidget(BasicPlanWidget):
@@ -55,6 +56,34 @@ class XPSPlanWidget(BasicPlanWidget):
         self.layout.addLayout(self.bottom_widget_layout)
 
         print("XPSPlanWidget setup Widget finished")
+
+    def check_plan_ready(self):
+        params = self.get_params()
+        # modifier_params = self.scan_modifier.get_params()
+
+        if (
+            "num" in params
+            and self.scan_modifier.check_ready()
+            and self.sample_select.check_ready()
+        ):
+            self.plan_ready.emit(True)
+        else:
+            self.plan_ready.emit(False)
+
+    def create_plan_items(self):
+        params = self.get_params()
+        samples = params.pop("samples", [{}])
+        items = []
+
+        for sample in samples:
+            item = BPlan(
+                "NewXPSScan",
+                md={"scantype": "xps"},
+                **params,
+                **sample,
+            )
+            items.append(item)
+        return items
 
 
 class RESPESPlanWidget(BasicPlanWidget):

@@ -1,7 +1,12 @@
 from haxpes.devices.detectors import I0, IK2600
 from bluesky.plans import count, scan, list_scan
+from nbs_bl.plans.scans import nbs_count
+from nbs_bl.utils import merge_func
+from nbs_bl.help import add_to_scan_list
+from nbs_bl.plans.plan_stubs import set_exposure
 from bluesky.plan_stubs import mv
 from haxpes.energy_tender import en
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 import numpy as np
 
 # for metadata ...
@@ -50,6 +55,18 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
         "Estimated total time is " + str((est_time * number_of_sweeps) / 60) + " min."
     )
     return est_time
+
+
+@add_to_scan_list
+@merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell"])
+def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
+    peak_analyzer = bl["peak_analyzer"]
+    peak_analyzer.setup_from_dictionary(region_dictionary, analyzer_settings, "XPS")
+    est_time = estimate_time(region_dictionary, analyzer_settings, sweeps)
+    I0initexp = I0.exposure_time.get()
+    yield from set_exposure(est_time)
+    yield from nbs_count(sweeps, extra_dets=[peak_analyzer], **kwargs)
+    yield from set_exposure(I0initexp)
 
 
 @xpswrite_wrapper

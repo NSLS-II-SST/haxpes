@@ -1,4 +1,4 @@
-from haxpes.hax_ops import set_analyzer
+# from haxpes.hax_ops import set_analyzer
 from haxpes.tender.funcs import (
     xalign_fs4,
     yalign_fs4_xps,
@@ -47,6 +47,11 @@ def check_tender_beam(func):
     return wrapper
 
 
+def set_crystal(crystalSP, roll_correct=1):
+    dcm = bl["mono"]
+    yield from dcm.set_crystal(crystalSP, roll_correct)
+
+
 ####
 @suspend_decorator(suspendUS_tender)
 @check_tender_beam
@@ -79,49 +84,49 @@ def tune_x2pitch():
     )
 
 
-@suspend_decorator(suspendHAX_tender)
-@check_tender_beam
-def run_XPS_tender(sample_list, close_shutter=False):
+# @suspend_decorator(suspendHAX_tender)
+# @check_tender_beam
+# def run_XPS_tender(sample_list, close_shutter=False):
 
-    psh2 = bl["psh2"]
-    fs4 = bl["fs4"]
-    en = bl["en"]
-    ses = bl["ses"]
+#     psh2 = bl["psh2"]
+#     fs4 = bl["fs4"]
+#     en = bl["en"]
+#     ses = bl["ses"]
 
-    if run_mode.current_mode.get() != "XPS SES":
-        run_mode.current_mode.put("XPS SES")
-    yield from psh2.open()  # in case it is closed. It should be open.
-    if close_shutter:
-        yield from fs4.close()
-    for i in range(sample_list.index):
-        if sample_list.all_samples[i]["To Run"]:
-            print("Moving to sample " + str(i))
-            yield from sample_list.goto_sample(i)
-            # set photon energy ...
-            current_en = en.position
-            if (
-                current_en >= sample_list.all_samples[i]["Photon Energy"] + 0.05
-                or current_en <= sample_list.all_samples[i]["Photon Energy"] - 0.05
-            ):
-                yield from set_photon_energy_tender(
-                    sample_list.all_samples[i]["Photon Energy"]
-                )
-                yield from align_beam_xps()
-            for region in sample_list.all_samples[i]["regions"]:
-                sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
-                #                if region["Energy Type"] == "Binding":
-                #                    sample_list.calc_KE(region)
-                yield from set_analyzer(
-                    sample_list.all_samples[i]["File Prefix"],
-                    region,
-                    sample_list.en_cal,
-                )
-                yield from fs4.open()  # in case it is closed ...
-                yield from count([ses], 1)
-                if close_shutter:
-                    yield from fs4.close()
-        else:
-            print("Skipping sample " + str(i))
+#     if run_mode.current_mode.get() != "XPS SES":
+#         run_mode.current_mode.put("XPS SES")
+#     yield from psh2.open()  # in case it is closed. It should be open.
+#     if close_shutter:
+#         yield from fs4.close()
+#     for i in range(sample_list.index):
+#         if sample_list.all_samples[i]["To Run"]:
+#             print("Moving to sample " + str(i))
+#             yield from sample_list.goto_sample(i)
+#             # set photon energy ...
+#             current_en = en.position
+#             if (
+#                 current_en >= sample_list.all_samples[i]["Photon Energy"] + 0.05
+#                 or current_en <= sample_list.all_samples[i]["Photon Energy"] - 0.05
+#             ):
+#                 yield from set_photon_energy_tender(
+#                     sample_list.all_samples[i]["Photon Energy"]
+#                 )
+#                 yield from align_beam_xps()
+#             for region in sample_list.all_samples[i]["regions"]:
+#                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
+#                 #                if region["Energy Type"] == "Binding":
+#                 #                    sample_list.calc_KE(region)
+#                 yield from set_analyzer(
+#                     sample_list.all_samples[i]["File Prefix"],
+#                     region,
+#                     sample_list.en_cal,
+#                 )
+#                 yield from fs4.open()  # in case it is closed ...
+#                 yield from count([ses], 1)
+#                 if close_shutter:
+#                     yield from fs4.close()
+#         else:
+#             print("Skipping sample " + str(i))
 
 
 @suspend_decorator(suspendHAX_tender)

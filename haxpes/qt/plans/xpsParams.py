@@ -18,6 +18,10 @@ class XPSParam(ParamGroup):
             LineEditParam("energy_width", float, "Energy Width", "Energy width to set")
         )
 
+    def get_params(self):
+        all_params = super().get_params()
+        return {"region_dictionary": all_params}
+
 
 class AnalyzerParam(ParamGroup):
     def __init__(self, parent=None):
@@ -33,3 +37,7 @@ class AnalyzerParam(ParamGroup):
             ComboBoxParam("lens_mode", ["Angular", "Transmission"], "Lens Mode")
         )
         print("Done adding lens mode param")
+
+    def get_params(self):
+        all_params = super().get_params()
+        return {"analyzer_settings": all_params}
