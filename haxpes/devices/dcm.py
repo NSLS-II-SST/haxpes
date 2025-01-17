@@ -12,9 +12,9 @@ from math import asin, cos, sin, pi
 from bluesky.plan_stubs import mv
 from sst_base.motors import PrettyMotor
 
-gonilateral = PrettyMotor(
-    "XF:07ID6-OP{Mono:DCM1-Ax:X}Mtr", name="DCM goniometer lateral"
-)
+#gonilateral = PrettyMotor(
+#    "XF:07ID6-OP{Mono:DCM1-Ax:X}Mtr", name="DCM goniometer lateral"
+#)
 
 
 class DCM(PseudoPositioner):
@@ -60,28 +60,30 @@ class DCM(PseudoPositioner):
     x2finepitch = Cpt(EpicsMotor, "PF2}Mtr", kind="normal")
     x2fineroll = Cpt(EpicsMotor, "RF2}Mtr", kind="normal")
 
+    #the following is deprecated for set_crystal in tender_ops ... probably doesn't work any more anyway
     # crystal set ... you shouldn't do this when shutter 1 is open ...
-    def set_crystal(self, crystalSP, roll_correct=1):
-        """sets the crystal pair and moves to that value.
-        This automatically disables the PSH1 suspender and closes the shutter.
-        Suspender is re-enabled after move is complete."""
-        if roll_correct:
-            yield from mv(self.x2roll, self.rolldict[crystalSP])
-        #        self.bragg.user_offset.set(self.offsetdict[crystalSP])
-        yield from mv(self.bragg.user_offset, self.offsetdict[crystalSP])
-        yield from mv(self.crystal, crystalSP)
-        # check crystal status; 0 = Not In Position; 1 = In Position:
-        inpos = self.crystalstatus.get()
-        if inpos == 0:
-            from haxpes.hax_suspenders import suspend_psh1
-            from haxpes.hax_runner import RE
-            from haxpes.hax_hw import psh1
-
-            RE.remove_suspender(suspend_psh1)
-            yield from psh1.close()
-            yield from mv(gonilateral, self.gonilatdict[crystalSP])
-            yield from psh1.open()
-            RE.install_suspender(suspend_psh1)
+#    def set_crystal(self, crystalSP, roll_correct=1):
+#        """sets the crystal pair and moves to that value.
+#        This automatically disables the PSH1 suspender and closes the shutter.
+#        Suspender is re-enabled after move is complete."""
+#        if roll_correct:
+#            yield from mv(self.x2roll, self.rolldict[crystalSP])
+#        #        self.bragg.user_offset.set(self.offsetdict[crystalSP])
+#        yield from mv(self.bragg.user_offset, self.offsetdict[crystalSP])
+#        yield from mv(self.crystal, crystalSP)
+#        # check crystal status; 0 = Not In Position; 1 = In Position:
+#       inpos = self.crystalstatus.get()
+#        if inpos == 0:
+#
+#            from haxpes.startup import RE
+#            from haxpes.hax_suspenders import suspend_psh1
+#            from nbs_bl.hw import psh1
+#            
+#            RE.remove_suspender(suspend_psh1)
+#            yield from psh1.close()
+#            yield from mv(gonilateral, self.gonilatdict[crystalSP])
+#           yield from psh1.open()
+#           RE.install_suspender(suspend_psh1)
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

@@ -70,8 +70,8 @@ class SST2EnergyMonitor(QGroupBox):
     """
 
     def __init__(self, energy, parent_model, *args, orientation=None, **kwargs):
-        print("Initializing EnergyControl")
-        super().__init__("Energy Control", *args, **kwargs)
+        print("Initializing Tender EnergyMonitor")
+        super().__init__("Energy Monitor", *args, **kwargs)
 
         self.model = energy
         self.parent_model = parent_model
@@ -112,19 +112,19 @@ class SST2EnergyControl(QGroupBox):
     """
 
     def __init__(self, energy, parent_model, *args, orientation=None, **kwargs):
-        print("Initializing EnergyControl")
+        print("Initializing Tender EnergyControl")
         super().__init__("Energy Control", *args, **kwargs)
 
         self.model = energy
         self.parent_model = parent_model
         self.REClientModel = parent_model.run_engine
 
-        print("Creating Energy Control layout")
+        print("Creating Tender Energy Control layout")
         vbox = QVBoxLayout()
         hbox = QHBoxLayout()
         ebox = QHBoxLayout()
 
-        print("Adding energy control")
+        print("Adding tender energy control")
         if hasattr(energy, "energy"):
             ebox.addWidget(AutoControl(energy.energy, parent_model))
 

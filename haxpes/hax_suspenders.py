@@ -1,8 +1,8 @@
 from bluesky.suspenders import SuspendBoolHigh, SuspendBoolLow
-from nbs_bl.hw import FEsh1, psh4, psh2, psh1, psh5, fs4
+from nbs_bl.hw import FEsh1, psh4, psh2, psh1, psh5, fs4, beamon
 from bluesky.plan_stubs import mv
 #from .hax_ops import stop_SES  # start_SES
-from .hax_monitors import beamon, run_mode
+from .hax_monitors import run_mode
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 
 def pre_plan():
@@ -75,7 +75,7 @@ suspend_FEsh1 = SuspendBoolHigh(
 )
 
 suspend_beamstat = SuspendBoolLow(
-    beamon.state,
+    beamon,
     sleep=10,
     pre_plan=pre_plan(),
     post_plan=post_plan(),
@@ -109,5 +109,6 @@ suspend_fs4a = SuspendBoolLow(
 suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
 suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
 suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
+suspendFOE = [suspend_beamstat, suspend_FEsh1]
 # suspendUS_tender = [suspend_FEsh1, suspend_psh1]
 # suspendHAX_tender = [suspend_FEsh1, suspend_psh1, suspend_psh2]

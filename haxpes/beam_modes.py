@@ -2,7 +2,7 @@
 Functions for managing HAXPES beam modes using deferred device loading.
 """
 
-from .hax_monitors import beamselection
+from nbs_bl.hw import beamselection, softbeamenable
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 import IPython
 
@@ -71,7 +71,7 @@ def enable_soft_beam():
     """
     ip = IPython.get_ipython()
     
-    softbeamenable = bl["softbeamenable"]
+
     if beamselection.get() != "none":
         print("Stopping.  " + beamselection.get() + " beam enabled.  Disable first.")
         return 0

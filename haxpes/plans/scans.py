@@ -1,26 +1,20 @@
-from haxpes.devices.detectors import I0, IK2600
+from nbs_bl.hw import I0, IK2600, sampx, sampy, sampz, sampr, floodgun, haxSMU, beamselection
 from bluesky.plans import count, scan, list_scan
 from nbs_bl.plans.scans import nbs_count
 from nbs_bl.utils import merge_func
 from nbs_bl.help import add_to_scan_list
 from nbs_bl.plans.plan_stubs import set_exposure
 from bluesky.plan_stubs import mv
-from haxpes.energy_tender import en
-from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
-import numpy as np
-
-# for metadata ...
-from haxpes.motors import sampx, sampy, sampz, sampr
-from haxpes.hax_hw import floodgun, haxSMU
-
-#
 from bluesky.preprocessors import suspend_decorator
-
-# from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from haxpes.hax_monitors import run_mode
+import numpy as np
+from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
 
 from haxpes.xpswriter import xpswrite_wrapper
 from haxpes.xaswriter import xaswrite_wrapper
 
+# from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
 # suspendList = [suspend_FEsh1]
 # suspendList.append(suspend_psh1)
 # suspendList.append(suspend_beamstat)
@@ -69,7 +63,15 @@ def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     yield from set_exposure(I0initexp)
 
 
+@suspsend_decorator(suspendHAX_tender)
+def SES_XPSScan(filename,core_line,en_cal):
+    ses = bl["SES"]
+    yield from ses.set_analyzer(filename,core_line,en_cal)
+    yield from count(ses,1)
+
+
 @xpswrite_wrapper
+@suspend_decorator(suspendHAX_tender)
 def XPS_scan(
     region_dictionary,
     number_of_sweeps,
@@ -78,12 +80,13 @@ def XPS_scan(
     comments=None,
     calibrated_hv=None,
 ):
-    from haxpes.hax_monitors import run_mode
 
     if run_mode.current_mode.get() != "XPS Peak":
         run_mode.current_mode.put("XPS Peak")
-    from haxpes.peak_analyzer import peak_analyzer
-
+    
+    peak_analyzer = bl['peak_analyzer']
+    en = bl['en']
+    
     number_of_sweeps = int(number_of_sweeps)
     peak_analyzer.setup_from_dictionary(region_dictionary, analyzer_settings, "XPS")
     #    yield from setup_peak(region_dictionary,analyzer_settings,"XPS")
@@ -93,6 +96,7 @@ def XPS_scan(
 
     # metadata for XPS scan:
     md = {}
+
     md["excitation energy"] = en.position
     md["purpose"] = "XPS Data"
     md["export filename"] = export_filename
@@ -138,8 +142,8 @@ def ResPES_scan(
     - step_<n> where <n> is the region number start from 0 for each region.
     """
     # first which beam and implement suspenders
-    from haxpes.hax_hw import beamselection
-    from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
+
+
 
     if beamselection.get() == "Tender":
         suspendList = suspendHAX_tender
@@ -153,7 +157,6 @@ def ResPES_scan(
 
     @suspend_decorator(suspendList)
     def inner_function(*args, **kw_args):
-        from haxpes.hax_monitors import run_mode
 
         if run_mode.current_mode.get() != "ResPES":
             run_mode.current_mode.put("ResPES")
@@ -191,7 +194,7 @@ def ResPES_scan(
             move_per_step,
             sleep as bs_sleep,
         )
-
+        en = bl['en']
         def per_step(detectors, step, pos_cache, take_readings=trigger_and_read):
             motors = step.keys()
             yield from move_per_step(step, pos_cache)
@@ -257,7 +260,6 @@ def XAS_scan(
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
     """
-    from haxpes.hax_monitors import run_mode
 
     if run_mode.current_mode.get() != "XAS":
         run_mode.current_mode.put("XAS")

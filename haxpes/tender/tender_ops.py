@@ -11,30 +11,18 @@ from haxpes.tender.funcs import (
     reset_feedback,
 )
 from bluesky.plan_stubs import mv, sleep
-from haxpes.devices.dcm_settings import dcmranges
+from haxpes.devices.dcm_settings import dcmranges, offsetdict, gonilatdict, x2rolldict
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
-
+from nbs_bl.hw import beamselection, gonilateral, psh1
 # from haxpes.scans import XPS_scan
 from haxpes.devices.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
-from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender
+from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender, suspendFOE
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
-from haxpes.hax_monitors import run_mode, beamselection
-
-
-# upstream suspender list:
-# suspendListUS = [suspend_FEsh1]
-# suspendListUS.append(suspend_psh1)
-# suspendListUS.append(suspend_beamstat)
-
-# HAXPES suspender list:
-# suspendListHAX = [s for s in suspendListUS]
-# suspendListHAX.append(suspend_psh2)
-# suspendListHAX.append(suspend_fs4a)
-
+from haxpes.hax_monitors import run_mode
 
 def check_tender_beam(func):
     def wrapper(*args, **kwargs):
@@ -46,11 +34,17 @@ def check_tender_beam(func):
 
     return wrapper
 
-
+@suspend_decorator(suspendFOE)
 def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
-    yield from dcm.set_crystal(crystalSP, roll_correct)
-
+    yield from mv(dcm.crystal, crystalSP)
+    inpos = dcm.crystalstatus.get()
+    if inpos == 0:
+        yield from psh1.close()
+        yield from mv(dcm.x2roll, x2rolldict[crystalSP])
+        yield from mv(dcm.bragg.user_offset, offsetdict[crystalSP])
+        yield from mv(gonilateral, gonilatdict[crystalSP])
+        yield from psh1.open()
 
 ####
 @suspend_decorator(suspendUS_tender)
@@ -84,52 +78,44 @@ def tune_x2pitch():
     )
 
 
-# @suspend_decorator(suspendHAX_tender)
-# @check_tender_beam
-# def run_XPS_tender(sample_list, close_shutter=False):
+@check_tender_beam
+def run_XPS_tender(sample_list, close_shutter=False):
 
-#     psh2 = bl["psh2"]
-#     fs4 = bl["fs4"]
-#     en = bl["en"]
-#     ses = bl["ses"]
+    psh2 = bl["psh2"]
+    fs4 = bl["fs4"]
+    en = bl["en"]
+    ses = bl["ses"]
 
-#     if run_mode.current_mode.get() != "XPS SES":
-#         run_mode.current_mode.put("XPS SES")
-#     yield from psh2.open()  # in case it is closed. It should be open.
-#     if close_shutter:
-#         yield from fs4.close()
-#     for i in range(sample_list.index):
-#         if sample_list.all_samples[i]["To Run"]:
-#             print("Moving to sample " + str(i))
-#             yield from sample_list.goto_sample(i)
-#             # set photon energy ...
-#             current_en = en.position
-#             if (
-#                 current_en >= sample_list.all_samples[i]["Photon Energy"] + 0.05
-#                 or current_en <= sample_list.all_samples[i]["Photon Energy"] - 0.05
-#             ):
-#                 yield from set_photon_energy_tender(
-#                     sample_list.all_samples[i]["Photon Energy"]
-#                 )
-#                 yield from align_beam_xps()
-#             for region in sample_list.all_samples[i]["regions"]:
-#                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
-#                 #                if region["Energy Type"] == "Binding":
-#                 #                    sample_list.calc_KE(region)
-#                 yield from set_analyzer(
-#                     sample_list.all_samples[i]["File Prefix"],
-#                     region,
-#                     sample_list.en_cal,
-#                 )
-#                 yield from fs4.open()  # in case it is closed ...
-#                 yield from count([ses], 1)
-#                 if close_shutter:
-#                     yield from fs4.close()
-#         else:
-#             print("Skipping sample " + str(i))
+    if run_mode.current_mode.get() != "XPS SES":
+        run_mode.current_mode.put("XPS SES")
+    yield from psh2.open()  # in case it is closed. It should be open.
+    if close_shutter:
+        yield from fs4.close()
+    for i in range(sample_list.index):
+        if sample_list.all_samples[i]["To Run"]:
+            print("Moving to sample " + str(i))
+            yield from sample_list.goto_sample(i)
+            # set photon energy ...
+            current_en = en.position
+            if (
+                current_en >= sample_list.all_samples[i]["Photon Energy"] + 0.05
+                or current_en <= sample_list.all_samples[i]["Photon Energy"] - 0.05
+            ):
+                yield from set_photon_energy_tender(
+                    sample_list.all_samples[i]["Photon Energy"]
+                )
+                yield from align_beam_xps()
+            for region in sample_list.all_samples[i]["regions"]:
+                sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
+                yield from fs4.open()  # in case it is closed ...
+                yield from SES_XPSScan(sample_list.all_samles[i]["File Prefix"],region,sample_list.en_cal)
+                if close_shutter:
+                    yield from fs4.close()
+        else:
+            print("Skipping sample " + str(i))
 
 
-@suspend_decorator(suspendHAX_tender)
+
 @check_tender_beam
 def run_peakXPS_tender(sample_list, close_shutter=False):
 
@@ -192,7 +178,6 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
             print("Skipping sample " + str(i))
 
 
-@suspend_decorator(suspendUS_tender)
 @check_tender_beam
 def set_photon_energy_tender(
     energySP, use_optimal_harmonic=True, use_optimal_crystal=True

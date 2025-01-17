@@ -1,17 +1,13 @@
 # from haxpes.energy_soft import ensoft as en, polsoft, hsoft, monosoft
-from haxpes.soft.pgm_settings import pgmranges
+from bluesky.preprocessors import suspend_decorator
+from bluesky.plans import count
 from bluesky.plan_stubs import mv
 
-# from haxpes.hax_hw import psh5
-from bluesky.plans import count
-
-# from haxpes.ses import ses
-from haxpes.hax_monitors import run_mode, beamselection
-
-from haxpes.hax_ops import set_analyzer
-
-from bluesky.preprocessors import suspend_decorator
+from haxpes.soft.pgm_settings import pgmranges
+from haxpes.hax_monitors import run_mode
 from haxpes.hax_suspenders import suspendHAX_soft
+
+from nbs_bl.hw import beamselection
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 
 
@@ -64,7 +60,7 @@ def run_XPS_soft(sample_list):
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 #                if region["Energy Type"] == "Binding":
                 #                    sample_list.calc_KE(region)
-                yield from set_analyzer(
+                yield from ses.set_analyzer(
                     sample_list.all_samples[i]["File Prefix"],
                     region,
                     sample_list.en_cal,
