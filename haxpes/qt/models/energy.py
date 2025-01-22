@@ -19,7 +19,7 @@ class SST2EnergyModel:
         long_name,
         **kwargs,
     ):
-        print("Initializing Energy")
+        print("Initializing Tender Energy")
         self.name = name
         self.obj = obj
         self.energy = SST2EnergyAxes(name, obj, group, name)

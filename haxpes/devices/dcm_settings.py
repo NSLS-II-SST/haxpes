@@ -30,3 +30,27 @@ range5 = {
 }
 
 dcmranges = [range1, range2, range3, range4, range5]
+
+#offsetdict for setting the Bragg angle offsets for crystal pairs
+offsetdict = {
+    "Si(111)": 10.829,
+    "Si(220)": 10.782,
+    "Si(333)": 10.829,
+    "Si(444)": 10.829,
+}
+
+#dictionary for setting the goniometer lateral possition for each crystal pair
+gonilatdict = {
+    "Si(111)": 0, 
+    "Si(220)": 35, 
+    "Si(333)": 0, 
+    "Si(444)": 0
+}
+
+#dictionary for setting the default x2roll position for each crystal pair
+x2rolldict = {
+    "Si(111)": -1.25, 
+    "Si(220)": 0.5, 
+    "Si(333)": -1.25, 
+    "Si(444)": -1.25
+}

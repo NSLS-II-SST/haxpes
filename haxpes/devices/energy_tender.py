@@ -11,7 +11,6 @@ from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from .dcm import DCM
 from sst_base.energy import UndulatorMotor
 
-
 import numpy as np
 
 

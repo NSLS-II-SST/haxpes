@@ -1,4 +1,4 @@
-from .motors import sampx, sampy, sampz, sampr
+from nbs_bl.hw import sampx, sampy, sampz, sampr
 from bluesky.plan_stubs import mv
 import numpy as np
 from pandas import read_excel

@@ -72,7 +72,7 @@ class SES(Device):
         self.stop_signal.put(1)
         return status
 
-    def set_analyzer(filename, core_line, en_cal):
+    def set_analyzer(self, filename, core_line, en_cal):
         """
         sets SES paramaters in a controlled way
         """
@@ -81,39 +81,37 @@ class SES(Device):
         dsteptime = 0.1
         dacqmode = "swept"
 
-        ses = bl["ses"]
-
-        yield from abs_set(ses.filename, filename)
-        yield from abs_set(ses.region_name, core_line["Region Name"])
+        yield from abs_set(self.filename, filename)
+        yield from abs_set(self.region_name, core_line["Region Name"])
         if core_line["Energy Type"] == "Binding":
             cent = en_cal - core_line["center_en"]
-            yield from abs_set(ses.center_en_sp, cent)
+            yield from abs_set(self.center_en_sp, cent)
         else:
-            yield from abs_set(ses.center_en_sp, core_line["center_en"])
-        #    yield from abs_set(ses.center_en_sp,core_line["center_en"]) ### BE correction.  Above 5 lines for testing, this one commented out.
-        yield from abs_set(ses.width_en_sp, core_line["width"])
-        yield from abs_set(ses.iterations, core_line["Iterations"])
-        yield from abs_set(ses.pass_en, core_line["Pass Energy"])
-        yield from abs_set(ses.excitation_en, en_cal)  # added 2023-08-02; NOT TESTED YET CW
+            yield from abs_set(self.center_en_sp, core_line["center_en"])
+        #    yield from abs_set(self.center_en_sp,core_line["center_en"]) ### BE correction.  Above 5 lines for testing, this one commented out.
+        yield from abs_set(self.width_en_sp, core_line["width"])
+        yield from abs_set(self.iterations, core_line["Iterations"])
+        yield from abs_set(self.pass_en, core_line["Pass Energy"])
+        yield from abs_set(self.excitation_en, en_cal)  # added 2023-08-02; NOT TESTED YET CW
         print(en_cal)
         #    if "Photon Energy" in core_line.keys():  #commented out 2023-08-02 CW
         #        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])  #commented out 2023-08-02 CW
         if "Step Size" in core_line.keys():
-            yield from abs_set(ses.en_step, core_line["Step Size"])
+            yield from abs_set(self.en_step, core_line["Step Size"])
         else:
-            yield from abs_set(ses.en_step, dstepsize)
+            yield from abs_set(self.en_step, dstepsize)
         if "Lens Mode" in core_line.keys():
-            yield from abs_set(ses.lens_mode, core_line["Lens Mode"])
+            yield from abs_set(self.lens_mode, core_line["Lens Mode"])
         else:
-            yield from abs_set(ses.lens_mode, dlensmode)
+            yield from abs_set(self.lens_mode, dlensmode)
         if "steptime" in core_line.keys():
-            yield from abs_set(ses.steptime, core_line["steptime"])
+            yield from abs_set(self.steptime, core_line["steptime"])
         else:
-            yield from abs_set(ses.steptime, dsteptime)
+            yield from abs_set(self.steptime, dsteptime)
         if "acq_mode" in core_line.keys():
-            yield from abs_set(ses.acq_mode, core_line["acq_mode"])
+            yield from abs_set(self.acq_mode, core_line["acq_mode"])
         else:
-            yield from abs_set(ses.acq_mode, dacqmode)
+            yield from abs_set(self.acq_mode, dacqmode)
 
     def reset(self):
         """
@@ -124,4 +122,4 @@ class SES(Device):
         return status
 
 
-ses = SES('XF:07ID-ES-SES', name='ses')
+# ses = SES('XF:07ID-ES-SES', name='ses')
