@@ -4,8 +4,7 @@ from nbs_bl.plans.scans import nbs_count
 from nbs_bl.utils import merge_func
 from nbs_bl.help import add_to_scan_list
 from nbs_bl.plans.plan_stubs import set_exposure
-from bluesky.plan_stubs import mv
-from haxpes.energy_tender import en
+from nbs_bl.plans.scan_decorators import wrap_scantype
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 import numpy as np
 
@@ -58,8 +57,9 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 
 
 @add_to_scan_list
+@wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell"])
-def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
+def XPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     peak_analyzer = bl["peak_analyzer"]
     peak_analyzer.setup_from_dictionary(region_dictionary, analyzer_settings, "XPS")
     est_time = estimate_time(region_dictionary, analyzer_settings, sweeps)

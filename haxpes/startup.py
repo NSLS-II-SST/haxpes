@@ -32,8 +32,14 @@ from nbs_bl.plans.groups import group
 from nbs_bl.queueserver import request_update, get_status
 from nbs_bl.samples import list_samples
 from nbs_bl.beamline import GLOBAL_BEAMLINE
-from haxpes.beam_modes import enable_tender_beam, enable_soft_beam, disable_tender_beam, disable_soft_beam
+from haxpes.beam_modes import (
+    enable_tender_beam,
+    enable_soft_beam,
+    disable_tender_beam,
+    disable_soft_beam,
+)
 from haxpes.tender.tender_ops import *
+from haxpes.plans.scans import XPSScan
 
 for key in GLOBAL_IMPORT_DICTIONARY:
     if key not in globals():
