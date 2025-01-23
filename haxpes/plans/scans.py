@@ -39,14 +39,14 @@ detector_widths = {"500": 40.0, "200": 16.0, "100": 8.0, "50": 4.0, "20": 1.6}
 
 
 def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
-    if "dwell time" in analyzer_settings.keys():
-        dwelltime = analyzer_settings["dwell time"]
+    if "dwell_time" in analyzer_settings.keys():
+        dwelltime = analyzer_settings["dwell_time"]
     else:
         dwelltime = default_dwell_time
     num_points = (
-        region_dictionary["energy width"]
-        + detector_widths[str(analyzer_settings["pass energy"])]
-    ) / region_dictionary["energy step"]
+        region_dictionary["energy_width"]
+        + detector_widths[str(analyzer_settings["pass_energy"])]
+    ) / region_dictionary["energy_step"]
     est_time = num_points * dwelltime
     print(
         "Estimated sweep time is "
