@@ -32,9 +32,12 @@ class XPSPlanWidget(BasicPlanWidget):
 
         self.analyzer_widget = AnalyzerParam(self)
         self.params.append(self.analyzer_widget)
+        self.analyzer_widget.editingFinished.connect(self.check_plan_ready)
 
         self.scan_modifier = ScanModifierParam(self)
         self.params.append(self.scan_modifier)
+        self.scan_modifier.editingFinished.connect(self.check_plan_ready)
+
         self.bl_modifier = BeamlineModifierParam(self.model, self)
         self.params.append(self.bl_modifier)
 
@@ -58,11 +61,9 @@ class XPSPlanWidget(BasicPlanWidget):
         print("XPSPlanWidget setup Widget finished")
 
     def check_plan_ready(self):
-        params = self.get_params()
-        # modifier_params = self.scan_modifier.get_params()
-
         if (
-            "num" in params
+            self.scan_widget.check_ready()
+            and self.analyzer_widget.check_ready()
             and self.scan_modifier.check_ready()
             and self.sample_select.check_ready()
         ):
@@ -77,8 +78,7 @@ class XPSPlanWidget(BasicPlanWidget):
 
         for sample in samples:
             item = BPlan(
-                "NewXPSScan",
-                md={"scantype": "xps"},
+                "XPSScan",
                 **params,
                 **sample,
             )

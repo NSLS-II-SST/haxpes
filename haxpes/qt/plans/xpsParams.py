@@ -5,6 +5,7 @@ class XPSParam(ParamGroup):
     def __init__(self, parent=None):
         super().__init__(parent, "XPS Parameters")
 
+        self.add_param(LineEditParam("region_name", str, "Region Name"))
         self.add_param(LineEditParam("energy_center", float, "Energy Center"))
         self.add_param(
             LineEditParam(

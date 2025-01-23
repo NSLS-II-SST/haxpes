@@ -1,10 +1,20 @@
-from nbs_bl.hw import I0, IK2600, sampx, sampy, sampz, sampr, floodgun, haxSMU, beamselection
+from nbs_bl.hw import (
+    I0,
+    IK2600,
+    sampx,
+    sampy,
+    sampz,
+    sampr,
+    floodgun,
+    haxSMU,
+    beamselection,
+)
 from bluesky.plans import count, scan, list_scan
 from nbs_bl.plans.scans import nbs_count
 from nbs_bl.utils import merge_func
 from nbs_bl.help import add_to_scan_list
 from nbs_bl.plans.plan_stubs import set_exposure
-from bluesky.plan_stubs import mv
+from nbs_bl.plans.scan_decorators import wrap_scantype
 from bluesky.preprocessors import suspend_decorator
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from haxpes.hax_monitors import run_mode
@@ -50,8 +60,9 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     )
     return est_time
 
-
+@suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
+@wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell"])
 def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     print("loading peak")
@@ -67,7 +78,7 @@ def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     yield from set_exposure(est_time)
     print("run Peak")
     yield from nbs_count(sweeps, extra_dets=[peak_analyzer], **kwargs)
-    print("resettnig I0")
+    print("resetting I0")
     yield from set_exposure(I0initexp)
 
 
@@ -94,14 +105,14 @@ def XPS_scan(
 
     if run_mode.current_mode.get() != "XPS Peak":
         run_mode.current_mode.put("XPS Peak")
-    
+   
     if "peak_analyzer" in bl.get_deferred_devices():
         peak_analyzer = bl.load_deferred_device('peak_analyzer')
     else:
         peak_analyzer = bl['peak_analyzer']
 
     en = bl['en']
-    
+
     number_of_sweeps = int(number_of_sweeps)
     peak_analyzer.setup_from_dictionary(region_dictionary, analyzer_settings, "XPS")
     #    yield from setup_peak(region_dictionary,analyzer_settings,"XPS")
@@ -158,8 +169,6 @@ def ResPES_scan(
     """
     # first which beam and implement suspenders
 
-
-
     if beamselection.get() == "Tender":
         suspendList = suspendHAX_tender
     elif beamselection.get() == "Soft":
@@ -209,7 +218,9 @@ def ResPES_scan(
             move_per_step,
             sleep as bs_sleep,
         )
-        en = bl['en']
+
+        en = bl["en"]
+
         def per_step(detectors, step, pos_cache, take_readings=trigger_and_read):
             motors = step.keys()
             yield from move_per_step(step, pos_cache)
