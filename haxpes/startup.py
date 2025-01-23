@@ -38,12 +38,14 @@ from haxpes.beam_modes import (
 )
 from haxpes.tender.tender_ops import *
 from haxpes.soft.soft_ops import *
-from haxpes.plans.scans import XPSScan
+from haxpes.plans.xps import XPSScan, load_xps
 
 from haxpes.sample_handling import sample_list
+
 S = sample_list()
 
 from os import chdir
+
 chdir("/home/xf07id1/Documents/UserFiles/live/LiveData")
 
 for key in GLOBAL_IMPORT_DICTIONARY:

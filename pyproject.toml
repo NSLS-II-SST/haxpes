@@ -24,5 +24,12 @@ packages = ["haxpes"]
 dependencies = {file = ["requirements.txt"]}
 
 [project.entry-points."nbs_gui.plans"]
-haxpes-xps = "haxpes.qt.plans.xpsScan:XPSPlanWidget"
-haxpes-respes = "haxpes.qt.plans.xpsScan:RESPESPlanWidget"
+haxpes-xps = "haxpes.qt.plans.xpsPlan:XPSPlanWidget"
+haxpes-xps-custom = "haxpes.qt.plans.xpsCustom:XPSCustomWidget"
+haxpes-respes-custom = "haxpes.qt.plans.respesCustom:RESPESCustomWidget"
+
+[project.entry-points."nbs_bl.plan_loaders"]
+xps = "haxpes.plans.xps:load_xps"
+
+[project.entry-points."nbs_gui.plan_loaders"]
+xps-gui-loader = "haxpes.qt.plans.xpsPlanLoader:XPSPlanLoader"

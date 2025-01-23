@@ -1,0 +1,184 @@
+from nbs_bl.hw import I0
+from nbs_bl.plans.scans import nbs_count
+from nbs_bl.utils import merge_func
+from nbs_bl.help import add_to_scan_list, add_to_func_list, _add_to_import_list
+from nbs_bl.plans.plan_stubs import set_exposure
+from nbs_bl.plans.scan_decorators import wrap_scantype
+from nbs_bl.plans.preprocessors import wrap_metadata
+from bluesky.preprocessors import suspend_decorator
+from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from nbs_bl.queueserver import GLOBAL_USER_STATUS
+from haxpes.hax_suspenders import suspendHAX_tender
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
+
+default_dwell_time = 0.1
+default_lens_mode = "Angular"
+default_acq_mode = "Image"
+
+detector_widths = {"500": 40.0, "200": 16.0, "100": 8.0, "50": 4.0, "20": 1.6}
+
+GLOBAL_XPS_PLANS = GLOBAL_USER_STATUS.request_status_dict("XPS_PLANS", use_redis=True)
+GLOBAL_XPS_PLANS.clear()
+
+
+def add_to_xps_list(f, key, **plan_info):
+    """
+    A function decorator that will add the plan to the built-in list
+    """
+    _add_to_import_list(f, "xps")
+    GLOBAL_XPS_PLANS[key] = {}
+    GLOBAL_XPS_PLANS[key].update(plan_info)
+    return f
+
+
+def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
+    if "dwell_time" in analyzer_settings.keys():
+        dwelltime = analyzer_settings["dwell_time"]
+    else:
+        dwelltime = default_dwell_time
+    num_points = (
+        region_dictionary["energy_width"]
+        + detector_widths[str(analyzer_settings["pass_energy"])]
+    ) / region_dictionary["energy_step"]
+    est_time = num_points * dwelltime
+    print(
+        "Estimated sweep time is "
+        + str(est_time)
+        + " s.  Setting I0 integration to "
+        + str(est_time)
+        + "."
+    )
+    print(
+        "Estimated total time is " + str((est_time * number_of_sweeps) / 60) + " min."
+    )
+    return est_time
+
+
+@suspend_decorator(suspendHAX_tender)
+@add_to_scan_list
+@wrap_scantype("xps")
+@merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell", "num"])
+def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwargs):
+    """
+    Parameters
+    ----------
+    region_dictionary : dict
+        The region dictionary for the XPS scan, with keys "energy_center", "energy_width", "energy_step", "energy_type" and "region_name"
+    analyzer_settings : dict
+        The analyzer settings for the XPS scan, with keys "dwell_time", "pass_energy", "lens_mode"
+    sweeps : int, optional
+        The number of sweeps to perform. Default is 1.
+    """
+    print("loading peak")
+    if "peak_analyzer" in bl.get_deferred_devices():
+        peak_analyzer = bl.load_deferred_device("peak_analyzer")
+    else:
+        peak_analyzer = bl["peak_analyzer"]
+    print("setting up peak")
+    _region_dictionary = region_dictionary.copy()
+    if region_dictionary["energy_type"] == "binding":
+        if energy is None:
+            try:
+                beam_energy = bl.energy.position
+            except Exception as e:
+                raise RuntimeError(
+                    f"Cannot get energy from bl.energy.position, and Binding Energy was requested: {e}"
+                )
+        else:
+            beam_energy = energy
+        _region_dictionary["energy_center"] = (
+            beam_energy - region_dictionary["energy_center"]
+        )
+        _region_dictionary["energy_type"] = "kinetic"
+
+    peak_analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, "XPS")
+    print("setting up I0")
+    est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)
+    I0initexp = I0.exposure_time.get()
+    yield from set_exposure(est_time)
+    print("run Peak")
+    yield from nbs_count(sweeps, extra_dets=[peak_analyzer], energy=energy, **kwargs)
+    print("resetting I0")
+    yield from set_exposure(I0initexp)
+
+
+def _xps_factory(region_dictionary, core_line, key):
+    @wrap_metadata({"plan_name": key, "core_line": core_line})
+    @merge_func(XPSScan, omit_params=["region_dictionary"])
+    def inner(**kwargs):
+        """Parameters
+        ----------
+        repeat : int
+            Number of times to repeat the scan
+        **kwargs :
+            Arguments to be passed to tes_gscan
+
+        """
+
+        yield from XPSScan(region_dictionary, **kwargs)
+
+    d = f"Perform an in-place XPS scan for {core_line}\n"
+    inner.__doc__ = d + inner.__doc__
+
+    inner.__qualname__ = key
+    inner.__name__ = key
+    inner._short_doc = f"Do XPS for {core_line}"
+    return inner
+
+
+@add_to_func_list
+def load_xps(filename):
+    """
+    Load XPS plans from a TOML file and inject them into the IPython user namespace.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the TOML file containing XPS plan definitions
+    """
+    try:
+        # Get IPython's user namespace
+        ip = get_ipython()
+        user_ns = ip.user_ns
+    except (NameError, AttributeError):
+        # Not running in IPython, just return the generated functions
+        user_ns = None
+
+    generated_plans = {}
+    with open(filename, "rb") as f:
+        regions = tomllib.load(f)
+        for key, value in regions.items():
+            name = value.get("name", key)
+            energy_type = value.get("energy_type")
+            energy_start = value.get("energy_start")
+            energy_stop = value.get("energy_stop")
+            energy_step = value.get("energy_step", 0.05)
+            energy_width = energy_stop - energy_start
+            energy_center = (energy_start + energy_stop) / 2
+            region_name = value.get("region_name")
+            core_line = value.get("core_line", "")
+            region_dict = {
+                "region_name": region_name,
+                "energy_center": energy_center,
+                "energy_width": energy_width,
+                "energy_step": energy_step,
+                "energy_type": energy_type,
+            }
+            xps_func = _xps_factory(region_dict, core_line, key)
+            add_to_xps_list(
+                xps_func, key, name=name, core_line=core_line, region_dict=region_dict
+            )
+
+            # Store the function
+            generated_plans[key] = xps_func
+
+            # If we're in IPython, inject into user namespace
+            if user_ns is not None:
+                user_ns[key] = xps_func
+
+    # Return the generated plans dictionary in case it's needed
+    return generated_plans
