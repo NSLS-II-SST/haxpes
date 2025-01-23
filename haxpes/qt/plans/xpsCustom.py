@@ -20,12 +20,12 @@ class XPSCustomWidget(BasicPlanWidget):
     ):
         self.initial_kwargs = kwargs
 
-        print("Initializing XPSPlanWidget Super")
+        print("Initializing XPSCustomWidget Super")
         super().__init__(model, parent, plans)
-        print("Done initializing XPSPlanWidget Super")
+        print("Done initializing XPSCustomWidget Super")
 
     def setup_widget(self):
-        print("XPSPlanWidget setup Widget")
+        print("XPSCustomWidget setup Widget")
         super().setup_widget()
         self.scan_widget = RegionParam(self)
         self.params.append(self.scan_widget)
@@ -59,7 +59,7 @@ class XPSCustomWidget(BasicPlanWidget):
         self.layout.addLayout(self.top_widget_layout)
         self.layout.addLayout(self.bottom_widget_layout)
 
-        print("XPSPlanWidget setup Widget finished")
+        print("XPSCustomWidget setup Widget finished")
 
     def check_plan_ready(self):
         if (

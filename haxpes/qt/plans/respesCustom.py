@@ -3,7 +3,7 @@ from nbs_gui.plans.planParam import AutoParamGroup
 from nbs_gui.plans.sampleModifier import SampleSelectWidget
 from nbs_gui.plans.scanModifier import ScanModifierParam, BeamlineModifierParam
 from nbs_gui.plans.variableStepPlan import VariableStepParam
-from .xpsParams import XPSParam, AnalyzerParam
+from .xpsParams import RegionParam, AnalyzerParam
 from qtpy.QtWidgets import QGridLayout, QWidget, QHBoxLayout, QVBoxLayout
 from bluesky_queueserver_api import BPlan
 
@@ -31,7 +31,7 @@ class RESPESCustomWidget(BasicPlanWidget):
         self.energy_widget.label_text = "Energy Step Arguments"
         self.params.append(self.energy_widget)
 
-        self.scan_widget = XPSParam(self)
+        self.scan_widget = RegionParam(self)
         self.params.append(self.scan_widget)
         self.scan_widget.editingFinished.connect(self.check_plan_ready)
 
