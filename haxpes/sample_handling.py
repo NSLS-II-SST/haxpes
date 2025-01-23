@@ -220,3 +220,16 @@ class sample_list:
                 t_total = t_total+t_sample
         t_hrs = t_total/60
         print("Total run time is "+str(t_total)+" minutes ("+str(t_hrs)+" hours).")
+
+    def translate_peak_dictionary(self,input_dictionary):
+        output_dictionary = {}
+        if input_dictionary["Energy Type"] == "Binding":
+            output_dictionary["energy center"] = self.en_cal - input_dictionary["center_en"]
+        else:
+            output_dictionary["energy center"] = input_dictionary["center_en"]
+        output_dictionary["energy step"] = input_dictionary["Step Size"]
+        output_dictionary["energy width"] = float(input_dictionary["width"])
+        output_dictionary["region name"] = input_dictionary["Region Name"]
+        return output_dictionary
+
+

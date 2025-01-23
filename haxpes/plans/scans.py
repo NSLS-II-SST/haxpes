@@ -11,8 +11,8 @@ from haxpes.hax_monitors import run_mode
 import numpy as np
 from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
 
-from haxpes.xpswriter import xpswrite_wrapper
-from haxpes.xaswriter import xaswrite_wrapper
+#from haxpes.xpswriter import xpswrite_wrapper
+#from haxpes.xaswriter import xaswrite_wrapper
 
 # from haxpes.hax_suspenders import suspend_FEsh1, suspend_psh1, suspend_beamstat, suspend_psh2, suspend_fs4a
 # suspendList = [suspend_FEsh1]
@@ -54,23 +54,34 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 @add_to_scan_list
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell"])
 def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
-    peak_analyzer = bl["peak_analyzer"]
+    print("loading peak")
+    if "peak_analyzer" in bl.get_deferred_devices():
+        peak_analyzer = bl.load_deferred_device('peak_analyzer')
+    else:
+        peak_analyzer = bl['peak_analyzer']
+    print("setting up peak")
     peak_analyzer.setup_from_dictionary(region_dictionary, analyzer_settings, "XPS")
+    print("setting up I0")
     est_time = estimate_time(region_dictionary, analyzer_settings, sweeps)
     I0initexp = I0.exposure_time.get()
     yield from set_exposure(est_time)
+    print("run Peak")
     yield from nbs_count(sweeps, extra_dets=[peak_analyzer], **kwargs)
+    print("resettnig I0")
     yield from set_exposure(I0initexp)
 
 
-@suspsend_decorator(suspendHAX_tender)
+@suspend_decorator(suspendHAX_tender)
 def SES_XPSScan(filename,core_line,en_cal):
-    ses = bl["SES"]
+    if "ses" in bl.get_deferred_devices():
+        ses = bl.load_deferred_device("ses")
+    else:
+        ses = bl["SES"]
     yield from ses.set_analyzer(filename,core_line,en_cal)
-    yield from count(ses,1)
+    yield from count([ses],1)
 
 
-@xpswrite_wrapper
+#@xpswrite_wrapper
 @suspend_decorator(suspendHAX_tender)
 def XPS_scan(
     region_dictionary,
@@ -84,7 +95,11 @@ def XPS_scan(
     if run_mode.current_mode.get() != "XPS Peak":
         run_mode.current_mode.put("XPS Peak")
     
-    peak_analyzer = bl['peak_analyzer']
+    if "peak_analyzer" in bl.get_deferred_devices():
+        peak_analyzer = bl.load_deferred_device('peak_analyzer')
+    else:
+        peak_analyzer = bl['peak_analyzer']
+
     en = bl['en']
     
     number_of_sweeps = int(number_of_sweeps)
@@ -243,7 +258,7 @@ def XAS_setup(detector_list, exposure_time):
 # edge_dictionary["stop_energy"],edge_dictionary["n_steps"])
 
 
-@xaswrite_wrapper
+#@xaswrite_wrapper
 def XAS_scan(
     edge_dictionary,
     detector_list,
@@ -260,6 +275,8 @@ def XAS_scan(
     - stop_<n> where <n> is the region number starting from 0 for each region.
     - step_<n> where <n> is the region number start from 0 for each region.
     """
+
+    en = bl['en']
 
     if run_mode.current_mode.get() != "XAS":
         run_mode.current_mode.put("XAS")

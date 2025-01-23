@@ -17,6 +17,7 @@ from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
 from nbs_bl.hw import beamselection, gonilateral, psh1
 # from haxpes.scans import XPS_scan
+from haxpes.plans.scans import NewXPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
@@ -84,7 +85,10 @@ def run_XPS_tender(sample_list, close_shutter=False):
     psh2 = bl["psh2"]
     fs4 = bl["fs4"]
     en = bl["en"]
-    ses = bl["ses"]
+#    if "ses" in bl.get_deferred_devices():
+#        ses = bl.load_deferred_device("ses")
+#    else:
+#        ses = bl["ses"]
 
     if run_mode.current_mode.get() != "XPS SES":
         run_mode.current_mode.put("XPS SES")
@@ -108,7 +112,7 @@ def run_XPS_tender(sample_list, close_shutter=False):
             for region in sample_list.all_samples[i]["regions"]:
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open()  # in case it is closed ...
-                yield from SES_XPSScan(sample_list.all_samles[i]["File Prefix"],region,sample_list.en_cal)
+                yield from SES_XPSScan(sample_list.all_samples[i]["File Prefix"],region,sample_list.en_cal)
                 if close_shutter:
                     yield from fs4.close()
         else:
@@ -160,18 +164,12 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
                 )
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open()  # in case it is closed ...
-                reg = {}
-                if region["Energy Type"] == "Binding":
-                    reg["energy center"] = sample_list.en_cal - region["center_en"]
-                else:
-                    reg["energy center"] = region["center_en"]
-                reg["energy step"] = region["Step Size"]
-                reg["region name"] = region["Region Name"]
-                reg["energy width"] = float(region["width"])
+                reg = sample_list.translate_peak_dictionary(region)
                 if sample_list.all_samples[i]["File Comments"] != "":
                     reg["description"] = sample_list.all_samples[i]["File Comments"]
                 iterations = region["Iterations"]
-                yield from XPS_scan(reg, iterations, anset, export_filename=fn)
+#                yield from XPS_scan(reg, iterations, anset, export_filename=fn)
+                yield from NewXPSScan(reg, anset, sweeps=iterations)
                 if close_shutter:
                     yield from fs4.close()
         else:
@@ -228,7 +226,7 @@ def align_beam_xps(PlaneMirror=False):
         yield from sleep(5.0)
         yield from BPM4cent.adjust_gain()
         yield from yalign_fs4_xps(spy=349)
-        yield from xalign_fs4(spx=468)
+        yield from xalign_fs4(spx=447)
     yield from fs4.open()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
@@ -356,8 +354,10 @@ def setL2_toroid(stripe):
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     # stop feedback and zero piezos:
+    print("stopping feedback")
     yield from stop_feedback()
     yield from mv(x2finepitch, 0, x2fineroll, 0)
+    print("collecting required information")
     if stripe == "gold" or stripe == "Au":
         y_sp = 0
         roll_sp = 22.25
@@ -367,8 +367,11 @@ def setL2_toroid(stripe):
         roll_sp = -16.5
         x_sp = 2.9
     # TO DO:  error out if not proper stripe name
+    print("moving L2 wedge")
     yield from mv(L2wedge, 35)
+    print("moving L2 hexapod")
     yield from mv(L2AB.y, y_sp)
     yield from mv(L2AB.x, x_sp)
     yield from mv(L2AB.roll, roll_sp)
+    print("optimizing L2 pitch")
     yield from optimizeL2()

@@ -35,6 +35,12 @@ from haxpes.beam_modes import enable_tender_beam, enable_soft_beam, disable_tend
 from haxpes.tender.tender_ops import *
 from haxpes.soft.soft_ops import *
 
+from haxpes.sample_handling import sample_list
+S = sample_list()
+
+from os import chdir
+chdir("/home/xf07id1/Documents/UserFiles/live/LiveData")
+
 for key in GLOBAL_IMPORT_DICTIONARY:
     if key not in globals():
         globals()[key] = GLOBAL_IMPORT_DICTIONARY[key]

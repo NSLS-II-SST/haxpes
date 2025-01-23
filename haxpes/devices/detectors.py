@@ -10,7 +10,7 @@ from nbs_bl.devices import ophScalar
 # dm4_f460 = F460("XF:07ID-BI{DM4:F4}", name="DM4 F460")
 # dm5_f460 = F460("XF:07ID-BI{DM5:F4}", name="DM5 F460")
 
-BPM4cent = simpleBPM("XF:07ID-BI{BPM:4}", name="BPM4 Centroid")
+#BPM4cent = simpleBPM("XF:07ID-BI{BPM:4}", name="BPM4 Centroid")
 
 I0 = ophScalar("XF:07ID-BI[ADC:1-Ch:1]Volt", name="I0 ADC")
 Idrain = ophScalar("XF:07ID-BI[ADC:1-Ch:0]Volt", name="Sample Drain Current")
