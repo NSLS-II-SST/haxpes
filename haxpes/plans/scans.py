@@ -64,7 +64,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 @add_to_scan_list
 @wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell"])
-def NewXPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
+def XPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     print("loading peak")
     if "peak_analyzer" in bl.get_deferred_devices():
         peak_analyzer = bl.load_deferred_device('peak_analyzer')
@@ -94,7 +94,7 @@ def SES_XPSScan(filename,core_line,en_cal):
 
 #@xpswrite_wrapper
 @suspend_decorator(suspendHAX_tender)
-def XPS_scan(
+def Peak_XPS_scan(
     region_dictionary,
     number_of_sweeps,
     analyzer_settings,

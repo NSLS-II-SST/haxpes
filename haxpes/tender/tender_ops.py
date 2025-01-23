@@ -17,7 +17,7 @@ from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
 from nbs_bl.hw import beamselection, gonilateral, psh1
 # from haxpes.scans import XPS_scan
-from haxpes.plans.scans import NewXPSScan, SES_XPSScan
+from haxpes.plans.scans import XPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
 
 from bluesky.preprocessors import suspend_decorator
@@ -169,7 +169,7 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
                     reg["description"] = sample_list.all_samples[i]["File Comments"]
                 iterations = region["Iterations"]
 #                yield from XPS_scan(reg, iterations, anset, export_filename=fn)
-                yield from NewXPSScan(reg, anset, sweeps=iterations)
+                yield from XPSScan(reg, anset, sweeps=iterations)
                 if close_shutter:
                     yield from fs4.close()
         else:
