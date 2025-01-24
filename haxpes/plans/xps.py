@@ -109,7 +109,7 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwarg
 def _xps_factory(region_dictionary, core_line, key):
     @wrap_metadata({"plan_name": key, "core_line": core_line})
     @merge_func(XPSScan, omit_params=["region_dictionary"])
-    def inner(**kwargs):
+    def inner(*args, **kwargs):
         """Parameters
         ----------
         repeat : int
@@ -119,7 +119,7 @@ def _xps_factory(region_dictionary, core_line, key):
 
         """
 
-        yield from XPSScan(region_dictionary, **kwargs)
+        yield from XPSScan(region_dictionary, *args, **kwargs)
 
     d = f"Perform an in-place XPS scan for {core_line}\n"
     inner.__doc__ = d + inner.__doc__
