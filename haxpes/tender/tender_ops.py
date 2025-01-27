@@ -77,6 +77,7 @@ def tune_x2pitch():
         max_channel=max_channel,
         md=md,
     )
+    yield from mv(dm1,60)
 
 
 @check_tender_beam
