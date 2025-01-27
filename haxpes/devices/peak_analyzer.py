@@ -65,7 +65,7 @@ class PeakAnalyzer(Device):
     def _activate_analyzer(self):
         if self._acqclient.get_state() == "Ready":
             self._peakclient.activate_servers()
-            sleep(5)
+            sleep(2)
         else:
             # NOTE: figure out states and how to deal
             print("Analyzer Already Active")
@@ -136,8 +136,9 @@ class PeakAnalyzer(Device):
         self._livemode = False
         ELo = self.energy_center.get() - (self.energy_width.get() / 2)
         self.set_live_pass_energy(self.pass_energy.get())
+        self.set_live_lens_mode(self.lens_mode.get())
         self.set_live_energy_center(ELo)
-        sleep(5)
+        sleep(8)
         self._setanalyzer()
 
     def _acquire(self, status):
