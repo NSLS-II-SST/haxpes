@@ -60,6 +60,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 
 @suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
+@wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell", "num"])
 def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwargs):

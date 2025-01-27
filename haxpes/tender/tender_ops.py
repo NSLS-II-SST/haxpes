@@ -199,7 +199,7 @@ def set_photon_energy_tender(
     if use_optimal_crystal:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
-                yield from dcm.set_crystal(r["crystal"])
+                yield from set_crystal(r["crystal"])
     yield from mv(en, energySP)
     yield from tune_x2pitch()
     yield from mv(dm1, 60)

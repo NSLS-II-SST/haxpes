@@ -11,13 +11,13 @@ def write_xps_file(uid,sum_sweeps=True):
     uid_str = run.start['uid']
     
     #check if "XPS scan"
-    if "purpose" not in run.start.keys():
-        print("Data Type Unclear.  No data will be written.")
-        return 0
-    else:
-        if run.start["purpose"] != "XPS Data":
-            print("Not XPS data.  No data will be written.")
-            return 0
+   # if "purpose" not in run.start.keys():
+   #     print("Data Type Unclear.  No data will be written.")
+   #     return 0
+   # else:
+   #     if run.start["purpose"] != "XPS Data":
+   #         print("Not XPS data.  No data will be written.")
+   #         return 0
 
     #record metadata:
     def get_md(md_key):
