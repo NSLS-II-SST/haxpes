@@ -57,6 +57,7 @@ for key in GLOBAL_IMPORT_DICTIONARY:
 print("HAXPES Main Startup")
 
 RE = create_run_engine(setup=True)
+
 # RE = setup_run_engine(RE)
 
 if "redis" in GLOBAL_BEAMLINE.settings:
@@ -71,6 +72,7 @@ if "redis" in GLOBAL_BEAMLINE.settings:
     GLOBAL_USER_STATUS.add_status("USER_MD", md)
     RE.md = md
 
+md["autoexport"] = False
 RE(set_exposure(1.0))
 
 
