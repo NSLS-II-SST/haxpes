@@ -18,7 +18,12 @@ class energypos(PseudoPositioner):
 
     energy = Cpt(PseudoSingle, kind="hinted", limits=(1985, 9000))
 
-    harmonic = Cpt(Signal, value=3, kind="config", name="U42 Harmonic")
+    harmonic = Cpt(
+        EpicsSignal,
+        "XF:07ID2-HAXMonitor:U42harmonic",
+        kind="config",
+        name="U42 Harmonic",
+    )
 
     mono = Cpt(DCM, "XF:07ID6-OP{Mono:DCM1-Ax:", name="dcm", kind="config")
     u42 = Cpt(

@@ -10,12 +10,14 @@ from haxpes.tender.funcs import (
     set_feedback,
     reset_feedback,
 )
-from bluesky.plan_stubs import mv, sleep
+from bluesky.plan_stubs import mv, sleep, abs_set
 from haxpes.devices.dcm_settings import dcmranges, offsetdict, gonilatdict, x2rolldict
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
 from nbs_bl.hw import beamselection, gonilateral, psh1
+from nbs_bl.utils import merge_func
+
 # from haxpes.scans import XPS_scan
 from haxpes.plans.scans import XPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
@@ -25,7 +27,9 @@ from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender, suspendFO
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from haxpes.hax_monitors import run_mode
 
+
 def check_tender_beam(func):
+    @merge_func(func)
     def wrapper(*args, **kwargs):
         if beamselection.get() != "Tender":
             raise RuntimeError(
@@ -34,6 +38,7 @@ def check_tender_beam(func):
         return (yield from func(*args, **kwargs))
 
     return wrapper
+
 
 @suspend_decorator(suspendFOE)
 def set_crystal(crystalSP, roll_correct=1):
@@ -47,6 +52,7 @@ def set_crystal(crystalSP, roll_correct=1):
         yield from mv(gonilateral, gonilatdict[crystalSP])
         yield from psh1.open()
 
+
 ####
 @suspend_decorator(suspendUS_tender)
 @check_tender_beam
@@ -58,7 +64,7 @@ def tune_x2pitch():
     dm1 = bl["dm1"]
     Idm1 = bl["Idm1"]
     x2pitch = bl["x2pitch"]
-
+    yield from abs_set(Idm1.exposure_time, 1)
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from mv(dm1, 32)
@@ -85,10 +91,10 @@ def run_XPS_tender(sample_list, close_shutter=False):
     psh2 = bl["psh2"]
     fs4 = bl["fs4"]
     en = bl["en"]
-#    if "ses" in bl.get_deferred_devices():
-#        ses = bl.load_deferred_device("ses")
-#    else:
-#        ses = bl["ses"]
+    #    if "ses" in bl.get_deferred_devices():
+    #        ses = bl.load_deferred_device("ses")
+    #    else:
+    #        ses = bl["ses"]
 
     if run_mode.current_mode.get() != "XPS SES":
         run_mode.current_mode.put("XPS SES")
@@ -112,12 +118,15 @@ def run_XPS_tender(sample_list, close_shutter=False):
             for region in sample_list.all_samples[i]["regions"]:
                 sample_list.en_cal = sample_list.all_samples[i]["Photon Energy"]
                 yield from fs4.open()  # in case it is closed ...
-                yield from SES_XPSScan(sample_list.all_samples[i]["File Prefix"],region,sample_list.en_cal)
+                yield from SES_XPSScan(
+                    sample_list.all_samples[i]["File Prefix"],
+                    region,
+                    sample_list.en_cal,
+                )
                 if close_shutter:
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
-
 
 
 @check_tender_beam
@@ -168,7 +177,7 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
                 if sample_list.all_samples[i]["File Comments"] != "":
                     reg["description"] = sample_list.all_samples[i]["File Comments"]
                 iterations = region["Iterations"]
-#                yield from XPS_scan(reg, iterations, anset, export_filename=fn)
+                #                yield from XPS_scan(reg, iterations, anset, export_filename=fn)
                 yield from XPSScan(reg, anset, sweeps=iterations)
                 if close_shutter:
                     yield from fs4.close()
@@ -184,7 +193,7 @@ def set_photon_energy_tender(
     x2finepitch = bl["x2finepitch"]
     x2fineroll = bl["x2fineroll"]
     h = bl["h"]
-    dcm = bl["dcm"]
+    dcm = bl["mono"]
     en = bl["en"]
     dm1 = bl["dm1"]
 
@@ -199,7 +208,7 @@ def set_photon_energy_tender(
     if use_optimal_crystal:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
-                yield from dcm.set_crystal(r["crystal"])
+                yield from set_crystal(r["crystal"])
     yield from mv(en, energySP)
     yield from tune_x2pitch()
     yield from mv(dm1, 60)

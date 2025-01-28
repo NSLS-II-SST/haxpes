@@ -4,6 +4,7 @@ from nbs_gui.models import (
     MultiMotorModel,
     MotorModel,
     EnumModel,
+    PVModel,
 )
 
 
@@ -28,6 +29,9 @@ class SST2EnergyModel:
             obj.mono.crystal,
             group=group,
             long_name=obj.mono.crystal.name,
+        )
+        self.harmonic = PVModel(
+            obj.harmonic.name, obj.harmonic, group=group, long_name="Harmonic"
         )
         self.group = group
         self.label = long_name
