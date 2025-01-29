@@ -38,6 +38,7 @@ from haxpes.beam_modes import (
 )
 from haxpes.tender.tender_ops import *
 from haxpes.soft.soft_ops import *
+from haxpes.hax_ops import *
 from haxpes.plans.xps import XPSScan, load_xps
 
 from haxpes.sample_handling import sample_list

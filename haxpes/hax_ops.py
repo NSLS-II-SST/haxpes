@@ -1,9 +1,35 @@
 from bluesky.plan_stubs import abs_set, mv, sleep
 from bluesky.plans import count, rel_scan
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from nbs_bl.help import add_to_plan_list
+from nbs_bl.hw import beamselection
+from .soft.soft_ops import set_photon_energy_soft
+from .tender.tender_ops import set_photon_energy_tender
 
 
+@add_to_plan_list
+def set_photon_energy(energy, use_optimal_harmonic=True, use_optimal_crystal=True):
+    """
+    Optimize the photon energy for the current beam mode. Automatically determines
+    whether to use the soft or tender beam settings.
 
+    Parameters
+    ----------
+    energy : float
+        The photon energy to set in eV.
+    use_optimal_harmonic : bool, optional
+        Whether to set the optimal harmonic for the current beam mode.
+    use_optimal_crystal : bool, optional
+        Whether to set the optimal crystal for the current beam mode.
+    """
+    if beamselection.get() == "Soft":
+        yield from set_photon_energy_soft(energy, use_optimal_harmonic)
+    elif beamselection.get() == "Tender":
+        yield from set_photon_energy_tender(
+            energy, use_optimal_harmonic, use_optimal_crystal
+        )
+    else:
+        raise ValueError("Invalid beam mode for setting photon energy")
 
 
 ###
