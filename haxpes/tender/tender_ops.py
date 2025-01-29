@@ -59,6 +59,8 @@ def tune_x2pitch():
     Idm1 = bl["Idm1"]
     x2pitch = bl["x2pitch"]
 
+    yield from dm1.set_exposure(1.0)
+
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from mv(dm1, 32)
