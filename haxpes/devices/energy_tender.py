@@ -15,6 +15,9 @@ import numpy as np
 
 
 class energypos(PseudoPositioner):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.u42.tolerance.put(1)
 
     energy = Cpt(PseudoSingle, kind="hinted", limits=(1985, 9000))
 
