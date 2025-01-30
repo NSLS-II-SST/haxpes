@@ -40,7 +40,6 @@ def check_tender_beam(func):
     return wrapper
 
 
-@suspend_decorator(suspendFOE)
 def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
     yield from mv(dcm.crystal, crystalSP)

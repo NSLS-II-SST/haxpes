@@ -138,7 +138,7 @@ class SST2EnergyControl(QGroupBox):
         vbox.addLayout(ebox)
         settingBox = QHBoxLayout()
         settingBox.addWidget(AutoControl(energy.harmonic, parent_model))
-        settingBox.addWidget(AutoControl(energy.crystal, parent_model))
+        settingBox.addWidget(AutoMonitor(energy.crystal, parent_model))
         vbox.addLayout(settingBox)
         hbox = QHBoxLayout()
 

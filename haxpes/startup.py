@@ -13,7 +13,7 @@ from .enabler import enable_soft_beam, enable_tender_beam, disable_soft_beam, di
 LiveTable._FMT_MAP['number'] = 'g'
 """
 
-from bluesky.plan_stubs import abs_set
+#from bluesky.plan_stubs import abs_set
 import nbs_bl
 from nbs_bl.hw import *
 from nbs_bl.detectors import (
@@ -42,6 +42,8 @@ from haxpes.hax_ops import *
 from haxpes.plans.xps import XPSScan, load_xps
 
 from haxpes.sample_handling import sample_list
+
+from haxpes.plans.bl_op_plans import *
 
 S = sample_list()
 
