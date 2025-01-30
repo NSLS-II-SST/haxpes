@@ -77,6 +77,8 @@ if "redis" in GLOBAL_BEAMLINE.settings:
 md["autoexport"] = False
 RE(set_exposure(1.0))
 
+#by default, start in tender mode:
+enable_tender_beam()
 
 """
 I0.set_exposure(1)
@@ -88,8 +90,7 @@ I1.set_exposure(1)
 #RE.install_suspender(suspend_FEsh1)
 #RE.install_suspender(suspend_beamstat)
 
-#by default, start in tender mode:
-enable_tender_beam()
+
 
 from haxpes.getXASregionsfromfile import DefaultRegions
 
