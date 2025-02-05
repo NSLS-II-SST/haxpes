@@ -9,13 +9,15 @@ class FloodGun(Device):
 
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-    
-    def startup(self,energy=None,Vgrid=None):
+
+    def startup(self):
         self.startProc.put(1)
-        if energy:
-            self.energy.put(energy)
-        if Vgrid:
-            self.Vgrid.put(Vgrid)
+
+    def set_energy(self,energy):
+        self.energy.put(energy)
+
+    def set_Vgrid(self,Vgrid):
+        self.Vgrid.put(Vgrid)
 
     def shutdown(self):
         self.stopProc.put(1)
