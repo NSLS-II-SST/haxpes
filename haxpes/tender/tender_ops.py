@@ -64,7 +64,7 @@ def tune_x2pitch():
     Idm1 = bl["Idm1"]
     x2pitch = bl["x2pitch"]
 
-    Idm1.set_exposure(1.0)
+    yield from set_exposure(1.0)
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from mv(dm1, 32)
@@ -262,6 +262,7 @@ def optimizeL1():
     Idm1 = bl["Idm1"]
     L1 = bl["L1"]
 
+    yield from set_exposure(1.0)
     yield from mv(dm1, 32)
     # TO DO: turn off feedback and zero
     max_channel = Idm1.mean.name  # define channel for DM1 diode
@@ -284,6 +285,7 @@ def optimizeL2():
     Idm1 = bl["Idm1"]
     L2AB = bl["L2AB"]
 
+    yield from set_exposure(1.0)
     L2pitch = L2AB.pitch
     yield from mv(dm1, 32)
     # TO DO: turn off feedback and zero
