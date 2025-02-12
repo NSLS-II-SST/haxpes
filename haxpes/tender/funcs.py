@@ -201,12 +201,14 @@ def set_feedback(axis, set_new_sp=True):
     if axis == "vertical":
         if set_new_sp:
             vval = fbvert.lastinput.get()
-            yield from mv(fbvert.setpoint, vval)
+            if vval <= 0.8 and vval >= -0.8:
+                yield from mv(fbvert.setpoint, vval)
         yield from mv(fbvert.pidcontrol, 1)
     elif axis == "horizontal":
         if set_new_sp:
             hval = fbhor.lastinput.get()
-            yield from mv(fbhor.setpoint, hval)
+            if hval <= 0.8 and hval >= -0.8:
+                yield from mv(fbhor.setpoint, hval)
         yield from mv(fbhor.pidcontrol, 1)
     else:
         print("what????")

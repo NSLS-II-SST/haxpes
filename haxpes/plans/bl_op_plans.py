@@ -1,7 +1,13 @@
 from nbs_bl.help import add_to_plan_list
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
+from nbs_bl.plans.plan_stubs import set_exposure
 
 from bluesky.plan_stubs import mv, abs_set, sleep as bsleep
+from bluesky_live.bluesky_run import BlueskyRun, DocumentCache
+from bluesky.plans import count
+from bluesky.preprocessors import subs_decorator
+
+import numpy as np
 
 @add_to_plan_list
 def close_shutter(shutter: str = "psh2"):
@@ -51,4 +57,44 @@ def withdraw_samplebar(y_out: float = 535):
     yield from mv(manip.y,y_out)
     low_lim = y_out - 0.1 #seems to be needed
     manip.y.set_lim(low_lim,manip.y.high_limit)
+
+@add_to_plan_list
+def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
+    """take dark counts and set detector offsets"""
+    dc = DocumentCache()
+
+    shutter = bl[shutter]
+
+    @subs_decorator(dc)
+    def inner():
+        yield from set_exposure(1.)
+
+        if shutter.status() == "open":
+            openAfter = True
+            yield from shutter.close()
+        else:
+            openAfter = False
+
+        # Clear offsets first
+        for det in bl.detectors.active:
+            detname = det.name
+            if hasattr(det, "offset"):
+                det.offset.set(0).wait()
+        
+        yield from count(
+            bl.detectors.active, n_counts, md={"scantype": "darkcounts"}
+        )
+        run = BlueskyRun(dc)
+        table = run.primary.read()
+        for det in bl.detectors.active:
+            detname = det.name
+            if hasattr(det, "offset"):
+                dark_value = float(table[detname].mean().values)
+                if np.isfinite(dark_value):
+                    det.offset.set(dark_value).wait()
+
+        if openAfter:
+            yield from shutter.open()
+
+    return (yield from inner())    
     
