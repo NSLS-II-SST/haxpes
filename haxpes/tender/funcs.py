@@ -17,7 +17,7 @@ def xalign_fs4(spx=448):
     md = {"purpose": "alignment"}
     yield from find_sp(
         rel_scan,
-        [BPM4cent],
+        [BPM4cent.centX],
         x2roll,
         -0.5,
         0.5,
@@ -29,7 +29,7 @@ def xalign_fs4(spx=448):
     )
     yield from find_sp(
         rel_scan,
-        [BPM4cent],
+        [BPM4cent.centX],
         x2roll,
         -0.1,
         0.1,
@@ -57,7 +57,7 @@ def yalign_fs4_xps(spy=326):
     delta = 0.1 * x2perp.position
     yield from find_sp(
         rel_scan,
-        [BPM4cent],
+        [BPM4cent.centY],
         x2perp,
         -delta,
         delta,
@@ -70,7 +70,7 @@ def yalign_fs4_xps(spy=326):
     delta = 0.02 * x2perp.position
     yield from find_sp(
         rel_scan,
-        [BPM4cent],
+        [BPM4cent.centY],
         x2perp,
         -delta,
         delta,
