@@ -97,4 +97,18 @@ def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
             yield from shutter.open()
 
     return (yield from inner())    
+
+@add_to_plan_list
+def setup_peakXAS(energy_center: float, pass_energy: int = 50, lens_mode: str = "Angular"):
+    """setup peak analyzer in fixed mode for XAS"""
     
+    peak_analyzer = bl.load_deferred_device("peak_analyzer")
+    rdict = {"energy_center": energy_center}
+    anset = {
+        "pass_energy": pass_energy,
+        "lens_mode": lens_mode
+        }
+    peak_analyzer.setup_from_dictionary(rdict,anset,"XAS")
+    yield None
+
+
