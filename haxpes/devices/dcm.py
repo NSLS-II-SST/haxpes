@@ -10,11 +10,11 @@ from ophyd import (
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from math import asin, cos, sin, pi
 from bluesky.plan_stubs import mv
-from sst_base.motors import PrettyMotor
+from nbs_bl.devices.motors import DeadbandEpicsMotor
 
-#gonilateral = PrettyMotor(
+# gonilateral = PrettyMotor(
 #    "XF:07ID6-OP{Mono:DCM1-Ax:X}Mtr", name="DCM goniometer lateral"
-#)
+# )
 
 
 class DCM(PseudoPositioner):
@@ -51,39 +51,39 @@ class DCM(PseudoPositioner):
     readback = Cpt(EpicsSignalRO, ":ENERGY_MON", kind="hinted")
 
     # motors:
-    bragg = Cpt(EpicsMotor, "Bragg}Mtr", kind="normal")
-    x2perp = Cpt(EpicsMotor, "Per2}Mtr", kind="normal")
-    x2para = Cpt(EpicsMotor, "Par2}Mtr", kind="normal")
-    x2roll = Cpt(EpicsMotor, "R2}Mtr", kind="normal")
-    x2pitch = Cpt(EpicsMotor, "P2}Mtr", kind="normal")
-    x2perp = Cpt(EpicsMotor, "Per2}Mtr", kind="normal")
-    x2finepitch = Cpt(EpicsMotor, "PF2}Mtr", kind="normal")
-    x2fineroll = Cpt(EpicsMotor, "RF2}Mtr", kind="normal")
+    bragg = Cpt(DeadbandEpicsMotor, "Bragg}Mtr", kind="normal")
+    x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")
+    x2para = Cpt(DeadbandEpicsMotor, "Par2}Mtr", tolerance=0.001, kind="normal")
+    x2roll = Cpt(DeadbandEpicsMotor, "R2}Mtr", tolerance=0.001, kind="normal")
+    x2pitch = Cpt(DeadbandEpicsMotor, "P2}Mtr", tolerance=0.001, kind="normal")
+    x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")
+    x2finepitch = Cpt(DeadbandEpicsMotor, "PF2}Mtr", tolerance=0.001, kind="normal")
+    x2fineroll = Cpt(DeadbandEpicsMotor, "RF2}Mtr", tolerance=0.001, kind="normal")
 
-    #the following is deprecated for set_crystal in tender_ops ... probably doesn't work any more anyway
+    # the following is deprecated for set_crystal in tender_ops ... probably doesn't work any more anyway
     # crystal set ... you shouldn't do this when shutter 1 is open ...
-#    def set_crystal(self, crystalSP, roll_correct=1):
-#        """sets the crystal pair and moves to that value.
-#        This automatically disables the PSH1 suspender and closes the shutter.
-#        Suspender is re-enabled after move is complete."""
-#        if roll_correct:
-#            yield from mv(self.x2roll, self.rolldict[crystalSP])
-#        #        self.bragg.user_offset.set(self.offsetdict[crystalSP])
-#        yield from mv(self.bragg.user_offset, self.offsetdict[crystalSP])
-#        yield from mv(self.crystal, crystalSP)
-#        # check crystal status; 0 = Not In Position; 1 = In Position:
-#       inpos = self.crystalstatus.get()
-#        if inpos == 0:
-#
-#            from haxpes.startup import RE
-#            from haxpes.hax_suspenders import suspend_psh1
-#            from nbs_bl.hw import psh1
-#            
-#            RE.remove_suspender(suspend_psh1)
-#            yield from psh1.close()
-#            yield from mv(gonilateral, self.gonilatdict[crystalSP])
-#           yield from psh1.open()
-#           RE.install_suspender(suspend_psh1)
+    #    def set_crystal(self, crystalSP, roll_correct=1):
+    #        """sets the crystal pair and moves to that value.
+    #        This automatically disables the PSH1 suspender and closes the shutter.
+    #        Suspender is re-enabled after move is complete."""
+    #        if roll_correct:
+    #            yield from mv(self.x2roll, self.rolldict[crystalSP])
+    #        #        self.bragg.user_offset.set(self.offsetdict[crystalSP])
+    #        yield from mv(self.bragg.user_offset, self.offsetdict[crystalSP])
+    #        yield from mv(self.crystal, crystalSP)
+    #        # check crystal status; 0 = Not In Position; 1 = In Position:
+    #       inpos = self.crystalstatus.get()
+    #        if inpos == 0:
+    #
+    #            from haxpes.startup import RE
+    #            from haxpes.hax_suspenders import suspend_psh1
+    #            from nbs_bl.hw import psh1
+    #
+    #            RE.remove_suspender(suspend_psh1)
+    #            yield from psh1.close()
+    #            yield from mv(gonilateral, self.gonilatdict[crystalSP])
+    #           yield from psh1.open()
+    #           RE.install_suspender(suspend_psh1)
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

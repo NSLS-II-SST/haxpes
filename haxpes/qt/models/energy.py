@@ -33,6 +33,7 @@ class SST2EnergyModel:
         self.harmonic = PVModel(
             obj.harmonic.name, obj.harmonic, group=group, long_name="Harmonic"
         )
+        self.real_motors = self.energy.real_motors
         self.group = group
         self.label = long_name
         for key, value in kwargs.items():

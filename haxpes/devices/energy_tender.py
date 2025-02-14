@@ -29,10 +29,11 @@ class energypos(PseudoPositioner):
     u42 = Cpt(
         UndulatorMotor,
         "SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr",
+        tolerance=0.001,
         kind="config",
         name="U42 Gap",
     )
-    u42val = Cpt(Signal, kind="config", name="U42 Gap Calculation")
+    u42val = Cpt(Signal, value=0, kind="config", name="U42 Gap Calculation")
 
     offset_gap = Cpt(Signal, value=0, name="U42 Gap Offset", kind="config")
 
@@ -62,7 +63,7 @@ class energypos(PseudoPositioner):
         if gap > max(lims):
             gap = max(lims)
             print("Warning, undulator value is above calibrated region.")
-        self.u42val.set(gap)
+        self.u42val.put(gap)
         return gap + self.offset_gap.get()
 
     @pseudo_position_argument
