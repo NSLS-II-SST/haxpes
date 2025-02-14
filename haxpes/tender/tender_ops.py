@@ -17,6 +17,9 @@ from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
 from nbs_bl.hw import beamselection, gonilateral, psh1
 from nbs_bl.utils import merge_func
+from nbs_bl.plans.plan_stubs import set_exposure
+
+from nbs_bl.help import add_to_plan_list
 
 # from haxpes.scans import XPS_scan
 from haxpes.plans.scans import XPSScan, SES_XPSScan
@@ -53,6 +56,7 @@ def set_crystal(crystalSP, roll_correct=1):
 
 
 ####
+@add_to_plan_list
 @suspend_decorator(suspendUS_tender)
 @check_tender_beam
 def tune_x2pitch():
@@ -64,7 +68,7 @@ def tune_x2pitch():
     Idm1 = bl["Idm1"]
     x2pitch = bl["x2pitch"]
 
-    Idm1.set_exposure(1.0)
+    yield from set_exposure(1.0)
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from mv(dm1, 32)
@@ -186,6 +190,7 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
             print("Skipping sample " + str(i))
 
 
+@add_to_plan_list
 @check_tender_beam
 def set_photon_energy_tender(
     energySP, use_optimal_harmonic=True, use_optimal_crystal=True
@@ -215,6 +220,7 @@ def set_photon_energy_tender(
     yield from mv(dm1, 60)
 
 
+@add_to_plan_list
 @suspend_decorator(suspendUS_tender)
 @check_tender_beam
 def align_beam_xps(PlaneMirror=False):
@@ -236,7 +242,7 @@ def align_beam_xps(PlaneMirror=False):
         yield from sleep(5.0)
         yield from BPM4cent.adjust_gain()
         yield from yalign_fs4_xps(spy=349)
-        yield from xalign_fs4(spx=447)
+        yield from xalign_fs4(spx=456)
     yield from fs4.open()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
@@ -249,8 +255,8 @@ def align_beam_xps(PlaneMirror=False):
         yield from sleep(
             5.0
         )  # necessary to make sure roll motor has disabled prior to using piezo
-    yield from set_feedback("vertical", set_new_sp=False)
-    yield from set_feedback("horizontal", set_new_sp=False)
+    yield from set_feedback("vertical", set_new_sp=True)
+    yield from set_feedback("horizontal", set_new_sp=True)
 
 
 ######## hexapod functions ########
@@ -262,6 +268,7 @@ def optimizeL1():
     Idm1 = bl["Idm1"]
     L1 = bl["L1"]
 
+    yield from set_exposure(1.0)
     yield from mv(dm1, 32)
     # TO DO: turn off feedback and zero
     max_channel = Idm1.mean.name  # define channel for DM1 diode
@@ -284,6 +291,7 @@ def optimizeL2():
     Idm1 = bl["Idm1"]
     L2AB = bl["L2AB"]
 
+    yield from set_exposure(1.0)
     L2pitch = L2AB.pitch
     yield from mv(dm1, 32)
     # TO DO: turn off feedback and zero

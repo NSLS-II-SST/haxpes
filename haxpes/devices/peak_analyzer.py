@@ -28,6 +28,7 @@ class PeakAnalyzer(Device):
     dwell_time = Cpt(Signal, name="dwell_time", kind="config")
     region_name = Cpt(Signal, name="region_name", kind="config", value="Region")
     description = Cpt(Signal, name="description", kind="config", value="Description")
+    offset = Cpt(Signal, value=0, name="offset", kind="config")
 
     # energy region:
     energy_center = Cpt(Signal, name="energy_center", kind="config", value=2000)
