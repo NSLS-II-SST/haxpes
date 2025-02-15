@@ -158,7 +158,7 @@ def load_xps(filename):
             energy_start = value.get("energy_start")
             energy_stop = value.get("energy_stop")
             energy_step = value.get("energy_step", 0.05)
-            energy_width = energy_stop - energy_start
+            energy_width = abs(energy_stop - energy_start)
             energy_center = (energy_start + energy_stop) / 2
             region_name = value.get("region_name")
             core_line = value.get("core_line", "")
