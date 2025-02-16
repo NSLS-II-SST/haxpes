@@ -77,7 +77,6 @@ def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
 
         # Clear offsets first
         for det in bl.detectors.active:
-            detname = det.name
             if hasattr(det, "offset"):
                 det.offset.set(0).wait()
         
@@ -87,7 +86,11 @@ def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
         run = BlueskyRun(dc)
         table = run.primary.read()
         for det in bl.detectors.active:
-            detname = det.name
+            print("detector: "+det.name)
+            if det.name == "PeakAnalyzer":
+                detname = "PeakAnalyzer_total_counts"
+            else:
+                detname = det.name
             if hasattr(det, "offset"):
                 dark_value = float(table[detname].mean().values)
                 if np.isfinite(dark_value):
@@ -102,17 +105,21 @@ def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
 def setup_peakXAS(energy_center: float, pass_energy: int = 50, lens_mode: str = "Angular"):
     """setup peak analyzer in fixed mode for XAS"""
     
-    if "peak_analzyer" in bl.get_deferred_devices():
+    if "peak_analyzer" in bl.get_deferred_devices():
         peak_analyzer = bl.load_deferred_device("peak_analyzer")
     else:
         peak_analyzer = bl["peak_analyzer"]
 
-    rdict = {"energy_center": energy_center}
+    rdict = {
+        "energy_center": energy_center,
+        "region_name": "XAS"}
     anset = {
         "pass_energy": pass_energy,
-        "lens_mode": lens_mode
+        "lens_mode": lens_mode,
+        "dwell_time": 1.0
         }
     peak_analyzer.setup_from_dictionary(rdict,anset,"XAS")
-    yield None
+    shutter = bl['psh2']
+    yield from shutter.open()
 
 
