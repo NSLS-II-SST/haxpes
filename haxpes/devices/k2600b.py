@@ -28,6 +28,10 @@ class SMU(Device):
     
     def set_voltage(self,voltage_level):
         self.VSource.put(voltage_level)
+
+    def disable(self):
+        self.VSource.set(0)
+        self.OutputEnable.set(0)
     
 
 #haxSMU = SMU('XF:07ID1{K2601B:1}', name='K2601B')

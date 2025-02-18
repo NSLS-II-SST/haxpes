@@ -53,6 +53,8 @@ def FG_off(delay_seconds: float = 10):
 @add_to_plan_list
 def withdraw_samplebar(y_out: float = 535):
     manip = bl['manipulator']
+    haxSMU = bl['haxSMU']
+    haxSMU.disable()
     yield from mv(manip.x,0,manip.z,0,manip.r,0)
     yield from mv(manip.y,y_out)
     low_lim = y_out - 0.1 #seems to be needed
@@ -64,7 +66,7 @@ def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
     dc = DocumentCache()
 
     shutter = bl[shutter]
-
+   
     @subs_decorator(dc)
     def inner():
         yield from set_exposure(1.)
