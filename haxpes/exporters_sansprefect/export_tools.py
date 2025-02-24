@@ -58,6 +58,15 @@ def get_general_metadata(run):
     metadata['Mono Crystal'] = get_baseline_config(run,'SST2 Energy','mono_crystal')
     metadata['Undulator Harmonic'] = get_baseline_config(run,'SST2 Energy','harmonic')
 
+    if len(run.start['hints']['dimensions']) == 1:
+        if len(run.start['hints']['dimensions'][0][0]) == 1:
+            x_key = run.start['hints']['dimensions'][0][0][0]
+    else:
+        x_key = "I dunno"
+    metadata['X Label'] = x_key
+
+    metadata['Detectors'] = get_md(run,'detectors')
+
     metadata['FloodGun Energy'] = get_baseline_config(run,'FloodGun','energy')
     metadata['FloodGun Emission'] = get_baseline_config(run,'FloodGun','Iemis')
     metadata['FloodGun Grid Voltage'] = get_baseline_config(run,'FloodGun','Vgrid')
@@ -131,6 +140,14 @@ def make_header(metadata,datatype,detlist=None):
             for det in detlist:
                 header = header+", "+det.replace(" ","_")   
         header = header+"\n"
+    elif datatype == "generic":
+        header = header+"\n"
+        header = header+'-----------------------------------------\n'
+        header = header+metadata['X Label'].replace(" ","_")
+        if detlist != None:
+            for det in detlist:
+                header = header+", "+det.replace(" ","_")
+        header = header+"\n"
         
     else:
         pass
@@ -146,6 +163,24 @@ def get_xas_data(run):
             data_array = column_stack((data_array,run.primary.read()['PeakAnalyzer_total_counts'].data))
         else:
             data_array = column_stack((data_array,run.primary.read()[det].data))
+    return data_array
+
+def get_generic_1d_data(run):
+    if len(run.start['hints']['dimensions']) == 1:
+        if len(run.start['hints']['dimensions'][0][0]) == 1:
+            x_key = run.start['hints']['dimensions'][0][0][0]
+    else:
+        return  #I don't know what to do
+    
+    data_array = run.primary.read()[x_key].data
+
+    detlist = run.start['detectors']
+    for det in detlist:
+        if det == "PeakAnalyzer":
+            data_array = column_stack((data_array,run.primary.read()['PeakAnalyzer_total_counts'].data))
+        else:
+            data_array = column_stack((data_array,run.primary.read()[det].data))
+
     return data_array
 
 def initialize_tiled_client(beamline_acronym):
