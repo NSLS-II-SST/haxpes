@@ -87,7 +87,7 @@ def SES_XPSScan(filename,core_line,en_cal):
     if "ses" in bl.get_deferred_devices():
         ses = bl.load_deferred_device("ses")
     else:
-        ses = bl["SES"]
+        ses = bl["ses"]
     yield from ses.set_analyzer(filename,core_line,en_cal)
     yield from count([ses],1)
 
