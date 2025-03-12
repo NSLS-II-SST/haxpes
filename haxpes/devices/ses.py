@@ -127,7 +127,7 @@ class SES(Device):
         self.width_en_sp.put(core_line["width"])
         self.iterations.put(core_line["Iterations"])
         self.pass_en.put(core_line["Pass Energy"])
-        self.excitation_en.put(en_cal)
+        self.excitation_en.put(float(en_cal))
         if "Step Size" in core_line.keys():
             self.en_step.put(core_line["Step Size"])
         else:
@@ -146,12 +146,17 @@ class SES(Device):
             self.acq_mode.put(dacqmode)
 
 
-    def setup_from_dictionary(self,region_dictionary,analyzer_settings,mode,sweeps=1):
-        """ temporary function to make SES work same as peak - just translates dictionary from peak format to SES format.  Call must include "XPS" mode. """
+    def setup_from_dictionary(self,region_dictionary,analyzer_settings,**kwargs):
+        """ function to make SES work same as peak - just translates dictionary from peak format to SES format. """
         print(region_dictionary)        
-        if mode != "XPS":
-            print("bad mode!  I'm not doing anything.")
-            return
+        if "sweeps" in kwargs.keys():
+            sweeps = kwargs['sweeps']
+        else:
+            sweeps = 1
+        if "energy" in kwargs.keys():
+            en_cal = round(kwargs['energy'],2)
+        else:
+            en_cal = 0
         core_line = {
             "Region Name": region_dictionary["region_name"],
             "Energy Type": region_dictionary["energy_type"].capitalize(),
@@ -165,7 +170,13 @@ class SES(Device):
             "Iterations": sweeps
         }
         print(core_line)
-        self.set_analyzer('XPS_scan_',core_line,0)
+        print(en_cal)
+
+        if "ses_filename" in kwargs.keys() and kwargs['ses_filename']:
+            export_filename = kwargs['ses_filename']
+        else:
+            export_filename = "XPS_scan"
+        self.set_analyzer(export_filename,core_line,en_cal)
     
     def reset(self):
         """

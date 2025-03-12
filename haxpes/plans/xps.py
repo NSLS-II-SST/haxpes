@@ -59,12 +59,12 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     return est_time, total_time
 
 
-@suspend_decorator(suspendHAX_tender)
+#@suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell", "num"])
-def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, analyzer_type="peak",**kwargs):
+def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None, export_filename=None, **kwargs):
     """
     Parameters
     ----------
@@ -75,6 +75,13 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, analyze
     sweeps : int, optional
         The number of sweeps to perform. Default is 1.
     """
+    global_md = bl.md
+    if 'scan_id' in global_md.keys():
+        scan_id = global_md['scan_id']+1
+    else:
+        scan_id = ""
+    
+    md = md or {} # Create an empty md dictionary if none is passed in
     def check_and_load(analyzer):
         if analyzer in bl.get_deferred_devices():
             analyzer = bl.load_deferred_device(analyzer)
@@ -82,16 +89,24 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, analyze
             analyzer = bl[analyzer]
         return analyzer
 
+    analyzer_type = bl['xps_analyzer'].enum_strs[bl['xps_analyzer'].get()]
+
     print(f"loading {analyzer_type}")
+    _md = {"analyzer_type": analyzer_type} # _md is for local metadata that will get passed to the RunEngine
+    _md['export_filename'] = export_filename
+    _md['sweeps'] = sweeps
 
     if analyzer_type == "peak":
         analyzer = check_and_load("peak_analyzer")
         nbs_sweeps = sweeps
+        ses_filename = None
     elif analyzer_type == "ses":
         analyzer = check_and_load("ses")
         nbs_sweeps = 1
+        ses_filename = f"SES_{scan_id}_"
 
     print(f"setting up {analyzer.name}")
+
     _region_dictionary = region_dictionary.copy()
     if region_dictionary["energy_type"] == "binding":
         if energy is None:
@@ -108,9 +123,8 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, analyze
         )
         _region_dictionary["energy_type"] = "kinetic"
 
-    print(_region_dictionary)
 
-    analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, "XPS", sweeps=sweeps)
+    analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, scan_type="XPS", sweeps=sweeps, ses_filename = ses_filename)
     print("setting up I0")
     if analyzer_type == "peak":
         est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[0]
@@ -119,7 +133,8 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, analyze
     I0initexp = I0.exposure_time.get()
     yield from set_exposure(est_time)
     print(f"run {analyzer}")
-    yield from nbs_count(nbs_sweeps, energy=energy, **kwargs) #think about extra dets
+    _md.update(md) # This ensures that metadata passed in by the user always has priority
+    yield from nbs_count(nbs_sweeps, energy=energy, md = _md, **kwargs) #think about extra dets
     print("resetting I0")
     yield from set_exposure(I0initexp)
 

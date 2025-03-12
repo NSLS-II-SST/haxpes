@@ -62,19 +62,21 @@ RE = create_run_engine(setup=True)
 
 # RE = setup_run_engine(RE)
 
-if "redis" in GLOBAL_BEAMLINE.settings:
-    import redis
-    from nbs_bl.status import RedisStatusDict
-    from nbs_bl.queueserver import GLOBAL_USER_STATUS
+#if "redis" in GLOBAL_BEAMLINE.settings:
+#    import redis
+#    from nbs_bl.status import RedisStatusDict
+#    from nbs_bl.queueserver import GLOBAL_USER_STATUS
+#
+#    redis_settings = GLOBAL_BEAMLINE.settings.get("redis").get("md")
+#    uri = redis_settings.get("host", "localhost")  # "info.sst.nsls2.bnl.gov"
+#    prefix = redis_settings.get("prefix", "")
+#    md = RedisStatusDict(redis.Redis(uri), prefix=prefix)
+#    GLOBAL_USER_STATUS.add_status("USER_MD", md)
+#    RE.md = md
 
-    redis_settings = GLOBAL_BEAMLINE.settings.get("redis").get("md")
-    uri = redis_settings.get("host", "localhost")  # "info.sst.nsls2.bnl.gov"
-    prefix = redis_settings.get("prefix", "")
-    md = RedisStatusDict(redis.Redis(uri), prefix=prefix)
-    GLOBAL_USER_STATUS.add_status("USER_MD", md)
-    RE.md = md
+RE.md = GLOBAL_BEAMLINE.md
+RE.md["autoexport"] = False
 
-md["autoexport"] = False
 RE(set_exposure(1.0))
 
 #by default, start in tender mode:

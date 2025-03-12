@@ -191,8 +191,14 @@ class PeakAnalyzer(Device):
             self._acqclient.finish_measurement()
         self._deactivate_analyzer()
 
-    def setup_from_dictionary(self, region_dictionary, analyzer_settings, scan_type, **kwargs):
+    def setup_from_dictionary(self, region_dictionary, analyzer_settings, **kwargs):
         """performs analyzer setup from dictionary settings"""
+
+        if "scan_type" in kwargs.keys():
+            scan_type = kwargs['scan_type']
+        else:
+            scan_type = "XPS" #default to XPS mode
+
         if scan_type == "XPS":
             self.setsweptmode()
             self.energy_center.put(region_dictionary["energy_center"])
