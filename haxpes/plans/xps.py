@@ -59,7 +59,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     return est_time, total_time
 
 
-#@suspend_decorator(suspendHAX_tender)
+@suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
