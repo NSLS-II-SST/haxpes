@@ -10,12 +10,36 @@ from bluesky.preprocessors import subs_decorator
 import numpy as np
 
 @add_to_plan_list
-def close_shutter(shutter: str = "psh2"):
+def close_shutter(shutter: str = "default"):
+    beamselect = bl["beamselection"].get()
+    if shutter == "default":
+        if beamselect == "Tender":
+            shutter = "psh2"
+            print(f"{beamselect} beam; use {shutter}")
+        elif beamselect == "Soft":
+            shutter = "psh5"
+        else:
+            print(f"{beamselect} beam selected.  Doing nothing")
+            yield from bsleep(1)
+            return
+    print(f"{beamselect} beam; use {shutter}")
     shutter = bl[shutter]
     yield from shutter.close()
 
 @add_to_plan_list
-def open_shutter(shutter: str = "psh2"):
+def open_shutter(shutter: str = "default"):
+    beamselect = bl["beamselection"].get()
+    if shutter == "default":
+        if beamselect == "Tender":
+            shutter = "psh2"
+            print(f"{beamselect} beam; use {shutter}")
+        elif beamselect == "Soft":
+            shutter = "psh5"
+        else:
+            print(f"{beamselect} beam selected.  Doing nothing")
+            yield from bsleep(1)
+            return
+    print(f"{beamselect} beam; use {shutter}")
     shutter = bl[shutter]
     yield from shutter.open()
 
