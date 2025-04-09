@@ -145,7 +145,7 @@ def setup_peakXAS(energy_center: float, pass_energy: int = 50, lens_mode: str = 
         "dwell_time": 1.0,
         "acquisition_mode": "Image"
         }
-    peak_analyzer.setup_from_dictionary(rdict,anset,"XAS")
+    peak_analyzer.setup_from_dictionary(rdict,anset,scan_type="XAS")
     shutter = bl['psh2']
     yield from shutter.open()
 
