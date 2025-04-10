@@ -11,35 +11,18 @@ import numpy as np
 
 @add_to_plan_list
 def close_shutter(shutter: str = "default"):
-    beamselect = bl["beamselection"].get()
     if shutter == "default":
-        if beamselect == "Tender":
-            shutter = "psh2"
-            print(f"{beamselect} beam; use {shutter}")
-        elif beamselect == "Soft":
-            shutter = "psh5"
-        else:
-            print(f"{beamselect} beam selected.  Doing nothing")
-            yield from bsleep(1)
-            return
-    print(f"{beamselect} beam; use {shutter}")
+        print("default shutter")
+        shutter = get_default_shutter()
+    print(f"Closing shutter {shutter}")
     shutter = bl[shutter]
     yield from shutter.close()
 
 @add_to_plan_list
 def open_shutter(shutter: str = "default"):
-    beamselect = bl["beamselection"].get()
     if shutter == "default":
-        if beamselect == "Tender":
-            shutter = "psh2"
-            print(f"{beamselect} beam; use {shutter}")
-        elif beamselect == "Soft":
-            shutter = "psh5"
-        else:
-            print(f"{beamselect} beam selected.  Doing nothing")
-            yield from bsleep(1)
-            return
-    print(f"{beamselect} beam; use {shutter}")
+        shutter = get_default_shutter()
+    print(f"Opening shutter {shutter}")
     shutter = bl[shutter]
     yield from shutter.open()
 
@@ -85,11 +68,14 @@ def withdraw_samplebar(y_out: float = 535):
     manip.y.set_lim(low_lim,manip.y.high_limit)
 
 @add_to_plan_list
-def measure_offsets(shutter: str = "psh2", n_counts: int = 10):
+def measure_offsets(shutter: str = "default", n_counts: int = 10):
     """take dark counts and set detector offsets"""
     dc = DocumentCache()
 
+    if shutter == "default":
+        shutter = get_default_shutter()
     shutter = bl[shutter]
+
    
     @subs_decorator(dc)
     def inner():
@@ -149,4 +135,15 @@ def setup_peakXAS(energy_center: float, pass_energy: int = 50, lens_mode: str = 
     shutter = bl['psh2']
     yield from shutter.open()
 
-
+def get_default_shutter():
+    beamselect = bl["beamselection"].get()
+    if beamselect == "Tender":
+        shutter = "psh2"
+        print(f"{beamselect} beam; use {shutter}")
+    elif beamselect == "Soft":
+        shutter = "psh5"
+        print(f"{beamselect} beam; use {shutter}")
+    else:
+        print(f"{beamselect} beam selected.  Defaulting to shutter psh2")
+        shutter = "psh2"
+    return shutter
