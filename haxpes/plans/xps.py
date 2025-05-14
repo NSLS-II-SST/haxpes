@@ -45,6 +45,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
         + detector_widths[str(analyzer_settings["pass_energy"])]
     ) / region_dictionary["energy_step"]
     est_time = num_points * dwelltime
+    total_time = est_time * number_of_sweeps
     print(
         "Estimated sweep time is "
         + str(est_time)
@@ -53,9 +54,9 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
         + "."
     )
     print(
-        "Estimated total time is " + str((est_time * number_of_sweeps) / 60) + " min."
+        "Estimated total time is " + str(total_time / 60) + " min."
     )
-    return est_time
+    return est_time, total_time
 
 
 @suspend_decorator(suspendHAX_tender)
@@ -63,7 +64,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell", "num"])
-def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwargs):
+def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None, export_filename=None, **kwargs):
     """
     Parameters
     ----------
@@ -74,12 +75,38 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwarg
     sweeps : int, optional
         The number of sweeps to perform. Default is 1.
     """
-    print("loading peak")
-    if "peak_analyzer" in bl.get_deferred_devices():
-        peak_analyzer = bl.load_deferred_device("peak_analyzer")
+    global_md = bl.md
+    if 'scan_id' in global_md.keys():
+        scan_id = global_md['scan_id']+1
     else:
-        peak_analyzer = bl["peak_analyzer"]
-    print("setting up peak")
+        scan_id = ""
+    
+    md = md or {} # Create an empty md dictionary if none is passed in
+    def check_and_load(analyzer):
+        if analyzer in bl.get_deferred_devices():
+            analyzer = bl.load_deferred_device(analyzer)
+        else:
+            analyzer = bl[analyzer]
+        return analyzer
+
+    analyzer_type = bl['xps_analyzer'].enum_strs[bl['xps_analyzer'].get()]
+
+    print(f"loading {analyzer_type}")
+    _md = {"analyzer_type": analyzer_type} # _md is for local metadata that will get passed to the RunEngine
+    _md['export_filename'] = export_filename
+    _md['sweeps'] = sweeps
+
+    if analyzer_type == "peak":
+        analyzer = check_and_load("peak_analyzer")
+        nbs_sweeps = sweeps
+        ses_filename = None
+    elif analyzer_type == "ses":
+        analyzer = check_and_load("ses")
+        nbs_sweeps = 1
+        ses_filename = f"SES_{scan_id}_"
+
+    print(f"setting up {analyzer.name}")
+
     _region_dictionary = region_dictionary.copy()
     if region_dictionary["energy_type"] == "binding":
         if energy is None:
@@ -96,13 +123,18 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, **kwarg
         )
         _region_dictionary["energy_type"] = "kinetic"
 
-    peak_analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, "XPS")
+
+    analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, scan_type="XPS", sweeps=sweeps, ses_filename = ses_filename)
     print("setting up I0")
-    est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)
+    if analyzer_type == "peak":
+        est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[0]
+    elif analyzer_type == "ses":
+        est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[1]
     I0initexp = I0.exposure_time.get()
     yield from set_exposure(est_time)
-    print("run Peak")
-    yield from nbs_count(sweeps, extra_dets=[peak_analyzer], energy=energy, **kwargs)
+    print(f"run {analyzer}")
+    _md.update(md) # This ensures that metadata passed in by the user always has priority
+    yield from nbs_count(nbs_sweeps, energy=energy, md = _md, **kwargs) #think about extra dets
     print("resetting I0")
     yield from set_exposure(I0initexp)
 
@@ -158,7 +190,7 @@ def load_xps(filename):
             energy_start = value.get("energy_start")
             energy_stop = value.get("energy_stop")
             energy_step = value.get("energy_step", 0.05)
-            energy_width = energy_stop - energy_start
+            energy_width = abs(energy_stop - energy_start)
             energy_center = (energy_start + energy_stop) / 2
             region_name = value.get("region_name")
             core_line = value.get("core_line", "")

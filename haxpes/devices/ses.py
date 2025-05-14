@@ -72,6 +72,43 @@ class SES(Device):
         self.stop_signal.put(1)
         return status
 
+#    def set_analyzer(self, filename, core_line, en_cal):
+#        """
+#        sets SES paramaters in a controlled way
+#        """
+#        dstepsize = 50
+#        dlensmode = "Angular"
+#        dsteptime = 0.1
+#        dacqmode = "swept"
+#        yield from abs_set(self.filename, filename)
+#        yield from abs_set(self.region_name, core_line["Region Name"])
+#        if core_line["Energy Type"] == "Binding":
+#            cent = en_cal - core_line["center_en"]
+#            yield from abs_set(self.center_en_sp, cent)
+#        else:
+#            yield from abs_set(self.center_en_sp, core_line["center_en"])
+#        yield from abs_set(self.width_en_sp, core_line["width"])
+#        yield from abs_set(self.iterations, core_line["Iterations"])
+#        yield from abs_set(self.pass_en, core_line["Pass Energy"])
+#        yield from abs_set(self.excitation_en, en_cal)  
+#        print(en_cal)
+#        if "Step Size" in core_line.keys():
+#            yield from abs_set(self.en_step, core_line["Step Size"])
+#        else:
+#            yield from abs_set(self.en_step, dstepsize)
+#        if "Lens Mode" in core_line.keys():
+#            yield from abs_set(self.lens_mode, core_line["Lens Mode"])
+#        else:
+#            yield from abs_set(self.lens_mode, dlensmode)
+#        if "steptime" in core_line.keys():
+#            yield from abs_set(self.steptime, core_line["steptime"])
+#        else:
+#            yield from abs_set(self.steptime, dsteptime)
+#        if "acq_mode" in core_line.keys():
+#            yield from abs_set(self.acq_mode, core_line["acq_mode"])
+#        else:
+#            yield from abs_set(self.acq_mode, dacqmode)
+
     def set_analyzer(self, filename, core_line, en_cal):
         """
         sets SES paramaters in a controlled way
@@ -80,39 +117,67 @@ class SES(Device):
         dlensmode = "Angular"
         dsteptime = 0.1
         dacqmode = "swept"
-
-        yield from abs_set(self.filename, filename)
-        yield from abs_set(self.region_name, core_line["Region Name"])
+        self.filename.put(filename)
+        self.region_name.put(core_line["Region Name"])
         if core_line["Energy Type"] == "Binding":
             cent = en_cal - core_line["center_en"]
-            yield from abs_set(self.center_en_sp, cent)
+            self.center_en_sp.put(cent)
         else:
-            yield from abs_set(self.center_en_sp, core_line["center_en"])
-        #    yield from abs_set(self.center_en_sp,core_line["center_en"]) ### BE correction.  Above 5 lines for testing, this one commented out.
-        yield from abs_set(self.width_en_sp, core_line["width"])
-        yield from abs_set(self.iterations, core_line["Iterations"])
-        yield from abs_set(self.pass_en, core_line["Pass Energy"])
-        yield from abs_set(self.excitation_en, en_cal)  # added 2023-08-02; NOT TESTED YET CW
-        print(en_cal)
-        #    if "Photon Energy" in core_line.keys():  #commented out 2023-08-02 CW
-        #        yield from abs_set(ses.excitation_en,core_line["Photon Energy"])  #commented out 2023-08-02 CW
+            self.center_en_sp.put(core_line["center_en"])
+        self.width_en_sp.put(core_line["width"])
+        self.iterations.put(core_line["Iterations"])
+        self.pass_en.put(core_line["Pass Energy"])
+        self.excitation_en.put(float(en_cal))
         if "Step Size" in core_line.keys():
-            yield from abs_set(self.en_step, core_line["Step Size"])
+            self.en_step.put(core_line["Step Size"])
         else:
-            yield from abs_set(self.en_step, dstepsize)
+            self.en_step.put(dstepsize)
         if "Lens Mode" in core_line.keys():
-            yield from abs_set(self.lens_mode, core_line["Lens Mode"])
+            self.lens_mode.put(core_line["Lens Mode"])
         else:
-            yield from abs_set(self.lens_mode, dlensmode)
+            self.lens_mode.put(dlensmode)
         if "steptime" in core_line.keys():
-            yield from abs_set(self.steptime, core_line["steptime"])
+            self.steptime.put(core_line["steptime"])
         else:
-            yield from abs_set(self.steptime, dsteptime)
+            self.steptime.put(dsteptime)
         if "acq_mode" in core_line.keys():
-            yield from abs_set(self.acq_mode, core_line["acq_mode"])
+            self.acq_mode.put(core_line["acq_mode"])
         else:
-            yield from abs_set(self.acq_mode, dacqmode)
+            self.acq_mode.put(dacqmode)
 
+
+    def setup_from_dictionary(self,region_dictionary,analyzer_settings,**kwargs):
+        """ function to make SES work same as peak - just translates dictionary from peak format to SES format. """
+        print(region_dictionary)        
+        if "sweeps" in kwargs.keys():
+            sweeps = kwargs['sweeps']
+        else:
+            sweeps = 1
+        if "energy" in kwargs.keys():
+            en_cal = round(kwargs['energy'],2)
+        else:
+            en_cal = 0
+        core_line = {
+            "Region Name": region_dictionary["region_name"],
+            "Energy Type": region_dictionary["energy_type"].capitalize(),
+            "center_en": region_dictionary["energy_center"],
+            "width": region_dictionary["energy_width"],
+            "Pass Energy": analyzer_settings["pass_energy"],
+            #think about en_cal ... by default already switched into k.e.
+            "Step Size": 1000*region_dictionary["energy_step"],
+            "Lens Mode": analyzer_settings["lens_mode"],
+            "steptime": analyzer_settings["dwell_time"],
+            "Iterations": sweeps
+        }
+        print(core_line)
+        print(en_cal)
+
+        if "ses_filename" in kwargs.keys() and kwargs['ses_filename']:
+            export_filename = kwargs['ses_filename']
+        else:
+            export_filename = "XPS_scan"
+        self.set_analyzer(export_filename,core_line,en_cal)
+    
     def reset(self):
         """
         resets the stop signal.  Probably not necessary

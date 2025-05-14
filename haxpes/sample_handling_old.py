@@ -2,6 +2,8 @@ from .motors import sampx, sampy, sampz, sampr
 from bluesky.plan_stubs import mv
 import numpy as np
 
+#here's a comment to test git
+
 class sample_list:
     
     def __init__(self):

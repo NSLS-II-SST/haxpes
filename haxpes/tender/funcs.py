@@ -104,7 +104,7 @@ def ycoursealign_i0(steptime=1):
         25,
         max_channel=ychannel,
         hysteresis_correct=True,
-        invert=True,
+        invert=False, 
         md=md,
     )
 
@@ -131,7 +131,7 @@ def yfinealign_i0(steptime=1):
         41,
         max_channel=ychannel,
         hysteresis_correct=True,
-        invert=True,
+        invert=False,
         md=md,
     )
 
@@ -158,7 +158,7 @@ def xcoursealign_i0(steptime=1):
         41,
         max_channel=xchannel,
         hysteresis_correct=True,
-        invert=True,
+        invert=False,
         md=md,
     )
 
@@ -185,7 +185,7 @@ def xfinealign_i0(steptime=1):
         51,
         max_channel=xchannel,
         hysteresis_correct=True,
-        invert=True,
+        invert=False,
         md=md,
     )
 

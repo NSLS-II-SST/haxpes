@@ -82,13 +82,13 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, **kwargs):
     yield from set_exposure(I0initexp)
 
 
-@suspend_decorator(suspendHAX_tender)
+#@suspend_decorator(suspendHAX_tender)
 def SES_XPSScan(filename,core_line,en_cal):
     if "ses" in bl.get_deferred_devices():
         ses = bl.load_deferred_device("ses")
     else:
-        ses = bl["SES"]
-    yield from ses.set_analyzer(filename,core_line,en_cal)
+        ses = bl["ses"]
+    ses.set_analyzer(filename,core_line,en_cal)
     yield from count([ses],1)
 
 
