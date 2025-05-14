@@ -53,9 +53,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
         + str(est_time)
         + "."
     )
-    print(
-        "Estimated total time is " + str(total_time / 60) + " min."
-    )
+    print("Estimated total time is " + str(total_time / 60) + " min.")
     return est_time, total_time
 
 
@@ -64,7 +62,15 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
 @merge_func(nbs_count, use_func_name=False, omit_params=["extra_dets", "dwell", "num"])
-def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None, export_filename=None, **kwargs):
+def XPSScan(
+    region_dictionary,
+    analyzer_settings,
+    sweeps=1,
+    energy=None,
+    md=None,
+    export_filename=None,
+    **kwargs,
+):
     """
     Parameters
     ----------
@@ -76,12 +82,13 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None
         The number of sweeps to perform. Default is 1.
     """
     global_md = bl.md
-    if 'scan_id' in global_md.keys():
-        scan_id = global_md['scan_id']+1
+    if "scan_id" in global_md.keys():
+        scan_id = global_md["scan_id"] + 1
     else:
         scan_id = ""
-    
-    md = md or {} # Create an empty md dictionary if none is passed in
+
+    md = md or {}  # Create an empty md dictionary if none is passed in
+
     def check_and_load(analyzer):
         if analyzer in bl.get_deferred_devices():
             analyzer = bl.load_deferred_device(analyzer)
@@ -89,12 +96,14 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None
             analyzer = bl[analyzer]
         return analyzer
 
-    analyzer_type = bl['xps_analyzer'].enum_strs[bl['xps_analyzer'].get()]
+    analyzer_type = bl["xps_analyzer"].enum_strs[bl["xps_analyzer"].get()]
 
     print(f"loading {analyzer_type}")
-    _md = {"analyzer_type": analyzer_type} # _md is for local metadata that will get passed to the RunEngine
-    _md['export_filename'] = export_filename
-    _md['sweeps'] = sweeps
+    _md = {
+        "analyzer_type": analyzer_type
+    }  # _md is for local metadata that will get passed to the RunEngine
+    _md["export_filename"] = export_filename
+    _md["sweeps"] = sweeps
 
     if analyzer_type == "peak":
         analyzer = check_and_load("peak_analyzer")
@@ -123,8 +132,13 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None
         )
         _region_dictionary["energy_type"] = "kinetic"
 
-
-    analyzer.setup_from_dictionary(_region_dictionary, analyzer_settings, scan_type="XPS", sweeps=sweeps, ses_filename = ses_filename)
+    analyzer.setup_from_dictionary(
+        _region_dictionary,
+        analyzer_settings,
+        scan_type="XPS",
+        sweeps=sweeps,
+        ses_filename=ses_filename,
+    )
     print("setting up I0")
     if analyzer_type == "peak":
         est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[0]
@@ -133,8 +147,12 @@ def XPSScan(region_dictionary, analyzer_settings, sweeps=1, energy=None, md=None
     I0initexp = I0.exposure_time.get()
     yield from set_exposure(est_time)
     print(f"run {analyzer}")
-    _md.update(md) # This ensures that metadata passed in by the user always has priority
-    yield from nbs_count(nbs_sweeps, energy=energy, md = _md, **kwargs) #think about extra dets
+    _md.update(
+        md
+    )  # This ensures that metadata passed in by the user always has priority
+    yield from nbs_count(
+        nbs_sweeps, energy=energy, md=_md, **kwargs
+    )  # think about extra dets
     print("resetting I0")
     yield from set_exposure(I0initexp)
 
@@ -154,7 +172,13 @@ def _xps_factory(region_dictionary, core_line, key):
 
         yield from XPSScan(region_dictionary, *args, **kwargs)
 
-    d = f"Perform an in-place XPS scan for {core_line}\n"
+    d = (
+        f"{region_dictionary['region_name']}\n"
+        + f"Perform a {region_dictionary['energy_type']} energy XPS scan for {core_line}\n"
+        + f"Start: {region_dictionary['energy_center'] - region_dictionary['energy_width']/2} eV\n"
+        + f"Stop: {region_dictionary['energy_center'] + region_dictionary['energy_width']/2} eV\n"
+        + f"Step size: {region_dictionary['energy_step']} eV\n"
+    )
     inner.__doc__ = d + inner.__doc__
 
     inner.__qualname__ = key

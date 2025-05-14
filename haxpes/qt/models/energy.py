@@ -1,7 +1,6 @@
 from ..views.energy import SST2EnergyControl, SST2EnergyMonitor
 from nbs_gui.models import (
-    PVPositionerModel,
-    PseudoPositionerModel,
+    PseudoSingleModel,
     MultiMotorModel,
     MotorModel,
     EnumModel,
@@ -86,7 +85,7 @@ class SST2EnergyAxes(MultiMotorModel):
         pseudo_axes = [obj.energy]
         # Create models for pseudo motors
         self.pseudo_motors = [
-            PseudoPositionerModel(
+            PseudoSingleModel(
                 name=ps_axis.name,
                 obj=ps_axis,
                 group=group,
