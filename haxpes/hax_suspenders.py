@@ -111,5 +111,17 @@ suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
 suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
 suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
 suspendFOE = [suspend_beamstat, suspend_FEsh1]
+
+
+def get_suspenders():
+    beamselect = bl["beamselection"].get()
+    if beamselect == "Tender":
+        return suspendHAX_tender
+    elif beamselect == "Soft":
+        return suspendHAX_soft
+    else:
+        return suspendHAX_tender
+
+
 # suspendUS_tender = [suspend_FEsh1, suspend_psh1]
 # suspendHAX_tender = [suspend_FEsh1, suspend_psh1, suspend_psh2]

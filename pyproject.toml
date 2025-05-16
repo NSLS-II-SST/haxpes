@@ -33,3 +33,6 @@ xps = "haxpes.plans.xps:load_xps"
 
 [project.entry-points."nbs_gui.plan_loaders"]
 xps-gui-loader = "haxpes.qt.plans.xpsPlanLoader:XPSPlanLoader"
+
+[project.entry-points."nbs_bl.suspenders"]
+haxpes-suspenders = "haxpes.hax_suspenders:get_suspenders"
