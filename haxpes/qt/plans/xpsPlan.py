@@ -87,8 +87,20 @@ class XPSParam(DynamicComboParam):
         self.input_widget.addItem(self.dummy_text)
 
         for key, plan_info in plans.items():
-            display_label = plan_info.get("name", key)
-            self.input_widget.addItem(str(display_label), userData=key)
+            name = plan_info.get("name", key)
+            region = plan_info.get("region_dict", {})
+            center = region.get("energy_center", None)
+            width = region.get("energy_width", None)
+            step = region.get("energy_step", None)
+            energy_type = region.get("energy_type", None)
+            if center is not None and width is not None:
+                start = center - width / 2
+                stop = center + width / 2
+            else:
+                start = None
+                stop = None
+            label = f"{name} ({start} to {stop} eV {energy_type}, {step} eV steps)"
+            self.input_widget.addItem(str(label), userData=key)
 
         index = self.input_widget.findText(current_text)
         self.input_widget.setCurrentIndex(index if index >= 0 else 0)
