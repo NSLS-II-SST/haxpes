@@ -5,10 +5,10 @@ from nbs_bl.help import add_to_scan_list, add_to_func_list, _add_to_import_list
 from nbs_bl.plans.plan_stubs import set_exposure
 from nbs_bl.plans.scan_decorators import wrap_scantype
 from nbs_bl.plans.preprocessors import wrap_metadata
-from bluesky.preprocessors import suspend_decorator
+#from bluesky.preprocessors import suspend_decorator
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.queueserver import GLOBAL_USER_STATUS
-from haxpes.hax_suspenders import suspendHAX_tender
+#from haxpes.hax_suspenders import suspendHAX_tender
 
 try:
     import tomllib
@@ -57,7 +57,7 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     return est_time, total_time
 
 
-@suspend_decorator(suspendHAX_tender)
+#@suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")

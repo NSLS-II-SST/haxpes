@@ -25,8 +25,8 @@ from nbs_bl.help import add_to_plan_list
 from haxpes.plans.scans import XPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
 
-from bluesky.preprocessors import suspend_decorator
-from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender, suspendFOE
+#from bluesky.preprocessors import suspend_decorator
+#from haxpes.hax_suspenders import suspendUS_tender, suspendHAX_tender, suspendFOE
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from haxpes.hax_monitors import run_mode
 
@@ -57,7 +57,7 @@ def set_crystal(crystalSP, roll_correct=1):
 
 ####
 @add_to_plan_list
-@suspend_decorator(suspendUS_tender)
+#@suspend_decorator(suspendUS_tender)
 @check_tender_beam
 def tune_x2pitch():
     """
@@ -221,7 +221,7 @@ def set_photon_energy_tender(
 
 
 @add_to_plan_list
-@suspend_decorator(suspendUS_tender)
+#@suspend_decorator(suspendUS_tender)
 @check_tender_beam
 def align_beam_xps(PlaneMirror=False):
 
@@ -310,7 +310,7 @@ def optimizeL2():
     )
 
 
-@suspend_decorator(suspendUS_tender)
+#@suspend_decorator(suspendUS_tender)
 def setL1(stripe):
 
     x2finepitch = bl["x2finepitch"]
@@ -332,7 +332,7 @@ def setL1(stripe):
     yield from optimizeL1()
 
 
-@suspend_decorator(suspendUS_tender)
+#@suspend_decorator(suspendUS_tender)
 def setL2_plane(stripe):
 
     x2finepitch = bl["x2finepitch"]
@@ -361,7 +361,7 @@ def setL2_plane(stripe):
     yield from optimizeL2()
 
 
-@suspend_decorator(suspendUS_tender)
+#@suspend_decorator(suspendUS_tender)
 def setL2_toroid(stripe):
 
     x2finepitch = bl["x2finepitch"]
