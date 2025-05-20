@@ -10,6 +10,10 @@ from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.queueserver import GLOBAL_USER_STATUS
 #from haxpes.hax_suspenders import suspendHAX_tender
 
+from pandas import read_excel
+
+from os.path import splitext
+
 try:
     import tomllib
 except ModuleNotFoundError:
@@ -187,24 +191,8 @@ def _xps_factory(region_dictionary, core_line, key):
     return inner
 
 
-@add_to_func_list
-def load_xps(filename):
-    """
-    Load XPS plans from a TOML file and inject them into the IPython user namespace.
 
-    Parameters
-    ----------
-    filename : str
-        Path to the TOML file containing XPS plan definitions
-    """
-    try:
-        # Get IPython's user namespace
-        ip = get_ipython()
-        user_ns = ip.user_ns
-    except (NameError, AttributeError):
-        # Not running in IPython, just return the generated functions
-        user_ns = None
-
+def _load_xps_toml(filename,user_ns):
     generated_plans = {}
     with open(filename, "rb") as f:
         regions = tomllib.load(f)
@@ -236,6 +224,68 @@ def load_xps(filename):
             # If we're in IPython, inject into user namespace
             if user_ns is not None:
                 user_ns[key] = xps_func
+
+    return generated_plans
+
+def _load_xps_xls(filename,user_ns):
+    generated_plans = {}
+    dfRegions = read_excel(filename)
+    for index, row in dfRegions.iterrows():
+        rdict = row.to_dict()
+        energy_type = rdict["Energy Type"]
+        energy_start = rdict["Low Energy"]
+        energy_stop = rdict["High Energy"]
+        energy_step = rdict["Step Size"]
+        energy_width = abs(energy_stop - energy_start)
+        energy_center = (energy_start + energy_stop) / 2
+        region_name = rdict["Region Name"]
+        name = f"{region_name.lower().replace(' ','')}_xps"
+        key = name
+        core_line = rdict["Region Name"] 
+        region_dict = {
+            "region_name": region_name,
+            "energy_center": energy_center,
+            "energy_width": energy_width,
+            "energy_step": energy_step,
+            "energy_type": energy_type,
+        }
+        xps_func = _xps_factory(region_dict, core_line, key)
+        add_to_xps_list(
+            xps_func, key, name=name, core_line=core_line, region_dict=region_dict
+        )
+
+        # Store the function
+        generated_plans[key] = xps_func
+
+        # If we're in IPython, inject into user namespace
+        if user_ns is not None:
+            user_ns[key] = xps_func
+
+    return generated_plans
+
+@add_to_func_list
+def load_xps(filename):
+    """
+    Load XPS plans from a TOML or Excel file and inject them into the IPython user namespace.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the TOML or excel file containing XPS plan definitions
+    """
+    try:
+        # Get IPython's user namespace
+        ip = get_ipython()
+        user_ns = ip.user_ns
+    except (NameError, AttributeError):
+        # Not running in IPython, just return the generated functions
+        user_ns = None
+
+    file_extension = splitext(filename)[1]
+    if file_extension == ".toml":
+        generated_plans = _load_xps_toml(filename,user_ns)
+    elif file_extension == ".xls" or file_extension == ".XLS":
+        generated_plans = _load_xps_xls(filename,user_ns)
 
     # Return the generated plans dictionary in case it's needed
     return generated_plans
