@@ -218,7 +218,7 @@ class XPSPlanWidget(NBSPlanWidget):
 
     def load_xps_file(self):
         file_dialog = QFileDialog(self)
-        file_dialog.setNameFilter("Excel Files (*.xls);;sTOML files (*.toml)")
+        file_dialog.setNameFilter("Excel Files (*.xls);;TOML files (*.toml)")
         file_dialog.setFileMode(QFileDialog.ExistingFile)
 
         if file_dialog.exec_():
