@@ -60,6 +60,100 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     print("Estimated total time is " + str(total_time / 60) + " min.")
     return est_time, total_time
 
+def check_and_load(analyzer):
+    if analyzer in bl.get_deferred_devices():
+        analyzer = bl.load_deferred_device(analyzer)
+    else:
+        analyzer = bl[analyzer]
+    return analyzer
+
+
+def resPESScan(
+    photon_energy_list,
+    region_dictionary,
+    analyzer_settings,
+    sweeps=1
+    md=None
+    export_filename=None,
+    energy=None
+    ):
+    """
+    Paramters
+    ---------
+    photon_energy_list : tuple or list
+        The photon energies at which to perform XPS scans 
+    region_dictionary : dict
+        The region dictionary for the XPS scan, with keys "energy_center", "energy_width", "energy_step", "energy_type" and "region_name"
+    analyzer_settings : dict
+        The analyzer settings for the XPS scan, with keys "dwell_time", "pass_energy", "lens_mode"
+    sweeps : int, optional
+        The number of sweeps to perform. Default is 1.
+    energy : float, optional
+        The photon energy which will be used to calculate electron kinetic energies IF region_dictionary has "energy_type" = "binding"
+        If energy = None, will use the mean of energies in photon_energy_list
+    """
+    global_md = bl.md
+    if "scan_id" in global_md.keys():
+        scan_id = global_md["scan_id"] + 1
+    else:
+        scan_id = ""
+
+    md = md or {}
+
+    exposure_motor = bl['exposureMotor']
+    photon_energy_motor = bl['en']
+
+    exposure_list = np.arange(sweeps).tolist()
+    
+    #for now peak only:
+    analyzer_type = "peak"
+    bl["xps_analyzer"].put(analyzer_type)
+
+    check_and_load("peak_analyzer")
+
+    _md = {
+        "export_filename": export_filename,
+        "sweeps": sweeps,
+        "analyzer_type": analyzer_type
+        }
+
+    _region_dictionary = region_dictionary.copy()
+    if region_dictionary["energy_type"] == "binding":
+        if energy is None:
+            beam_energy = sum(photon_energy_list) / len(photon_energy_list)
+        else:
+            beam_energy = energy
+        _region_dictionary["energy_center"] = (
+            beam_energy - region_dictionary["energy_center"]
+        )
+        _region_dictionary["energy_type"] = "kinetic"  
+
+    analyzer.setup_from_dictionary(
+        _region_dictionary,
+        analyzer_settings,
+        scan_type="XPS",
+        sweeps=sweeps,
+        ses_filename=ses_filename,
+    )
+
+    print("setting up I0") 
+    est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[0]
+    I0initexp = I0.exposure_time.get()
+    yield from set_exposure(est_time)
+    _md.update(
+        md
+    )  # This ensures that metadata passed in by the user always has priority
+    yield from nbs_list_grid_scan(
+        photon_energy_motor, 
+        photon_energy_list,
+        exposure_motor,
+        exposure_list,
+        md = _md,
+        **kwargs
+        )
+    print("resetting I0")
+    yield from set_exposure(I0initexp) 
+
 
 #@suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
@@ -92,13 +186,6 @@ def XPSScan(
         scan_id = ""
 
     md = md or {}  # Create an empty md dictionary if none is passed in
-
-    def check_and_load(analyzer):
-        if analyzer in bl.get_deferred_devices():
-            analyzer = bl.load_deferred_device(analyzer)
-        else:
-            analyzer = bl[analyzer]
-        return analyzer
 
     analyzer_type = bl["xps_analyzer"].enum_strs[bl["xps_analyzer"].get()]
 
