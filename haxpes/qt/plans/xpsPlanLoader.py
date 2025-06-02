@@ -67,7 +67,7 @@ class XPSPlanLoader(PlanLoaderWidgetBase):
             analyzer_dict = {}
             analyzer_dict["dwell_time"] = float(plan_data.get("Dwell Time", 0.01))
             analyzer_dict["lens_mode"] = plan_data.get("Lens Mode", "Angular")
-            analyzer_dict["pass_energy"] = float(plan_data.get("Pass Energy", 50))
+            analyzer_dict["pass_energy"] = int(plan_data.get("Pass Energy", 50))
             plan_kwargs["group_name"] = plan_data.get("Group Name", None)
             plan_kwargs["comment"] = plan_data.get("Comment", None)
             plan_kwargs["repeat"] = int(plan_data.get("Repeat", 1))

@@ -72,8 +72,8 @@ def resPESScan(
     photon_energy_list,
     region_dictionary,
     analyzer_settings,
-    sweeps=1
-    md=None
+    sweeps=1,
+    md=None,
     export_filename=None,
     energy=None
     ):
@@ -319,7 +319,7 @@ def _load_xps_xls(filename,user_ns):
     dfRegions = read_excel(filename)
     for index, row in dfRegions.iterrows():
         rdict = row.to_dict()
-        energy_type = rdict["Energy Type"]
+        energy_type = rdict["Energy Type"].lower()
         energy_start = rdict["Low Energy"]
         energy_stop = rdict["High Energy"]
         energy_step = rdict["Step Size"]
