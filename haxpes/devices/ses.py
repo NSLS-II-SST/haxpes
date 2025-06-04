@@ -20,17 +20,15 @@ class ExternalFileReference(Signal):
     A pure software signal that holds a datum_id referencing external file data.
     This signal describes itself as external data stored in a file.
     """
-    def __init__(self, *args, shape=None, dtype='array', **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.shape = shape or ()
-        self.dtype = dtype
 
     def describe(self):
         res = super().describe()
         res[self.name].update({
             'external': 'FILESTORE:',
-            'dtype': self.dtype,
-            'shape': self.shape
+            "dtype": "array",
+            "shape": (), # TODO: Not sure how we get this?
         })
         return res
 
@@ -46,7 +44,8 @@ class SESFileStore(Device, FileStoreBase):
     dim : int, optional
         The dimension of the data in the file to be referenced.
     """
-    file_reference = Component(ExternalFileReference, value="", kind="normal", shape=())
+    _default_read_attrs = ("file_reference",)
+    file_reference = Component(ExternalFileReference, value="", kind="normal")
 
     def __init__(self, dim: int = 0, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -74,57 +73,6 @@ class SESFileStore(Device, FileStoreBase):
         datum_id = super().generate_datum(key, timestamp, datum_kwargs)
         self.file_reference.set(datum_id).wait(1.0)
         return datum_id
-
-
-class SESFileHandler(HandlerBase):
-    """A handler for SES files."""
-    specs = {"SES_FILE"} | HandlerBase.specs
-
-    def __init__(self, path: str, dim: int = 0):
-        if dim < 0:
-            raise ValueError(f"Dimension must be non-negative, got {dim}")
-        self._path = path
-        self._dim = dim
-
-        self._array = None
-
-    def _read_array(self):
-        """Read an array from the file."""
-        with open(self._path, "r") as f:
-            lines = f.readlines()
-
-        data_start_line = None
-        data_end_line = len(lines)
-
-        for i, line in enumerate(lines):
-            if line.strip() == "[Data 1]":
-                data_start_line = i + 1
-            elif data_start_line is not None and line.strip().startswith('['):
-                data_end_line = i
-                break
-        
-        if data_start_line is None:
-            msg = f"Failed to find [Data 1] section in the file: {self._path}"
-            raise ValueError(msg)
-
-        max_rows = data_end_line - data_start_line
-        data_array = np.loadtxt(self._path, skiprows=data_start_line, max_rows=max_rows)
-
-        if self._dim >= data_array.shape[1]:
-            msg = f"Dimension {self._dim} is out of range for file {self._path}"
-            raise ValueError(msg)
-        
-        return data_array[:, self._dim]
-
-    @property
-    def array(self):
-        if self._array is None:
-            self._array = self._read_array()
-        return self._array
-
-    def __call__(self, datum_kwargs: dict[str, Any]):
-        """Read the data from the file."""
-        return self.array
 
 
 class SES(Device):
@@ -338,8 +286,3 @@ class SES(Device):
 
 
 # ses = SES('XF:07ID-ES-SES', name='ses')
-if __name__ == "__main__":
-    handler = SESFileHandler("test-SES-data.txt", dim=0)
-    print(handler({}))
-    handler2 = SESFileHandler("test-SES-data.txt", dim=1)
-    print(handler2({}))
