@@ -1,5 +1,5 @@
 from nbs_bl.hw import I0
-from nbs_bl.plans.scans import nbs_count
+from nbs_bl.plans.scans import nbs_count, nbs_list_grid_scan
 from nbs_bl.utils import merge_func
 from nbs_bl.help import add_to_scan_list, add_to_func_list, _add_to_import_list
 from nbs_bl.plans.plan_stubs import set_exposure
@@ -13,6 +13,7 @@ from nbs_bl.queueserver import GLOBAL_USER_STATUS
 from pandas import read_excel
 
 from os.path import splitext
+
 
 try:
     import tomllib
@@ -68,14 +69,15 @@ def check_and_load(analyzer):
     return analyzer
 
 
-def resPESScan(
+def resPESscan(
     photon_energy_list,
     region_dictionary,
     analyzer_settings,
     sweeps=1,
     md=None,
     export_filename=None,
-    energy=None
+    energy=None,
+    **kwargs
     ):
     """
     Paramters
@@ -86,8 +88,7 @@ def resPESScan(
         The region dictionary for the XPS scan, with keys "energy_center", "energy_width", "energy_step", "energy_type" and "region_name"
     analyzer_settings : dict
         The analyzer settings for the XPS scan, with keys "dwell_time", "pass_energy", "lens_mode"
-    sweeps : int, optional
-        The number of sweeps to perform. Default is 1.
+    sweeps : int, optional.  Number of XPS sweeps per energy
     energy : float, optional
         The photon energy which will be used to calculate electron kinetic energies IF region_dictionary has "energy_type" = "binding"
         If energy = None, will use the mean of energies in photon_energy_list
@@ -103,13 +104,13 @@ def resPESScan(
     exposure_motor = bl['exposureMotor']
     photon_energy_motor = bl['en']
 
-    exposure_list = np.arange(sweeps).tolist()
-    
+    _exp_list = list(range(sweeps))
+
     #for now peak only:
     analyzer_type = "peak"
     bl["xps_analyzer"].put(analyzer_type)
 
-    check_and_load("peak_analyzer")
+    analyzer = check_and_load("peak_analyzer")
 
     _md = {
         "export_filename": export_filename,
@@ -132,12 +133,10 @@ def resPESScan(
         _region_dictionary,
         analyzer_settings,
         scan_type="XPS",
-        sweeps=sweeps,
-        ses_filename=ses_filename,
     )
 
     print("setting up I0") 
-    est_time = estimate_time(_region_dictionary, analyzer_settings, sweeps)[0]
+    est_time = estimate_time(_region_dictionary, analyzer_settings, 1)[0] #use single sweep for time estimate; 
     I0initexp = I0.exposure_time.get()
     yield from set_exposure(est_time)
     _md.update(
@@ -147,7 +146,7 @@ def resPESScan(
         photon_energy_motor, 
         photon_energy_list,
         exposure_motor,
-        exposure_list,
+        _exp_list,
         md = _md,
         **kwargs
         )

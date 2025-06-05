@@ -65,7 +65,12 @@ def tune_x2pitch():
     """
 
     dm1 = bl["dm1"]
-    Idm1 = bl["Idm1"]
+    if "Idm1" in bl.get_deferred_devices():
+        Idm1 = bl.load_deferred_device("Idm1")
+        defer_after = True
+    else:
+        Idm1 = bl['Idm1']
+        defer_after = False
     x2pitch = bl["x2pitch"]
 
     yield from set_exposure(1.0)
@@ -88,6 +93,8 @@ def tune_x2pitch():
         md=md,
     )
     yield from mv(dm1,60)
+    if defer_after:
+        bl.defer_device('Idm1')
 
 
 @check_tender_beam
@@ -265,7 +272,12 @@ def align_beam_xps(PlaneMirror=False):
 
 def optimizeL1():
     dm1 = bl["dm1"]
-    Idm1 = bl["Idm1"]
+    if "Idm1" in bl.get_deferred_devices():
+        Idm1 = bl.load_deferred_device("Idm1")
+        defer_after = True
+    else:
+        Idm1 = bl['Idm1']
+        defer_after = False
     L1 = bl["L1"]
 
     yield from set_exposure(1.0)
@@ -284,11 +296,18 @@ def optimizeL1():
         hexapod=True,
         md=md,
     )
+    if defer_after:
+        bl.defer_device('Idm1')
 
 
 def optimizeL2():
     dm1 = bl["dm1"]
-    Idm1 = bl["Idm1"]
+    if "Idm1" in bl.get_deferred_devices():
+        Idm1 = bl.load_deferred_device("Idm1")
+        defer_after = True
+    else:
+        Idm1 = bl['Idm1']
+        defer_after = False
     L2AB = bl["L2AB"]
 
     yield from set_exposure(1.0)
@@ -308,6 +327,8 @@ def optimizeL2():
         hexapod=True,
         md=md,
     )
+    if defer_after:
+        bl.defer_device('Idm1')
 
 
 #@suspend_decorator(suspendUS_tender)
