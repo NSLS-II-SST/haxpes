@@ -1,11 +1,90 @@
+import itertools
+import os
+import time
+import uuid
+from typing import Any
+
+import numpy as np
+from ophyd import Staged
 from ophyd import EpicsSignal,PVPositioner, EpicsSignalRO, EpicsMotor
 from ophyd import Device, Component
 from ophyd import DeviceStatus
+from ophyd import Signal
+from ophyd.areadetector.filestore_mixins import FileStoreBase
+from area_detector_handlers import HandlerBase
 from bluesky.plan_stubs import abs_set
+
+
+class ExternalFileReference(Signal):
+    """
+    A pure software signal that holds a datum_id referencing external file data.
+    This signal describes itself as external data stored in a file.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def describe(self):
+        res = super().describe()
+        res[self.name].update({
+            'external': 'FILESTORE:',
+            "dtype": "array",
+            "shape": (), # TODO: Not sure how we get this?
+        })
+        return res
+
+
+class SESFileStore(Device, FileStoreBase):
+    """
+    A device that manages external file references for SES data.
+    Creates Resource documents pointing to external files and generates
+    Datum documents for data access through databroker.
+
+    Parameters
+    ----------
+    dim : int, optional
+        The dimension of the data in the file to be referenced.
+    """
+    _default_read_attrs = ("file_reference",)
+    file_reference = Component(ExternalFileReference, value="", kind="normal")
+
+    def __init__(self, dim: int = 0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.filestore_spec = "SES_FILE"
+        self._dim = dim
+    
+    @property
+    def file_path(self):
+        if not hasattr(self.parent, "filename"):
+            raise ValueError("Parent device does not have a filename attribute")
+        return os.path.join(self.write_path_template, self.parent.filename.get())
+
+    def stage(self):
+        if self._staged == Staged.yes:
+            return super().stage()
+
+        # Used by superclass to generate resource document
+        self._fn = self.file_path
+        # Generate resource document which references the file
+        self._generate_resource({"dim": self._dim})
+        return super().stage()
+
+    def generate_datum(self, key, timestamp, datum_kwargs):
+        datum_id = super().generate_datum(key, timestamp, datum_kwargs)
+        self.file_reference.set(datum_id).wait(1.0)
+        return datum_id
+
 
 class SES(Device):
     """
     Scienta SES control
+
+    Attributes
+    ----------
+    file_energy : SESFileStore
+        Dimension 0 of the file store for the data, typically the kinetic or binding energy
+    file_readout : SESFileStore
+        Dimension 1 of the file store for the data, typically the readout from the CCD detector
     """
 
     center_en_sp = Component(EpicsSignal, ':center_en_SP', kind='config')
@@ -23,8 +102,27 @@ class SES(Device):
     filename = Component(EpicsSignal, ':filename_SP', string=True, kind='config')
     region_name = Component(EpicsSignal, ':region_name_SP', string=True, kind='config')
     stop_signal = Component(EpicsSignal, ':stop_request', kind='config')
+    file_dim0 = Component(SESFileStore, dim=0, write_path_template="", root="/nsls2/data/sst/proposals/")
+    file_dim1 = Component(SESFileStore, dim=1, write_path_template="", root="/nsls2/data/sst/proposals/")
    # write_directory = Component(EpicsSignal, ':savedir_SP')
 
+    def __init__(self, cycle: str, data_session: str, *args, **kwargs):
+        """
+        Initialize the SES device.
+
+        Parameters
+        ----------
+        cycle : str
+            The cycle number (typically from RE.md["cycle"])
+        data_session: str
+            The data session (typically from RE.md["data_session"])
+        """
+        super().__init__(*args, **kwargs)
+
+        # Need to set the write path template (although it's not actually a template)
+        file_path = f"{cycle}/{data_session}/assets/haxpes-ses"
+        self.file_dim0.write_path_template = str(self.file_dim0.reg_root / file_path)
+        self.file_dim1.write_path_template = str(self.file_dim1.reg_root / file_path)
 
     def trigger(self):
         """
