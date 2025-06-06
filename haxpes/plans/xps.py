@@ -70,29 +70,69 @@ def check_and_load(analyzer):
 
 
 def resPESscan(
-    photon_energy_list,
-    region_dictionary,
     analyzer_settings,
-    sweeps=1,
-    md=None,
-    export_filename=None,
-    energy=None,
+    photon_energy_list = None,
+    photon_energy_bounds = None,
+    xpsPlan = None,
+    region_dictionary = None,
+    sweeps = 1,
+    resName = "ResPES",
+    md = None,
     **kwargs
     ):
     """
-    Paramters
-    ---------
-    photon_energy_list : tuple or list
-        The photon energies at which to perform XPS scans 
-    region_dictionary : dict
-        The region dictionary for the XPS scan, with keys "energy_center", "energy_width", "energy_step", "energy_type" and "region_name"
-    analyzer_settings : dict
-        The analyzer settings for the XPS scan, with keys "dwell_time", "pass_energy", "lens_mode"
-    sweeps : int, optional.  Number of XPS sweeps per energy
-    energy : float, optional
-        The photon energy which will be used to calculate electron kinetic energies IF region_dictionary has "energy_type" = "binding"
-        If energy = None, will use the mean of energies in photon_energy_list
+    Parameters
+    ----------
+    analyzer_settings: dictionary
+        Dictionary of the analyzer settings containing "pass_energy", "dwell_time", and "lens_mode"
+    photon_energy_list:  (optional) tuple or list
+        List of photon energies to perform XPS scans
+        Either photon_energy_list or photon_energy_bounds must be given.  If both are given, list takes priority
+    photon_energy_bounds: (optional) tuple or list
+        List of bounds for photon energies to perform XPS scans.  List is in format [start1, stop1, step1, stop2, step2, ...]
+        Either photon_energy_list or photon_energy_bounds must be given.  If both are given, list takes priority
+    xpsPlan: (optional) plan  
+        The specific XPS plan to call.  One of xpsPlan or region_dictionary must be given.
+        If both xpsPlan and region_dictionary are given, xpsPlan will be prioritized.
+    region_dictionary: (optional) dictionary
+        The XPS region dictionary to use for the XPS scans defined as pe XPS scans.
+        One of xpsPlan or region_dictionary must be provided
+        If both xpsPlan and region_dictionary are given, xpsPlan will be prioritized.    
+    sweeps:  int or iterable
+        The number of sweeps for XPS scans.  If a single int is given, the same number of sweeps will be used for each scan.
+        If a list is given, len(sweeps) must be equal to len(photon_energies) and will be taken as the number of sweeps for each photon energy
+    resName: name of resPES scan; will be included in metadata.  
     """
+    
+    #first parse inputs:
+    if xpsPlan == None:
+        if region_dictionary == None:
+            print("Please provide either an xpsPlan or region_dictionary")
+            return
+        else:
+            core_line = region_dictionary['region_name']
+            key = f"{core_line.lower()}_xps"
+            xpsPlan = _xps_factory(region_dictionary, core_line, key)
+    if photon_energy_list == None:
+        if photon_energy_bounds == None:
+            print("Please provide either photon_energy_list or photon_energy_bounds")
+            return
+#        else:
+#            photon_energy_list = ... #################Look up ...
+    if isinstance(sweeps, int):
+        _sweeps = []
+        for n in range(len(photon_energy_list)):
+            _sweeps.append(sweeps)
+    elif all(isinstance(sweep, int) for sweep in sweeps):
+        _sweeps = sweeps
+    else:
+        print("Sweeps must be integer or iterable of integers!")
+        return
+
+    if len(_sweeps) != len(photon_energy_list):
+        print("Boo!  Number of sweeps values must be one or the same number as photon energies to scan")
+        return
+
     global_md = bl.md
     if "scan_id" in global_md.keys():
         scan_id = global_md["scan_id"] + 1
@@ -101,57 +141,19 @@ def resPESscan(
 
     md = md or {}
 
-    exposure_motor = bl['exposureMotor']
-    photon_energy_motor = bl['en']
-
-    _exp_list = list(range(sweeps))
-
-    #for now peak only:
-    analyzer_type = "peak"
-    bl["xps_analyzer"].put(analyzer_type)
-
-    analyzer = check_and_load("peak_analyzer")
-
     _md = {
-        "export_filename": export_filename,
-        "sweeps": sweeps,
-        "analyzer_type": analyzer_type
-        }
+        'ResPesData': True,
+        'ResName' : resName,
+    }
 
-    _region_dictionary = region_dictionary.copy()
-    if region_dictionary["energy_type"] == "binding":
-        if energy is None:
-            beam_energy = sum(photon_energy_list) / len(photon_energy_list)
-        else:
-            beam_energy = energy
-        _region_dictionary["energy_center"] = (
-            beam_energy - region_dictionary["energy_center"]
-        )
-        _region_dictionary["energy_type"] = "kinetic"  
+    _md.update(md)
 
-    analyzer.setup_from_dictionary(
-        _region_dictionary,
-        analyzer_settings,
-        scan_type="XPS",
-    )
+    for n in range(len(photon_energy_list)):
+        photon_energy = photon_energy_list[n]
+        n_sweeps = _sweeps[n]
+        yield from xpsPlan(analyzer_settings,energy=photon_energy,sweeps=n_sweeps,md=_md,**kwargs)         
+        
 
-    print("setting up I0") 
-    est_time = estimate_time(_region_dictionary, analyzer_settings, 1)[0] #use single sweep for time estimate; 
-    I0initexp = I0.exposure_time.get()
-    yield from set_exposure(est_time)
-    _md.update(
-        md
-    )  # This ensures that metadata passed in by the user always has priority
-    yield from nbs_list_grid_scan(
-        photon_energy_motor, 
-        photon_energy_list,
-        exposure_motor,
-        _exp_list,
-        md = _md,
-        **kwargs
-        )
-    print("resetting I0")
-    yield from set_exposure(I0initexp) 
 
 
 #@suspend_decorator(suspendHAX_tender)
