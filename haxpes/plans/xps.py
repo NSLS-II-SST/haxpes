@@ -142,8 +142,8 @@ def resPESscan(
     md = md or {}
 
     _md = {
-        'ResPesData': True,
-        'ResName' : resName,
+        'resPESData': True,
+        'resName' : resName,
     }
 
     _md.update(md)

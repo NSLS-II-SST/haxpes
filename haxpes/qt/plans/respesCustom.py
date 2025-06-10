@@ -7,6 +7,7 @@ from .xpsParams import RegionParam, AnalyzerParam
 from qtpy.QtWidgets import QGridLayout, QWidget, QHBoxLayout, QVBoxLayout
 from bluesky_queueserver_api import BPlan
 
+from haxpes.util import bounds_to_dict_list
 
 class RESPESCustomWidget(BasicPlanWidget):
     display_name = "RESPES Custom Scan"
@@ -62,3 +63,29 @@ class RESPESCustomWidget(BasicPlanWidget):
         self.layout.addLayout(self.bottom_widget_layout)
 
         print("RESPESPlanWidget setup Widget finished")
+
+    def create_plan_items(self):
+        params = self.get_params()
+        print(params)
+        samples = params.pop("samples", [{}])
+        energy_bounds = params.pop("args") 
+
+        energy_list = bounds_to_dict_list(energy_bounds,'energy')
+
+        items = []
+
+        _md = {
+            "resPESData": True
+        }
+  
+        for sample in samples:
+            for energy in energy_list:
+                item = BPlan(
+                    "XPSScan",
+                    **params,
+                    **sample,
+                    **energy,
+                    md = _md
+                )
+                items.append(item)
+        return items
