@@ -1,14 +1,22 @@
 from nbs_bl.hw import I0
 from nbs_bl.plans.scans import nbs_count, nbs_list_grid_scan
 from nbs_bl.utils import merge_func
-from nbs_bl.help import add_to_scan_list, add_to_func_list, _add_to_import_list
+from nbs_bl.help import (
+    add_to_scan_list,
+    add_to_func_list,
+    _add_to_import_list,
+    add_to_plan_time_dict,
+)
 from nbs_bl.plans.plan_stubs import set_exposure
 from nbs_bl.plans.scan_decorators import wrap_scantype
 from nbs_bl.plans.preprocessors import wrap_metadata
-#from bluesky.preprocessors import suspend_decorator
+from nbs_bl.plans.time_estimation import with_repeat
+
+# from bluesky.preprocessors import suspend_decorator
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.queueserver import GLOBAL_USER_STATUS
-#from haxpes.hax_suspenders import suspendHAX_tender
+
+# from haxpes.hax_suspenders import suspendHAX_tender
 
 from pandas import read_excel
 
@@ -61,6 +69,27 @@ def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
     print("Estimated total time is " + str(total_time / 60) + " min.")
     return est_time, total_time
 
+
+@with_repeat
+def xps_time_estimator(plan_name, plan_args, estimation_dict):
+    if "region_dictionary" in plan_args:
+        region_dictionary = plan_args["region_dictionary"]
+    else:
+        region_dictionary = estimation_dict.get("region_dictionary")
+    if "analyzer_settings" in plan_args:
+        analyzer_settings = plan_args["analyzer_settings"]
+    else:
+        analyzer_settings = estimation_dict.get("analyzer_settings")
+    if "sweeps" in plan_args:
+        number_of_sweeps = plan_args["sweeps"]
+    else:
+        number_of_sweeps = estimation_dict.get("sweeps", 1)
+    est_time, total_time = estimate_time(
+        region_dictionary, analyzer_settings, number_of_sweeps
+    )
+    return total_time
+
+
 def check_and_load(analyzer):
     if analyzer in bl.get_deferred_devices():
         analyzer = bl.load_deferred_device(analyzer)
@@ -71,15 +100,15 @@ def check_and_load(analyzer):
 
 def resPESscan(
     analyzer_settings,
-    photon_energy_list = None,
-    photon_energy_bounds = None,
-    xpsPlan = None,
-    region_dictionary = None,
-    sweeps = 1,
-    resName = "ResPES",
-    md = None,
-    **kwargs
-    ):
+    photon_energy_list=None,
+    photon_energy_bounds=None,
+    xpsPlan=None,
+    region_dictionary=None,
+    sweeps=1,
+    resName="ResPES",
+    md=None,
+    **kwargs,
+):
     """
     Parameters
     ----------
@@ -91,34 +120,34 @@ def resPESscan(
     photon_energy_bounds: (optional) tuple or list
         List of bounds for photon energies to perform XPS scans.  List is in format [start1, stop1, step1, stop2, step2, ...]
         Either photon_energy_list or photon_energy_bounds must be given.  If both are given, list takes priority
-    xpsPlan: (optional) plan  
+    xpsPlan: (optional) plan
         The specific XPS plan to call.  One of xpsPlan or region_dictionary must be given.
         If both xpsPlan and region_dictionary are given, xpsPlan will be prioritized.
     region_dictionary: (optional) dictionary
         The XPS region dictionary to use for the XPS scans defined as pe XPS scans.
         One of xpsPlan or region_dictionary must be provided
-        If both xpsPlan and region_dictionary are given, xpsPlan will be prioritized.    
+        If both xpsPlan and region_dictionary are given, xpsPlan will be prioritized.
     sweeps:  int or iterable
         The number of sweeps for XPS scans.  If a single int is given, the same number of sweeps will be used for each scan.
         If a list is given, len(sweeps) must be equal to len(photon_energies) and will be taken as the number of sweeps for each photon energy
-    resName: name of resPES scan; will be included in metadata.  
+    resName: name of resPES scan; will be included in metadata.
     """
-    
-    #first parse inputs:
+
+    # first parse inputs:
     if xpsPlan == None:
         if region_dictionary == None:
             print("Please provide either an xpsPlan or region_dictionary")
             return
         else:
-            core_line = region_dictionary['region_name']
+            core_line = region_dictionary["region_name"]
             key = f"{core_line.lower()}_xps"
             xpsPlan = _xps_factory(region_dictionary, core_line, key)
     if photon_energy_list == None:
         if photon_energy_bounds == None:
             print("Please provide either photon_energy_list or photon_energy_bounds")
             return
-#        else:
-#            photon_energy_list = ... #################Look up ...
+    #        else:
+    #            photon_energy_list = ... #################Look up ...
     if isinstance(sweeps, int):
         _sweeps = []
         for n in range(len(photon_energy_list)):
@@ -130,7 +159,9 @@ def resPESscan(
         return
 
     if len(_sweeps) != len(photon_energy_list):
-        print("Boo!  Number of sweeps values must be one or the same number as photon energies to scan")
+        print(
+            "Boo!  Number of sweeps values must be one or the same number as photon energies to scan"
+        )
         return
 
     global_md = bl.md
@@ -142,8 +173,8 @@ def resPESscan(
     md = md or {}
 
     _md = {
-        'resPESData': True,
-        'resName' : resName,
+        "resPESData": True,
+        "resName": resName,
     }
 
     _md.update(md)
@@ -151,12 +182,12 @@ def resPESscan(
     for n in range(len(photon_energy_list)):
         photon_energy = photon_energy_list[n]
         n_sweeps = _sweeps[n]
-        yield from xpsPlan(analyzer_settings,energy=photon_energy,sweeps=n_sweeps,md=_md,**kwargs)         
-        
+        yield from xpsPlan(
+            analyzer_settings, energy=photon_energy, sweeps=n_sweeps, md=_md, **kwargs
+        )
 
 
-
-#@suspend_decorator(suspendHAX_tender)
+# @suspend_decorator(suspendHAX_tender)
 @add_to_scan_list
 @wrap_metadata({"autoexport": True})
 @wrap_scantype("xps")
@@ -249,6 +280,9 @@ def XPSScan(
     yield from set_exposure(I0initexp)
 
 
+add_to_plan_time_dict(XPSScan, estimator="haxpes-xps-estimate")
+
+
 def _xps_factory(region_dictionary, core_line, key):
     @wrap_metadata({"plan_name": key, "core_line": core_line})
     @merge_func(XPSScan, omit_params=["region_dictionary"])
@@ -276,11 +310,16 @@ def _xps_factory(region_dictionary, core_line, key):
     inner.__qualname__ = key
     inner.__name__ = key
     inner._short_doc = f"Do XPS for {core_line}"
+
+    add_to_plan_time_dict(
+        inner,
+        estimator="haxpes-xps-estimate",
+        estimation_dict={"region_dictionary": region_dictionary},
+    )
     return inner
 
 
-
-def _load_xps_toml(filename,user_ns):
+def _load_xps_toml(filename, user_ns):
     generated_plans = {}
     with open(filename, "rb") as f:
         regions = tomllib.load(f)
@@ -315,7 +354,8 @@ def _load_xps_toml(filename,user_ns):
 
     return generated_plans
 
-def _load_xps_xls(filename,user_ns):
+
+def _load_xps_xls(filename, user_ns):
     generated_plans = {}
     dfRegions = read_excel(filename)
     for index, row in dfRegions.iterrows():
@@ -329,7 +369,7 @@ def _load_xps_xls(filename,user_ns):
         region_name = rdict["Region Name"]
         name = f"{region_name.lower().replace(' ','')}_xps"
         key = name
-        core_line = rdict["Region Name"] 
+        core_line = rdict["Region Name"]
         region_dict = {
             "region_name": region_name,
             "energy_center": energy_center,
@@ -351,6 +391,7 @@ def _load_xps_xls(filename,user_ns):
 
     return generated_plans
 
+
 @add_to_func_list
 def load_xps(filename):
     """
@@ -371,9 +412,9 @@ def load_xps(filename):
 
     file_extension = splitext(filename)[1]
     if file_extension == ".toml":
-        generated_plans = _load_xps_toml(filename,user_ns)
+        generated_plans = _load_xps_toml(filename, user_ns)
     elif file_extension == ".xls" or file_extension == ".XLS":
-        generated_plans = _load_xps_xls(filename,user_ns)
+        generated_plans = _load_xps_xls(filename, user_ns)
 
     # Return the generated plans dictionary in case it's needed
     return generated_plans

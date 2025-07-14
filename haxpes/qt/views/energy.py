@@ -16,6 +16,7 @@ from qtpy.QtGui import QDoubleValidator
 from nbs_gui.views.views import AutoControl, AutoMonitor
 from nbs_gui.widgets.utils import execute_plan
 from bluesky_queueserver_api import BPlan
+from nbs_gui.settings import get_top_level_model
 
 
 class CrystalSelectionDialog(QDialog):
@@ -76,13 +77,13 @@ class SST2EnergyMonitor(QGroupBox):
         Additional arguments passed to QGroupBox
     """
 
-    def __init__(self, energy, parent_model, *args, orientation=None, **kwargs):
+    def __init__(self, energy, parent_model=None, *args, orientation=None, **kwargs):
         print("Initializing Tender EnergyMonitor")
         super().__init__("Energy Monitor", *args, **kwargs)
 
         self.model = energy
-        self.parent_model = parent_model
-        self.REClientModel = parent_model.run_engine
+        self.top_level_model = get_top_level_model()
+        self.REClientModel = self.top_level_model.run_engine
 
         print("Creating Energy monitor layout")
         vbox = QVBoxLayout()
@@ -91,10 +92,10 @@ class SST2EnergyMonitor(QGroupBox):
 
         print("Adding energy monitor")
         if hasattr(energy, "energy"):
-            ebox.addWidget(AutoMonitor(energy.energy, parent_model))
+            ebox.addWidget(AutoMonitor(energy.energy))
 
         vbox.addLayout(ebox)
-        vbox.addWidget(AutoMonitor(energy.crystal, parent_model))
+        vbox.addWidget(AutoMonitor(energy.crystal))
 
         hbox = QHBoxLayout()
 
@@ -118,13 +119,13 @@ class SST2EnergyControl(QGroupBox):
         Additional arguments passed to QGroupBox
     """
 
-    def __init__(self, energy, parent_model, *args, orientation=None, **kwargs):
+    def __init__(self, energy, parent_model=None, *args, orientation=None, **kwargs):
         print("Initializing Tender EnergyControl")
         super().__init__("Energy Control", *args, **kwargs)
 
         self.model = energy
-        self.parent_model = parent_model
-        self.REClientModel = parent_model.run_engine
+        self.top_level_model = get_top_level_model()
+        self.REClientModel = self.top_level_model.run_engine
 
         print("Creating Tender Energy Control layout")
         vbox = QVBoxLayout()
@@ -133,12 +134,12 @@ class SST2EnergyControl(QGroupBox):
 
         print("Adding tender energy control")
         if hasattr(energy, "energy"):
-            ebox.addWidget(AutoControl(energy.energy, parent_model))
+            ebox.addWidget(AutoControl(energy.energy))
 
         vbox.addLayout(ebox)
         settingBox = QHBoxLayout()
-        settingBox.addWidget(AutoControl(energy.harmonic, parent_model))
-        settingBox.addWidget(AutoMonitor(energy.crystal, parent_model))
+        settingBox.addWidget(AutoControl(energy.harmonic))
+        settingBox.addWidget(AutoMonitor(energy.crystal))
         vbox.addLayout(settingBox)
         hbox = QHBoxLayout()
 
@@ -152,7 +153,7 @@ class SST2EnergyControl(QGroupBox):
         self.crystalButton.clicked.connect(self.show_crystal_dialog)
         hbox.addWidget(self.crystalButton)
 
-        self.optimizeButton = OptimizeEnergy(parent_model)
+        self.optimizeButton = OptimizeEnergy(self.top_level_model)
         hbox.addWidget(self.optimizeButton)
 
         vbox.addLayout(hbox)
