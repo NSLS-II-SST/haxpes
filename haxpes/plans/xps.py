@@ -10,11 +10,12 @@ from nbs_bl.help import (
 from nbs_bl.plans.plan_stubs import set_exposure
 from nbs_bl.plans.scan_decorators import wrap_scantype
 from nbs_bl.plans.preprocessors import wrap_metadata
-from nbs_bl.plans.time_estimation import with_repeat
 
 # from bluesky.preprocessors import suspend_decorator
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.queueserver import GLOBAL_USER_STATUS
+
+from haxpes.plans.time_estimation import estimate_time, xps_time_estimator
 
 # from haxpes.hax_suspenders import suspendHAX_tender
 
@@ -46,48 +47,6 @@ def add_to_xps_list(f, key, **plan_info):
     GLOBAL_XPS_PLANS[key] = {}
     GLOBAL_XPS_PLANS[key].update(plan_info)
     return f
-
-
-def estimate_time(region_dictionary, analyzer_settings, number_of_sweeps):
-    if "dwell_time" in analyzer_settings.keys():
-        dwelltime = analyzer_settings["dwell_time"]
-    else:
-        dwelltime = default_dwell_time
-    num_points = (
-        region_dictionary["energy_width"]
-        + detector_widths[str(analyzer_settings["pass_energy"])]
-    ) / region_dictionary["energy_step"]
-    est_time = num_points * dwelltime
-    total_time = est_time * number_of_sweeps
-    print(
-        "Estimated sweep time is "
-        + str(est_time)
-        + " s.  Setting I0 integration to "
-        + str(est_time)
-        + "."
-    )
-    print("Estimated total time is " + str(total_time / 60) + " min.")
-    return est_time, total_time
-
-
-@with_repeat
-def xps_time_estimator(plan_name, plan_args, estimation_dict):
-    if "region_dictionary" in plan_args:
-        region_dictionary = plan_args["region_dictionary"]
-    else:
-        region_dictionary = estimation_dict.get("region_dictionary")
-    if "analyzer_settings" in plan_args:
-        analyzer_settings = plan_args["analyzer_settings"]
-    else:
-        analyzer_settings = estimation_dict.get("analyzer_settings")
-    if "sweeps" in plan_args:
-        number_of_sweeps = plan_args["sweeps"]
-    else:
-        number_of_sweeps = estimation_dict.get("sweeps", 1)
-    est_time, total_time = estimate_time(
-        region_dictionary, analyzer_settings, number_of_sweeps
-    )
-    return total_time
 
 
 def check_and_load(analyzer):
@@ -314,7 +273,7 @@ def _xps_factory(region_dictionary, core_line, key):
     add_to_plan_time_dict(
         inner,
         estimator="haxpes-xps-estimate",
-        estimation_dict={"region_dictionary": region_dictionary},
+        region_dictionary=region_dictionary,
     )
     return inner
 

@@ -38,4 +38,4 @@ xps-gui-loader = "haxpes.qt.plans.xpsPlanLoader:XPSPlanLoader"
 haxpes-suspenders = "haxpes.hax_suspenders:get_suspenders"
 
 [project.entry-points."nbs_bl.time_estimators"]
-haxpes-xps-estimate = "haxpes.plans.xps:xps_time_estimator"
+haxpes-xps-estimate = "haxpes.plans.time_estimation:xps_time_estimator"
