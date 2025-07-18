@@ -39,3 +39,6 @@ haxpes-suspenders = "haxpes.hax_suspenders:get_suspenders"
 
 [project.entry-points."nbs_bl.time_estimators"]
 haxpes-xps-estimate = "haxpes.plans.time_estimation:xps_time_estimator"
+
+[project.entry-points."nbs_bl.plan_decorators"]
+haxpes-shutter = "haxpes.plans.scan_decorators:haxpes_shutter_decorator"
