@@ -117,6 +117,8 @@ def yfinealign_i0(steptime=1):
     fs4 = bl["fs4"]
     I0 = bl["I0"]
     x2finepitch = bl["x2finepitch"]
+#    x2pitch = bl['x2pitch']
+#    yiled from x2pitch.kill() #disable ....
 
     md = {"purpose": "alignment"}
     yield from mv(I0.exposure_time, steptime)
@@ -171,6 +173,8 @@ def xfinealign_i0(steptime=1):
     fs4 = bl["fs4"]
     I0 = bl["I0"]
     x2fineroll = bl["x2fineroll"]
+#    x2roll = bl['x2roll']
+#    yield from x2roll.kill() #disable
 
     md = {"purpose": "alignment"}
     yield from mv(I0.exposure_time, steptime)

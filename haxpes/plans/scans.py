@@ -10,7 +10,7 @@ from nbs_bl.hw import (
     beamselection,
 )
 from bluesky.plans import count, scan, list_scan
-from nbs_bl.plans.scans import nbs_count
+from nbs_bl.plans.scans import nbs_count, nbs_scan
 from nbs_bl.utils import merge_func
 from nbs_bl.help import add_to_scan_list
 from nbs_bl.plans.plan_stubs import set_exposure
@@ -20,6 +20,7 @@ from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from haxpes.hax_monitors import run_mode
 import numpy as np
 from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
+from bluesky.plan_stubs import mv
 
 #from haxpes.xpswriter import xpswrite_wrapper
 #from haxpes.xaswriter import xaswrite_wrapper
@@ -327,3 +328,33 @@ def XAS_scan(
     XAS_setup(detector_list, exposure_time)
     for sweep in range(n_sweeps):
         yield from list_scan(detector_list, en, en_list, per_step=per_step, md=md)
+
+
+
+@add_to_scan_list
+def bias_scan(
+    start_bias,
+    stop_bias,
+    n_steps,
+    exposure_time,
+    settle_time=0.5,
+    **kwargs
+):
+
+    en = bl['en']
+    sample_bias = bl['sample_bias']
+    if run_mode.current_mode.get() != "XAS":
+        run_mode.current_mode.put("XAS")
+    from bluesky.plan_stubs import trigger_and_read, move_per_step, sleep as bs_sleep
+
+    def per_step(detectors, step, pos_cache, take_readings=trigger_and_read):
+        motors = step.keys()
+        yield from move_per_step(step, pos_cache)
+        yield from bs_sleep(settle_time)
+        yield from take_readings(list(detectors) + list(motors))
+
+    yield from mv(sample_bias,start_bias)
+    yield from bs_sleep(5.)
+
+    yield from set_exposure(exposure_time)
+    yield from nbs_scan(sample_bias,start_bias,stop_bias,n_steps,per_step=per_step,**kwargs)

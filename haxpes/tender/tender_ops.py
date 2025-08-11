@@ -249,21 +249,33 @@ def align_beam_xps(PlaneMirror=False):
         yield from sleep(5.0)
         yield from BPM4cent.adjust_gain()
         yield from yalign_fs4_xps(spy=349)
-        yield from xalign_fs4(spx=456)
+        yield from xalign_fs4(spx=479)
     yield from fs4.open()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
     yield from sleep(
         5.0
     )  # necessary to make sure pitch motor has disabled prior to using piezo
-    if not PlaneMirror:
-        yield from yfinealign_i0()
-        yield from xfinealign_i0()
-        yield from sleep(
-            5.0
-        )  # necessary to make sure roll motor has disabled prior to using piezo
-    yield from set_feedback("vertical", set_new_sp=True)
-    yield from set_feedback("horizontal", set_new_sp=True)
+#    if not PlaneMirror:
+#        yield from yfinealign_i0()
+#        yield from xfinealign_i0()
+#        yield from sleep(
+#            5.0
+#        )  # necessary to make sure roll motor has disabled prior to using piezo
+#    yield from set_feedback("vertical", set_new_sp=True)
+#    yield from set_feedback("horizontal", set_new_sp=True)
+
+@add_to_plan_list
+#@suspend_decorator(suspendUS_tender)
+@check_tender_beam
+def fine_align_beam():
+    x2finepitch = bl["x2finepitch"]
+    x2fineroll = bl["x2fineroll"]
+    yield from yfinealign_i0()
+    yield from xfinealign_i0()
+    yield from set_feedback("vertical", set_new_sp=False)
+    yield from set_feedback("horizontal", set_new_sp=False)
+
 
 
 ######## hexapod functions ########
