@@ -249,7 +249,7 @@ def align_beam_xps(PlaneMirror=False):
         yield from sleep(5.0)
         yield from BPM4cent.adjust_gain()
         yield from yalign_fs4_xps(spy=349)
-        yield from xalign_fs4(spx=479)
+        yield from xalign_fs4(spx=429)
     yield from fs4.open()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
