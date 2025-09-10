@@ -28,13 +28,13 @@ class SST2EnergyModel:
             obj.mono.crystal.name,
             obj.mono.crystal,
             group=group,
-            long_name=obj.mono.crystal.name,
+            long_name="SST2 Crystal",
         )
         self.dcm_mode = EnumModel(
             obj.mono.mode.name,
             obj.mono.mode,
             group=group,
-            long_name=obj.mono.mode.name
+            long_name="SST2 DCM Mode"
         )
         self.harmonic = PVModel(
             obj.harmonic.name, obj.harmonic, group=group, long_name="Harmonic"

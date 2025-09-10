@@ -129,42 +129,48 @@ class SST2EnergyControl(QGroupBox):
         self.REClientModel = self.top_level_model.run_engine
 
         print("Creating Tender Energy Control layout")
-        vbox = QHBoxLayout()
-        hbox = QVBoxLayout()
-        ebox = QVBoxLayout()
-
+        mainBox = QHBoxLayout()
+        motorBox = QVBoxLayout()
+        settingBox = QVBoxLayout()
+        harmonicBox = QVBoxLayout()
+        
+        
+        
         print("Adding tender energy control")
         if hasattr(energy, "energy"):
-            ebox.addWidget(AutoControl(energy.energy))
+            motorBox.addWidget(AutoControl(energy.energy))
 
-        vbox.addLayout(ebox)
-        settingBox = QVBoxLayout()
-        settingBox.addWidget(AutoControl(energy.harmonic))
         settingBox.addWidget(AutoMonitor(energy.crystal))
         settingBox.addWidget(AutoMonitor(energy.dcm_mode))
-        vbox.addLayout(settingBox)
-        hbox = QHBoxLayout()
+
+        buttonBox = QHBoxLayout()
 
         print("Adding tune button")
         self.tuneButton = QPushButton("Tune X2 Pitch")
         self.tuneButton.clicked.connect(self.tune_x2pitch)
-        hbox.addWidget(self.tuneButton)
+        buttonBox.addWidget(self.tuneButton)
 
         print("Adding crystal selection button")
         self.crystalButton = QPushButton("Set Crystal")
         self.crystalButton.clicked.connect(self.show_crystal_dialog)
-        hbox.addWidget(self.crystalButton)
+        buttonBox.addWidget(self.crystalButton)
         
         print("Adding mode selection button")
         self.modeButton = QPushButton("Set DCM Mode")
         self.modeButton.clicked.connect(self.show_mode_dialog)
-        hbox.addWidget(self.modeButton)
-        
-        self.optimizeButton = OptimizeEnergy(self.top_level_model)
-        hbox.addWidget(self.optimizeButton)
+        buttonBox.addWidget(self.modeButton)
 
-        vbox.addLayout(hbox)
-        self.setLayout(vbox)
+        settingBox.addLayout(buttonBox)
+        
+        harmonicBox.addWidget(AutoControl(energy.harmonic))
+        self.optimizeButton = OptimizeEnergy(self.top_level_model)
+        harmonicBox.addWidget(self.optimizeButton)
+        
+
+        mainBox.addLayout(motorBox)
+        mainBox.addLayout(settingBox)
+        mainBox.addLayout(harmonicBox)
+        self.setLayout(mainBox)
         print("EnergyControl initialization complete")
 
     def show_crystal_dialog(self):
