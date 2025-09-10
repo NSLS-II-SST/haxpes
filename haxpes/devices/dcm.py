@@ -21,6 +21,18 @@ class DCM_energy(PVPositioner):
     done = Cpt(EpicsSignalRO,":ERDY_STS",kind="config")
     done_value = 1
 
+    def _setup_move(self, position):
+        """Move and do not wait until motion is complete (asynchronous)
+        Required so that mono moves do not wait unintentionally, as setpoint
+        put will not return until motor has finished moving"""
+        self.log.debug("%s.setpoint = %s", self.name, position)
+        # copy from pv_positioner, with wait changed to false
+        # possible problem with IOC not returning from a set
+        self.setpoint.put(position, wait=False)
+        if self.actuate is not None:
+            self.log.debug("%s.actuate = %s", self.name, self.actuate_value)
+            self.actuate.put(self.actuate_value, wait=False)
+
 class DCM(Device):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -54,9 +66,5 @@ class DCM(Device):
     x2finepitch = Cpt(DeadbandEpicsMotor, "PF2}Mtr", tolerance=0.001, kind="normal")
     x2fineroll = Cpt(DeadbandEpicsMotor, "RF2}Mtr", tolerance=0.001, kind="normal")
 
-#    def set_mode
-"""
-PVs for the DCM mode:
-XF:07ID6-OP{MC:08}DCM_MODE
-XF:07ID6-OP{MC:08}DCM_MODE_RBV
-"""
+
+
