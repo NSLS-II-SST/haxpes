@@ -30,6 +30,12 @@ class SST2EnergyModel:
             group=group,
             long_name=obj.mono.crystal.name,
         )
+        self.dcm_mode = EnumModel(
+            obj.mono.mode.name,
+            obj.mono.mode,
+            group=group,
+            long_name=obj.mono.mode.name
+        )
         self.harmonic = PVModel(
             obj.harmonic.name, obj.harmonic, group=group, long_name="Harmonic"
         )
@@ -72,7 +78,8 @@ class SST2EnergyAxes(MultiMotorModel):
         )
 
         # Create models for real motors
-        real_axes = [obj.u42, obj.mono.bragg, obj.mono.x2roll, obj.mono.x2pitch]
+        #real_axes = [obj.u42, obj.mono.bragg, obj.mono.x2roll, obj.mono.x2pitch]
+        real_axes = [obj.u42, obj.mono_en]
         self.real_motors = [
             MotorModel(
                 name=real_axis.name,
