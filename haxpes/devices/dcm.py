@@ -31,7 +31,13 @@ class DCM(Device):
     d = Cpt(EpicsSignalRO, ":XTAL_CONST_MON", kind="config")
     hc = Cpt(EpicsSignalRO, ":HC_SP", kind="config")
     beam_offset = Cpt(EpicsSignalRO, ":BEAM_OFF_SP", kind="config")
-    mode = Cpt(Signal, name="DCM mode", value='motor', kind="config")
+    mode = Cpt(EpicsSignal, 
+        read_pv="XF:07ID6-OP{MC:08}DCM_MODE_RBV", 
+        write_pv="XF:07ID6-OP{MC:08}DCM_MODE", 
+        kind="config",
+        add_prefix=[False,False],
+        string=True
+    )
     crystal = Cpt(EpicsSignal, ":XTAL_SEL", string=True, kind="config")
     stop_signal = Cpt(EpicsSignal, ":ENERGY_ST_CMD")
     crystal_move = Cpt(EpicsSignal, ":XTAL_CMD.PROC")
