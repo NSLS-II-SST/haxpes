@@ -96,6 +96,7 @@ class SST2EnergyMonitor(QGroupBox):
 
         vbox.addLayout(ebox)
         vbox.addWidget(AutoMonitor(energy.crystal))
+        vbox.addWidget(AutoMonitor(energy.dcm_mode))
 
         hbox = QHBoxLayout()
 
@@ -140,6 +141,7 @@ class SST2EnergyControl(QGroupBox):
         settingBox = QHBoxLayout()
         settingBox.addWidget(AutoControl(energy.harmonic))
         settingBox.addWidget(AutoMonitor(energy.crystal))
+        settingBox.addWidget(AutoMonitor(energy.dcm_mode))
         vbox.addLayout(settingBox)
         hbox = QHBoxLayout()
 
@@ -152,7 +154,12 @@ class SST2EnergyControl(QGroupBox):
         self.crystalButton = QPushButton("Set Crystal")
         self.crystalButton.clicked.connect(self.show_crystal_dialog)
         hbox.addWidget(self.crystalButton)
-
+        
+        print("Adding mode selection button")
+        self.modeButton = QPushButton("Set DCM Mode")
+        self.modeButton.clicked.connect(self.show_mode_dialog)
+        hbox.addWidget(self.modeButton)
+        
         self.optimizeButton = OptimizeEnergy(self.top_level_model)
         hbox.addWidget(self.optimizeButton)
 
@@ -173,6 +180,15 @@ class SST2EnergyControl(QGroupBox):
                     plan = BPlan("set_crystal", crystal_setting)
                     execute_plan(self, self.REClientModel, plan)
 
+    def show_mode_dialog(self):
+        print("Opening mode selection dialog")
+        dialog = QDialog()
+        dialog.setWindowTitle("DCM Mode Selection")
+        vbox = QVBoxLayout()
+        vbox.addWidget(AutoControl(self.model.dcm_mode))
+        dialog.setLayout(vbox)
+        dialog.exec_()
+        
     def tune_x2pitch(self):
         """Execute x2pitch tuning plan."""
         print("Initiating x2pitch tune")
