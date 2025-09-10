@@ -129,16 +129,16 @@ class SST2EnergyControl(QGroupBox):
         self.REClientModel = self.top_level_model.run_engine
 
         print("Creating Tender Energy Control layout")
-        vbox = QVBoxLayout()
-        hbox = QHBoxLayout()
-        ebox = QHBoxLayout()
+        vbox = QHBoxLayout()
+        hbox = QVBoxLayout()
+        ebox = QVBoxLayout()
 
         print("Adding tender energy control")
         if hasattr(energy, "energy"):
             ebox.addWidget(AutoControl(energy.energy))
 
         vbox.addLayout(ebox)
-        settingBox = QHBoxLayout()
+        settingBox = QVBoxLayout()
         settingBox.addWidget(AutoControl(energy.harmonic))
         settingBox.addWidget(AutoMonitor(energy.crystal))
         settingBox.addWidget(AutoMonitor(energy.dcm_mode))
