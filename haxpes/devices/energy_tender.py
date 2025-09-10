@@ -8,7 +8,7 @@ from ophyd import (
     Component as Cpt,
 )
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
-from .dcm import DCM
+from .dcm import DCM, DCM_energy
 from sst_base.energy import UndulatorMotor
 
 import numpy as np
@@ -29,6 +29,8 @@ class energypos(PseudoPositioner):
     )
 
     mono = Cpt(DCM, "XF:07ID6-OP{Mono:DCM1-Ax:", name="dcm", kind="config")
+    mono_en = Cpt(DCM_energy, "XF:07ID6-OP{Mono:DCM1-Ax:", name = "dcm_energy", kind="config")
+
     u42 = Cpt(
         UndulatorMotor,
         "SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr",
@@ -40,8 +42,8 @@ class energypos(PseudoPositioner):
 
     offset_gap = Cpt(Signal, value=0, name="U42 Gap Offset", kind="config")
 
-    def set_mono_mode(self, mono_mode):
-        self.mono.mode.set(mono_mode)
+#    def set_mono_mode(self, mono_mode):
+#        self.mono.mode.set(mono_mode)
 
     def set_mono_crystal(self, crystal):
         self.mono.set_crystal(crystal)
@@ -72,13 +74,13 @@ class energypos(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         return self.RealPosition(
-            mono=[pseudo_pos.energy],
+            mono_en=pseudo_pos.energy,
             u42=self.calc_gap(pseudo_pos.energy, self.harmonic.get()),
         )
 
     @real_position_argument
     def inverse(self, real_pos):
-        return self.PseudoPosition(energy=real_pos.mono.energy)
+        return self.PseudoPosition(energy=real_pos.mono_en)
 
 
 enpos = energypos("", name="SST2 Energy")
