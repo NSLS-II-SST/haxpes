@@ -63,8 +63,13 @@ def tune_x2pitch():
     """
     Tunes second crystal rocking curve. Starts with broad scan, then narrows around max.
     """
-
+    
     dm1 = bl["dm1"]
+
+    #collect DM1 initial position; return to this position once scan is done
+    dm1_initial_position = dm1.position
+    print(f'Current DM1 position is {dm1_initial_position}.')
+
     if "Idm1" in bl.get_deferred_devices():
         Idm1 = bl.load_deferred_device("Idm1")
         defer_after = True
@@ -92,7 +97,8 @@ def tune_x2pitch():
         max_channel=max_channel,
         md=md,
     )
-    yield from mv(dm1,60)
+    print(f'Returning DM1 to initial position {dm1_initial_position}')
+    yield from mv(dm1,dm1_initial_position)
     if defer_after:
         bl.defer_device('Idm1')
 
