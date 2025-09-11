@@ -49,8 +49,8 @@ gonilatdict = {
 
 #dictionary for setting the default x2roll position for each crystal pair
 x2rolldict = {
-    "Si(111)": -1.25, 
+    "Si(111)": -1.9, 
     "Si(220)": 0.5, 
-    "Si(333)": -1.25, 
-    "Si(444)": -1.25
+    "Si(333)": -1.9, 
+    "Si(444)": -1.9
 }
