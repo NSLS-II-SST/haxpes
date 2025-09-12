@@ -20,6 +20,7 @@ class DCM_energy(PVPositioner):
     readback = Cpt(EpicsSignal,":ENERGY_MON",kind='normal')
     done = Cpt(EpicsSignalRO,":ERDY_STS",kind="config")
     done_value = 1
+    stop_signal = Cpt(EpicsSignal, ":ENERGY_ST_CMD.PROC")
 
     def _setup_move(self, position):
         """Move and do not wait until motion is complete (asynchronous)
@@ -51,7 +52,7 @@ class DCM(Device):
         string=True
     )
     crystal = Cpt(EpicsSignal, ":XTAL_SEL", string=True, kind="config")
-    stop_signal = Cpt(EpicsSignal, ":ENERGY_ST_CMD")
+
     crystal_move = Cpt(EpicsSignal, ":XTAL_CMD.PROC")
     para_default = Cpt(Signal, value=7.5, kind="config")
     crystalstatus = Cpt(EpicsSignalRO, ":XTAL_STS", kind="config")
@@ -65,6 +66,4 @@ class DCM(Device):
     x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")
     x2finepitch = Cpt(DeadbandEpicsMotor, "PF2}Mtr", tolerance=0.001, kind="normal")
     x2fineroll = Cpt(DeadbandEpicsMotor, "RF2}Mtr", tolerance=0.001, kind="normal")
-
-
 
