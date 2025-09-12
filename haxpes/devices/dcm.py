@@ -11,7 +11,7 @@ from ophyd import (
 )
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from math import asin, cos, sin, pi
-from bluesky.plan_stubs import mv, sleep as bsleep
+from bluesky.plan_stubs import mv
 from nbs_bl.devices.motors import DeadbandEpicsMotor
 
 
