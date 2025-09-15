@@ -68,6 +68,8 @@ def tune_x2pitch():
 
     #collect DM1 initial position; return to this position once scan is done
     dm1_initial_position = dm1.position
+    if dm1_initial_position > 60.: #in case slightly above 60, which is the soft limit ... it happens ...
+        dm1_initial_position = 60.
     print(f'Current DM1 position is {dm1_initial_position}.')
 
     if "Idm1" in bl.get_deferred_devices():
