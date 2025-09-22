@@ -10,9 +10,30 @@ from ophyd import (
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from .dcm import DCM, DCM_energy
 from sst_base.energy import UndulatorMotor
+from time import sleep
 
 import numpy as np
 
+class U42(UndulatorMotor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    _enabledTU = Cpt(EpicsSignalRO, "SR:C07-ID:G1A{SST2:1-Ax:TU}Sw:AmpEn-Sts", add_prefix=[False],kind='config')
+    _enabledTD = Cpt(EpicsSignalRO, "SR:C07-ID:G1A{SST2:1-Ax:TD}Sw:AmpEn-Sts", add_prefix=[False],kind='config')
+
+    def _check_and_enable(self):
+        if not self._enabledTU.get() and not self._enabledTD.get():
+            print('not enabled')
+            current_position = self.position
+            self.user_setpoint.put(current_position,wait=False)
+            print('U42 not enabled.  Enabling')
+            sleep(1.)
+
+    def move(self, position,**kwargs):
+        self._check_and_enable()
+        super().move(position,**kwargs)
+
+    
 
 class energypos(PseudoPositioner):
     def __init__(self, *args, **kwargs):
@@ -32,7 +53,8 @@ class energypos(PseudoPositioner):
     mono_en = Cpt(DCM_energy, "XF:07ID6-OP{Mono:DCM1-Ax:", name = "dcm_energy", kind="config")
 
     u42 = Cpt(
-        UndulatorMotor,
+        #UndulatorMotor,
+        U42,
         "SR:C07-ID:G1A{SST2:1-Ax:Gap}-Mtr",
         tolerance=0.001,
         kind="config",
