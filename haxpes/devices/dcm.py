@@ -23,23 +23,24 @@ class DCM_energy(PVPositioner):
     stop_signal = Cpt(EpicsSignal, ":ENERGY_ST_CMD.PROC")
     _enable_cmd = Cpt(EpicsSignal, ":ENA_CMD.PROC")
 
-    def _setup_move(self, position):
-        """Move and do not wait until motion is complete (asynchronous)
-        Required so that mono moves do not wait unintentionally, as setpoint
-        put will not return until motor has finished moving"""
-        self.log.debug("%s.setpoint = %s", self.name, position)
-        self._check_and_enable()
-        # copy from pv_positioner, with wait changed to false
-        # possible problem with IOC not returning from a set
-        self.setpoint.put(position, wait=False)
-        if self.actuate is not None:
-            self.log.debug("%s.actuate = %s", self.name, self.actuate_value)
-            self.actuate.put(self.actuate_value, wait=False)
 
-    def _check_and_enable(self):
-        if self.done.get() == 4:
-            self._enable_cmd.put(1,wait=True)       
-        
+#    def _setup_move(self, position):
+#        """Move and do not wait until motion is complete (asynchronous)
+#        Required so that mono moves do not wait unintentionally, as setpoint
+#        put will not return until motor has finished moving"""
+#       self.log.debug("%s.setpoint = %s", self.name, position)
+#       self._check_and_enable()
+#        # copy from pv_positioner, with wait changed to false
+#        # possible problem with IOC not returning from a set
+#        self.setpoint.put(position, wait=False)
+#        if self.actuate is not None:
+#            self.log.debug("%s.actuate = %s", self.name, self.actuate_value)
+#            self.actuate.put(self.actuate_value, wait=False)
+#
+#    def _check_and_enable(self):
+#        if self.done.get() == 4:
+#_en            self._enable_cmd.put(1,wait=True)       
+
 
 """
 XF:07ID6-OP{Mono:DCM1-Ax::ERDY_STS

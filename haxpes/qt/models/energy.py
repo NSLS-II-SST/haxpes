@@ -46,6 +46,13 @@ class SST2EnergyModel:
             setattr(self, key, value)
         print("Done Initializing Energy")
 
+    def iter_models(self):
+        yield from (self.energy,
+                    self.crystal,
+                    self.dcm_mode,
+                    self.harmonic)
+                    
+
 
 class SST2EnergyAxes(MultiMotorModel):
     """
@@ -100,3 +107,7 @@ class SST2EnergyAxes(MultiMotorModel):
             )
             for ps_axis in pseudo_axes
         ]
+
+    def iter_models(self):
+        yield from self.real_motors + self.pseudo_motors
+        

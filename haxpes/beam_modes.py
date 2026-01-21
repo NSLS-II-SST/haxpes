@@ -7,8 +7,8 @@ from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from nbs_bl.help import add_to_func_list
 import IPython
 
-tender_mode_devices = ["enpostender", "Idm1", "dm1", "nBPM", "I1"]
-soft_mode_devices = ["enpossoft", "dm4", "SlitAB", "M4Adrain"]
+# tender_mode_devices = ["enpostender", "Idm1", "dm1", "nBPM", "I1"]
+# soft_mode_devices = ["enpossoft", "dm4", "SlitAB", "M4Adrain"]
 
 
 @add_to_func_list
@@ -28,21 +28,24 @@ def enable_tender_beam():
         print("Stopping.  " + beamselection.get() + " beam enabled.  Disable first.")
         return 0
 
-    devices_to_load = tender_mode_devices
+    # devices_to_load = tender_mode_devices
 
     ip = IPython.get_ipython()
 
     # Load each device
+    """
     for device in devices_to_load:
         if bl.is_device_deferred(device):
             print(f"Loading {device}...")
             bl.load_deferred_device(device, ns=ip.user_global_ns)
         else:
             print(f"{device} already loaded")
-
+    """
+    bl.activate_mode("Tender")
     from haxpes.tender.tender_ops import run_XPS_tender
 
     ip.user_global_ns["run_XPS"] = run_XPS_tender
+    print("Setting beamselection to Tender")
     beamselection.set("Tender")
     print("Tender beam mode enabled")
 
@@ -54,9 +57,10 @@ def disable_tender_beam():
     """
     ip = IPython.get_ipython()
     print("Disabling tender beam mode")
-    devices_to_defer = tender_mode_devices
-    for device in devices_to_defer:
-        bl.defer_device(device)
+    bl.deactivate_mode("Tender")
+    # devices_to_defer = tender_mode_devices
+    # for device in devices_to_defer:
+    #     bl.defer_device(device)
 
     ip.user_global_ns.pop("run_XPS", None)
 
@@ -84,6 +88,8 @@ def enable_soft_beam():
     if softbeamenable.get() != "HAXPES":
         print("HAXPES endstation not selected for soft beam.  Cannot enable.")
         return 0
+
+    """
     devices_to_load = soft_mode_devices
     for device in devices_to_load:
         if bl.is_device_deferred(device):
@@ -91,7 +97,8 @@ def enable_soft_beam():
             bl.load_deferred_device(device, ns=ip.user_global_ns)
         else:
             print(f"{device} already loaded")
-
+    """
+    bl.activate_mode("Soft")
     from haxpes.soft.soft_ops import run_XPS_soft
 
     ip.user_global_ns["run_XPS"] = run_XPS_soft
@@ -110,10 +117,13 @@ def disable_soft_beam():
     """
     ip = IPython.get_ipython()
     print("Disabling soft beam mode")
+    """
     devices_to_defer = soft_mode_devices
     for device in devices_to_defer:
         bl.defer_device(device)
-
+    """
+    bl.deactivate_mode("Soft")
+    
     ip.user_global_ns.pop("run_XPS", None)
     ip.user_global_ns.pop("transfer_setup", None)
 

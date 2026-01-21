@@ -107,7 +107,7 @@ class energypos(PseudoPositioner):
 
 enpos = energypos("", name="SST2 Energy")
 en = enpos.energy
-mono = enpos.mono
+#mono = enpos.mono
 h = enpos.harmonic
 U42 = enpos.u42
 gapoffset = enpos.offset_gap
