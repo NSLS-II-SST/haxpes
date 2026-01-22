@@ -39,6 +39,17 @@ class energypos(PseudoPositioner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.u42.tolerance.put(1)
+        fit_coefficients = np.array(
+            (
+                3.721976545762123387e-12,
+                -1.882489732981389563e-08,
+                4.211877279144933479e-05,
+                -5.089901181955627796e-02,
+                4.530182069819578317e01,
+                1.215159200296257040e03,
+            )
+        )
+        self.polyfit = np.poly1d(fit_coefficients)
 
     energy = Cpt(PseudoSingle, kind="hinted", limits=(1985, 9000))
 
@@ -71,18 +82,7 @@ class energypos(PseudoPositioner):
         self.mono.set_crystal(crystal)
 
     def calc_gap(self, energy, harmonic, lims=(13446, 32902)):
-        fit_coefficients = np.array(
-            (
-                3.721976545762123387e-12,
-                -1.882489732981389563e-08,
-                4.211877279144933479e-05,
-                -5.089901181955627796e-02,
-                4.530182069819578317e01,
-                1.215159200296257040e03,
-            )
-        )
-        polyfit = np.poly1d(fit_coefficients)
-        gap = polyfit(energy / harmonic)
+        gap = self.polyfit(energy / harmonic)
         ### limit gap ... need to think of a better way to handle this ...
         if gap < min(lims):
             print("Warning, undulator value is below calibrated region.")
