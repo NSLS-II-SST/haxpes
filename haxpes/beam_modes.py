@@ -24,7 +24,7 @@ def enable_tender_beam():
     # Load required devices
     print("Enabling tender beam mode")
 
-    if beamselection.get() != "None":
+    if beamselection.get() not in ["None", "Tender"]:
         print("Stopping.  " + beamselection.get() + " beam enabled.  Disable first.")
         return 0
 
@@ -82,7 +82,7 @@ def enable_soft_beam():
     """
     ip = IPython.get_ipython()
     print("Enabling soft beam mode")
-    if beamselection.get() != "None":
+    if beamselection.get() not in  ["None", "Soft"]:
         print("Stopping.  " + beamselection.get() + " beam enabled.  Disable first.")
         return 0
     if softbeamenable.get() != "HAXPES":
