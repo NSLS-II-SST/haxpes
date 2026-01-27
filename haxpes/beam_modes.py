@@ -48,6 +48,8 @@ def enable_tender_beam():
     print("Setting beamselection to Tender")
     beamselection.set("Tender")
     print("Tender beam mode enabled")
+    bl.add_to_baseline("enpostender")
+    print("Tender energy added to baseline")
 
 
 @add_to_func_list
@@ -108,6 +110,8 @@ def enable_soft_beam():
     ip.user_global_ns["transfer_setup"] = transfer_setup
     beamselection.set("Soft")
     print("Soft beam mode enabled")
+    bl.add_to_baseline("enpossoft")
+    print("Soft energy added to baseline")
 
 
 @add_to_func_list
