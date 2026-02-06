@@ -28,7 +28,13 @@ class SST2EnergyModel:
             obj.mono.crystal.name,
             obj.mono.crystal,
             group=group,
-            long_name=obj.mono.crystal.name,
+            long_name="SST2 Crystal",
+        )
+        self.dcm_mode = EnumModel(
+            obj.mono.mode.name,
+            obj.mono.mode,
+            group=group,
+            long_name="SST2 DCM Mode"
         )
         self.harmonic = PVModel(
             obj.harmonic.name, obj.harmonic, group=group, long_name="Harmonic"
@@ -39,6 +45,13 @@ class SST2EnergyModel:
         for key, value in kwargs.items():
             setattr(self, key, value)
         print("Done Initializing Energy")
+
+    def iter_models(self):
+        yield from (self.energy,
+                    self.crystal,
+                    self.dcm_mode,
+                    self.harmonic)
+                    
 
 
 class SST2EnergyAxes(MultiMotorModel):
@@ -72,7 +85,8 @@ class SST2EnergyAxes(MultiMotorModel):
         )
 
         # Create models for real motors
-        real_axes = [obj.u42, obj.mono.bragg, obj.mono.x2roll, obj.mono.x2pitch]
+        #real_axes = [obj.u42, obj.mono.bragg, obj.mono.x2roll, obj.mono.x2pitch]
+        real_axes = [obj.u42, obj.mono_en]
         self.real_motors = [
             MotorModel(
                 name=real_axis.name,
@@ -93,3 +107,7 @@ class SST2EnergyAxes(MultiMotorModel):
             )
             for ps_axis in pseudo_axes
         ]
+
+    def iter_models(self):
+        yield from self.real_motors + self.pseudo_motors
+        

@@ -51,7 +51,8 @@ def add_to_xps_list(f, key, **plan_info):
 
 def check_and_load(analyzer):
     if analyzer in bl.get_deferred_devices():
-        analyzer = bl.load_deferred_device(analyzer)
+        bl.load_deferred_device(analyzer)
+        analyzer = bl[analyzer]
     else:
         analyzer = bl[analyzer]
     return analyzer
@@ -376,4 +377,4 @@ def load_xps(filename):
         generated_plans = _load_xps_xls(filename, user_ns)
 
     # Return the generated plans dictionary in case it's needed
-    return generated_plans
+    return list(generated_plans.keys())
