@@ -377,4 +377,4 @@ def load_xps(filename):
         generated_plans = _load_xps_xls(filename, user_ns)
 
     # Return the generated plans dictionary in case it's needed
-    return generated_plans
+    return list(generated_plans.keys())
