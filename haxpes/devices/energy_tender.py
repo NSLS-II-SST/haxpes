@@ -6,11 +6,13 @@ from ophyd import (
     EpicsSignal,
     Signal,
     Component as Cpt,
-    PVPositioner
+    PVPositioner,
+    Device
 )
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from .dcm import DCM, DCM_energy
 from sst_base.energy import UndulatorMotor
+from nbs_bl.devices.motors import DeadbandPVPositioner
 from time import sleep
 
 import numpy as np
@@ -37,15 +39,24 @@ class U42(UndulatorMotor):
         super().move(position,**kwargs)
 
     
-
-class energypos(PVPositioner):
+class flyenergy(DeadbandPVPositioner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-                    
+
     setpoint = Cpt(EpicsSignal, "FlyMove-Mtr-SP-Go")
     readback = Cpt(EpicsSignal, "FlyEnergyID-RB")
+    # readback = Cpt(EpicsSignal, "FlyMove-Mtr.RBV")
     done = Cpt(EpicsSignalRO, "FlyMove-Mtr.MOVN")
+    done_value = 0
     stop_signal = Cpt(EpicsSignal, "FlyMove-Mtr.STOP")
+    speed = Cpt(EpicsSignal,"FlyMove-Speed-RB",write_pv="FlyMove-Speed-SP",kind="config")
+
+
+class energypos(Device):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.energy.tolerance.set(0.15).wait()
+                    
     speed = Cpt(EpicsSignal,"FlyMove-Speed-RB",write_pv="FlyMove-Speed-SP",kind="config")
     
     harmonic = Cpt(
@@ -68,7 +79,7 @@ class energypos(PVPositioner):
         add_prefix=[False,False]
     )
     
-    energy = Cpt(EpicsSignal,"FlyEnergyID-RB",write_pv="FlyMove-Mtr-SP-Go") #this is redundant
+    energy = Cpt(flyenergy,"SR:C07-ID:G1A{SST2:1}",add_prefix=[False,False])
 
     offset_gap = Cpt(EpicsSignal,"EScanIDEnergyOffset-RB",write_pv="EScanIDEnergyOffset-SP",kind='config')
 
