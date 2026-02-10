@@ -42,12 +42,14 @@ class U42(UndulatorMotor):
 class flyenergy(DeadbandPVPositioner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.readback.name = self.name
 
     setpoint = Cpt(EpicsSignal, "FlyMove-Mtr-SP-Go")
-    readback = Cpt(EpicsSignal, "FlyEnergyID-RB")
+    # readback = Cpt(EpicsSignal, "FlyEnergyID-RB",name="")
     # readback = Cpt(EpicsSignal, "FlyMove-Mtr.RBV")
-    done = Cpt(EpicsSignalRO, "FlyMove-Mtr.MOVN")
-    done_value = 0
+    readback = Cpt(EpicsSignal, "FlyEnergyDCM-RB")
+    done = Cpt(EpicsSignalRO, "FlyMove-Mtr.DMOV")
+    done_value = 1
     stop_signal = Cpt(EpicsSignal, "FlyMove-Mtr.STOP")
     speed = Cpt(EpicsSignal,"FlyMove-Speed-RB",write_pv="FlyMove-Speed-SP",kind="config")
 
@@ -56,6 +58,7 @@ class energypos(Device):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.energy.tolerance.set(0.15).wait()
+
                     
     speed = Cpt(EpicsSignal,"FlyMove-Speed-RB",write_pv="FlyMove-Speed-SP",kind="config")
     
