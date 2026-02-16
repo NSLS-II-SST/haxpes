@@ -30,21 +30,14 @@ def enable_tender_beam():
 
     # devices_to_load = tender_mode_devices
 
-    ip = IPython.get_ipython()
+    #ip = IPython.get_ipython()
 
     # Load each device
-    """
-    for device in devices_to_load:
-        if bl.is_device_deferred(device):
-            print(f"Loading {device}...")
-            bl.load_deferred_device(device, ns=ip.user_global_ns)
-        else:
-            print(f"{device} already loaded")
-    """
-    bl.activate_mode("Tender")
-    from haxpes.tender.tender_ops import run_XPS_tender
 
-    ip.user_global_ns["run_XPS"] = run_XPS_tender
+    bl.activate_mode("Tender")
+    #from haxpes.tender.tender_ops import run_XPS_tender
+
+    #ip.user_global_ns["run_XPS"] = run_XPS_tender
     print("Setting beamselection to Tender")
     beamselection.set("Tender")
     print("Tender beam mode enabled")
@@ -57,14 +50,14 @@ def disable_tender_beam():
     """
     Disable tender beam mode by unloading required devices.
     """
-    ip = IPython.get_ipython()
+    #ip = IPython.get_ipython()
     print("Disabling tender beam mode")
     bl.deactivate_mode("Tender")
     # devices_to_defer = tender_mode_devices
     # for device in devices_to_defer:
     #     bl.defer_device(device)
 
-    ip.user_global_ns.pop("run_XPS", None)
+    #ip.user_global_ns.pop("run_XPS", None)
 
     if beamselection.get() != "Tender":
         print(
@@ -91,19 +84,10 @@ def enable_soft_beam():
         print("HAXPES endstation not selected for soft beam.  Cannot enable.")
         return 0
 
-    """
-    devices_to_load = soft_mode_devices
-    for device in devices_to_load:
-        if bl.is_device_deferred(device):
-            print(f"Loading {device}...")
-            bl.load_deferred_device(device, ns=ip.user_global_ns)
-        else:
-            print(f"{device} already loaded")
-    """
-    bl.activate_mode("Soft")
-    from haxpes.soft.soft_ops import run_XPS_soft
 
-    ip.user_global_ns["run_XPS"] = run_XPS_soft
+    bl.activate_mode("Soft")
+    #from haxpes.soft.soft_ops import run_XPS_soft
+    #ip.user_global_ns["run_XPS"] = run_XPS_soft
 
     from haxpes.soft.getbeam import transfer_setup
 
@@ -128,7 +112,7 @@ def disable_soft_beam():
     """
     bl.deactivate_mode("Soft")
     
-    ip.user_global_ns.pop("run_XPS", None)
+    #ip.user_global_ns.pop("run_XPS", None)
     ip.user_global_ns.pop("transfer_setup", None)
 
     if beamselection.get() != "Soft":

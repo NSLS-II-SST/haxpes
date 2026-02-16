@@ -15,14 +15,14 @@ from haxpes.devices.dcm_settings import dcmranges, offsetdict, gonilatdict, x2ro
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
-from nbs_bl.hw import beamselection, gonilateral, psh1
+from nbs_bl.hw import beamselection, gonilateral
 from nbs_bl.utils import merge_func
 from nbs_bl.plans.plan_stubs import set_exposure
 
 from nbs_bl.help import add_to_plan_list
 
 # from haxpes.scans import XPS_scan
-from haxpes.plans.scans import XPSScan, SES_XPSScan
+#from haxpes.plans.scans import XPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
 
 #from bluesky.preprocessors import suspend_decorator
@@ -45,6 +45,7 @@ def check_tender_beam(func):
 
 def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
+    psh1 = bl["psh1"]
     yield from mv(dcm.crystal, crystalSP)
     inpos = dcm.crystalstatus.get()
     if inpos == 0:
@@ -104,7 +105,7 @@ def tune_x2pitch():
     if defer_after:
         bl.defer_device('Idm1')
 
-
+'''
 @check_tender_beam
 def run_XPS_tender(sample_list, close_shutter=False):
 
@@ -147,8 +148,9 @@ def run_XPS_tender(sample_list, close_shutter=False):
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
+'''
 
-
+'''
 @check_tender_beam
 def run_peakXPS_tender(sample_list, close_shutter=False):
 
@@ -203,7 +205,7 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
-
+'''
 
 @add_to_plan_list
 @check_tender_beam

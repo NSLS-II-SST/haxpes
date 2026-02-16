@@ -5,7 +5,7 @@ from bluesky.plan_stubs import mv
 
 from haxpes.soft.pgm_settings import pgmranges
 from haxpes.hax_monitors import run_mode
-from haxpes.hax_suspenders import suspendHAX_soft
+#from haxpes.hax_suspenders import suspendHAX_soft
 
 from nbs_bl.hw import beamselection
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
@@ -22,7 +22,6 @@ def check_soft_beam(func):
     return wrapper
 
 
-@suspend_decorator(suspendHAX_soft)
 @check_soft_beam
 def set_photon_energy_soft(energySP, use_optimal_harmonic=True):
     en = bl["ensoft"]
@@ -33,7 +32,7 @@ def set_photon_energy_soft(energySP, use_optimal_harmonic=True):
                 yield from mv(hsoft, r["harmonic"])
     yield from mv(en, energySP)
 
-
+'''
 @suspend_decorator(suspendHAX_soft)
 @check_soft_beam
 def run_XPS_soft(sample_list):
@@ -69,8 +68,8 @@ def run_XPS_soft(sample_list):
                 yield from count([ses], 1)
         else:
             print("Skipping sample " + str(i))
-
-
+'''
+'''
 @suspend_decorator(suspendHAX_soft)
 @check_soft_beam
 def run_peakXPS_soft(sample_list):
@@ -124,3 +123,4 @@ def run_peakXPS_soft(sample_list):
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
+'''

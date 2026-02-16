@@ -1,5 +1,5 @@
 from bluesky.suspenders import SuspendBoolHigh, SuspendBoolLow
-from nbs_bl.hw import FEsh1, psh4, psh2, psh1, psh5, fs4, beamon
+from nbs_bl.hw import FEsh1, beamon #fs4, psh4, psh2, psh1, psh5,
 from bluesky.plan_stubs import mv
 
 # from .hax_ops import stop_SES  # start_SES
@@ -51,21 +51,6 @@ def post_plan():
         pass
 
 
-suspend_psh2 = SuspendBoolHigh(
-    psh2.state,
-    sleep=10,
-    pre_plan=pre_plan(),
-    post_plan=post_plan(),
-    tripped_message="Shutter 2 is closed.  Waiting for it to re-open.",
-)
-
-suspend_psh1 = SuspendBoolHigh(
-    psh1.state,
-    sleep=10,
-    pre_plan=pre_plan(),
-    post_plan=post_plan(),
-    tripped_message="Shutter 1 is closed.  Waiting for it to re-open.",
-)
 
 suspend_FEsh1 = SuspendBoolHigh(
     FEsh1.state,
@@ -83,22 +68,27 @@ suspend_beamstat = SuspendBoolLow(
     tripped_message="Beam is down.  Waiting for recovery.",
 )
 
-suspend_psh4 = SuspendBoolHigh(
-    psh4.state,
-    sleep=10,
-    pre_plan=pre_plan(),
-    post_plan=post_plan(),
-    tripped_message="Shutter 4 is closed.  Waiting for it to re-open.",
-)
+def create_soft_suspenders():
+    psh4 = bl["psh4"]
+    psh5 = bl["psh5"]
+    suspend_psh4 = SuspendBoolHigh(
+        psh4.state,
+        sleep=10,
+        pre_plan=pre_plan(),
+        post_plan=post_plan(),
+        tripped_message="Shutter 4 is closed.  Waiting for it to re-open.",
+    )
 
-suspend_psh5 = SuspendBoolHigh(
-    psh5.state,
-    sleep=10,
-    pre_plan=pre_plan(),
-    post_plan=post_plan(),
-    tripped_message="Shutter 5 is closed.  Waiting for it to re-open.",
-)
+    suspend_psh5 = SuspendBoolHigh(
+        psh5.state,
+        sleep=10,
+        pre_plan=pre_plan(),
+        post_plan=post_plan(),
+        tripped_message="Shutter 5 is closed.  Waiting for it to re-open.",
+    )
+    return [suspend_psh4, suspend_psh5]
 
+"""
 suspend_fs4a = SuspendBoolLow(
     fs4.state,
     sleep=10,
@@ -106,21 +96,43 @@ suspend_fs4a = SuspendBoolLow(
     post_plan=post_plan(),
     tripped_message="FS4A is closed.  Waiting for it to re-open",
 )
+"""
 
-suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
-suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
-suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
+def create_tender_suspenders():
+    psh2 = bl["psh2"]
+    psh1 = bl["psh1"]
+    suspend_psh2 = SuspendBoolHigh(
+        psh2.state,
+        sleep=10,
+        pre_plan=pre_plan(),
+        post_plan=post_plan(),
+        tripped_message="Shutter 2 is closed.  Waiting for it to re-open.",
+    )
+
+    suspend_psh1 = SuspendBoolHigh(
+        psh1.state,
+        sleep=10,
+        pre_plan=pre_plan(),
+        post_plan=post_plan(),
+        tripped_message="Shutter 1 is closed.  Waiting for it to re-open.",
+    )
+    return [suspend_psh1, suspend_psh2]
+    
+
+#suspendUS_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1]
+#suspendHAX_tender = [suspend_beamstat, suspend_FEsh1, suspend_psh1, suspend_psh2]
+#suspendHAX_soft = [suspend_beamstat, suspend_FEsh1, suspend_psh4, suspend_psh5]
 suspendFOE = [suspend_beamstat, suspend_FEsh1]
 
 
 def get_suspenders():
     beamselect = bl["beamselection"].get()
     if beamselect == "Tender":
-        return suspendHAX_tender
+        return suspendFOE + create_tender_suspenders()
     elif beamselect == "Soft":
-        return suspendHAX_soft
+        return suspendFOE + create_soft_suspenders()
     else:
-        return suspendHAX_tender
+        return suspendFOE
 
 
 # suspendUS_tender = [suspend_FEsh1, suspend_psh1]
