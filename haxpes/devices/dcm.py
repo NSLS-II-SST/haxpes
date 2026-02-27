@@ -13,7 +13,7 @@ from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from math import asin, cos, sin, pi
 from bluesky.plan_stubs import mv
 from nbs_bl.devices.motors import DeadbandEpicsMotor
-
+from sst_base.motors import DeadbandFMBOEpicsMotor
 
 class DCM_energy(PVPositioner):
     setpoint = Cpt(EpicsSignal,":ENERGY_SP",kind='config')
@@ -74,8 +74,8 @@ class DCM(Device):
     bragg = Cpt(DeadbandEpicsMotor, "Bragg}Mtr", kind="normal")
     x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")
     x2para = Cpt(DeadbandEpicsMotor, "Par2}Mtr", tolerance=0.001, kind="normal")
-    x2roll = Cpt(DeadbandEpicsMotor, "R2}Mtr", tolerance=0.001, kind="normal")
-    x2pitch = Cpt(DeadbandEpicsMotor, "P2}Mtr", tolerance=0.001, kind="normal")
+    x2roll = Cpt(DeadbandFMBOEpicsMotor, "R2}Mtr", tolerance=0.001, kind="normal")
+    x2pitch = Cpt(DeadbandFMBOEpicsMotor, "P2}Mtr", tolerance=0.001, kind="normal")
     x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")
     x2finepitch = Cpt(DeadbandEpicsMotor, "PF2}Mtr", tolerance=0.001, kind="normal")
     x2fineroll = Cpt(DeadbandEpicsMotor, "RF2}Mtr", tolerance=0.001, kind="normal")

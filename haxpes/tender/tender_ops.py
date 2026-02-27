@@ -51,6 +51,7 @@ def set_crystal(crystalSP, roll_correct=1):
     if inpos == 0:
         yield from psh1.close()
         yield from mv(dcm.x2roll, x2rolldict[crystalSP])
+        yield from mv(dcm.x2roll.kill,1)
         yield from mv(dcm.bragg.user_offset, offsetdict[crystalSP])
         yield from mv(gonilateral, gonilatdict[crystalSP])
         yield from psh1.open()
@@ -66,6 +67,14 @@ def tune_x2pitch():
     """
     
     dm1 = bl["dm1"]
+
+    #kill feedback first
+    x2finepitch = bl["x2finepitch"]
+    x2fineroll = bl["x2fineroll"]
+
+    yield from stop_feedback()
+    yield from reset_feedback()  # resets permit latch in case shutter was closed
+    yield from mv(x2finepitch, 0, x2fineroll, 0)
 
     #collect DM1 initial position; return to this position once scan is done
     dm1_initial_position = dm1.position
@@ -100,6 +109,8 @@ def tune_x2pitch():
         max_channel=max_channel,
         md=md,
     )
+    yield from mv(x2pitch.kill,1)
+
     print(f'Returning DM1 to initial position {dm1_initial_position}')
     yield from mv(dm1,dm1_initial_position)
     if defer_after:
