@@ -109,6 +109,8 @@ def tune_x2pitch():
         max_channel=max_channel,
         md=md,
     )
+
+    print('Disabling x2pitch motor')
     yield from mv(x2pitch.kill,1)
 
     print(f'Returning DM1 to initial position {dm1_initial_position}')
