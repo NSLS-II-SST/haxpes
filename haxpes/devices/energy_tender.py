@@ -10,6 +10,7 @@ from ophyd import (
     Device
 )
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
+from ophyd.status import SubscriptionStatus
 from .dcm import DCM, DCM_energy
 from sst_base.energy import UndulatorMotor
 from nbs_bl.devices.motors import DeadbandPVPositioner
@@ -88,6 +89,58 @@ class energypos(Device):
 
     def set_mono_crystal(self, crystal):
         self.mono.set_crystal(crystal)
+
+    #The following macro mode is untested----------------------------------------------------------------------------------
+
+    macro_enable = Cpt(EpicsSignal, "MACROControl-RB", write_pv="MACROControl-SP", name="Macro Enable")
+    
+    def enable_macro(self,wait_for_completion=False):
+        # Read status
+        print("Enable undulator sync")
+
+        def check_value(*, old_value, value, **kwargs):
+            if int(value) & 4:
+                return True
+            else:
+                return False
+
+        st = SubscriptionStatus(self.macro_enable, check_value, run=True)
+        status = self.macro_enable.get()
+        if int(status) & 4:
+            print("Undulator sync already enabled")
+            return st
+        else:
+            self.macro_enable.put(1)
+            if wait_for_completion:
+                st.wait()
+            print("Enable undulator sync done")
+            return st
+
+    def disable_macro(self,wait_for_completion=False):
+        print("Disable undulator sync")
+
+        def check_value(*, old_value, value, **kwargs):
+            if int(value) & 2:
+                return True
+            else:
+                return False
+
+        st = SubscriptionStatus(self.macro_enable, check_value, run=True)
+        status = self.macro_enable.get()
+        if int(status) & 2:
+            print("Undulator sync already disabled")            
+            return st
+        else:
+            self.macro_enable.put(0)
+            if wait_for_completion:
+                st.wait()
+            print("Disable undulator sync done")
+            st = SubscriptionStatus(self.macro_enable, check_value, run=True)
+            return st
+
+    #End untested portion-------------------------------------------------------------------------------------------------
+
+
 
 #enpos = energypos("SR:C07-ID:G1A{SST2:1}", name="SST2 Energy")
 

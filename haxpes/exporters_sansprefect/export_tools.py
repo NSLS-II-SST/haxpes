@@ -182,6 +182,7 @@ def get_mono_md(run):
                 run, "SST2 Energy", "harmonic"
             )
             metadata["Filter Position"] = get_baseline(run, "nBPM Filter")
+    """
         elif beamselect == "Soft":
             metadata["CFF"] = get_baseline_config(run, "en", "monoen_cff")
             metadata["Grating"] = get_baseline_config(
@@ -192,6 +193,7 @@ def get_mono_md(run):
             )
             metadata["Undulator Harmonic"] = get_baseline_config(run, "en", "harmonic")
             metadata["Exit Slit Gap"] = get_baseline(run, "Exit Slit AB")
+    """
     return metadata
 
 

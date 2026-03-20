@@ -39,6 +39,7 @@ def xalign_fs4(spx=448):
         hysteresis_correct=True,
         md=md,
     )
+    yield from mv(x2roll.kill,1)
 
 
 def yalign_fs4_xps(spy=326):
@@ -49,36 +50,26 @@ def yalign_fs4_xps(spy=326):
     """
     fs4 = bl["fs4"]
     BPM4cent = bl["BPM4cent"]
-    x2perp = bl["x2perp"]
-
+#    x2perp = bl["x2perp"]
+    L2AB = bl["L2AB"]
+    alignment_motor = L2AB.y
+    
     md = {"purpose": "alignment"}
     yield from fs4.close()
     ychannel = BPM4cent.centY.name
-    delta = 0.1 * x2perp.position
+    delta = 0.5
     yield from find_sp(
         rel_scan,
         [BPM4cent.centY],
-        x2perp,
+        alignment_motor,
         -delta,
         delta,
-        25,
+        21,
         sp=spy,
         max_channel=ychannel,
-        hysteresis_correct=True,
+        hysteresis_correct=False,
         md=md,
-    )
-    delta = 0.02 * x2perp.position
-    yield from find_sp(
-        rel_scan,
-        [BPM4cent.centY],
-        x2perp,
-        -delta,
-        delta,
-        25,
-        sp=spy,
-        max_channel=ychannel,
-        hysteresis_correct=True,
-        md=md,
+        hexapod=True,
     )
 
 
@@ -107,7 +98,7 @@ def ycoursealign_i0(steptime=1):
         invert=False, 
         md=md,
     )
-
+    yield from mv(x2pitch.kill,1)
 
 def yfinealign_i0(steptime=1):
     """
@@ -163,6 +154,7 @@ def xcoursealign_i0(steptime=1):
         invert=False,
         md=md,
     )
+    yield from mv(x2roll.kill,1)
 
 
 def xfinealign_i0(steptime=1):
