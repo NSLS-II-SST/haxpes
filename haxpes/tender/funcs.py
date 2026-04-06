@@ -42,7 +42,7 @@ def xalign_fs4(spx=448):
     yield from mv(x2roll.kill,1)
 
 
-def yalign_fs4_xps(spy=326):
+def yalign_fs4_xps(spy=326,PlaneMirror=False):
     """
     Tunes second crystal perpendicular offset to align beam centroid at spy.
     ONLY USE FOR PHOTOEMISSION. Motor will move to pre-defined position when
@@ -50,14 +50,16 @@ def yalign_fs4_xps(spy=326):
     """
     fs4 = bl["fs4"]
     BPM4cent = bl["BPM4cent"]
-#    x2perp = bl["x2perp"]
     L2AB = bl["L2AB"]
-    alignment_motor = L2AB.y
-    
+    if PlaneMirror:
+        alignment_motor = L2AB.roll
+        delta = 5
+    else:
+        alignment_motor = L2AB.y
+        delta = 0.5
     md = {"purpose": "alignment"}
     yield from fs4.close()
     ychannel = BPM4cent.centY.name
-    delta = 0.5
     yield from find_sp(
         rel_scan,
         [BPM4cent.centY],

@@ -47,6 +47,13 @@ def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
     psh1 = bl["psh1"]
     gonilateral = bl["gonilateral"]
+    enpostender = bl["enpostender"]
+    if enpostender.check_macro_status() == "Enabled":
+        reenable_macro = True
+        enpostender.disable_macro(wait_for_completion=True)
+    else:
+        reenable_macro = False
+
     yield from mv(dcm.crystal, crystalSP)
     inpos = dcm.crystalstatus.get()
     if inpos == 0:
@@ -56,6 +63,8 @@ def set_crystal(crystalSP, roll_correct=1):
         yield from mv(dcm.bragg.user_offset, offsetdict[crystalSP])
         yield from mv(gonilateral, gonilatdict[crystalSP])
         yield from psh1.open()
+    if reenable_macro:
+        enpostender.enable_macro(wait_for_completion=True)
 
 
 ####
@@ -255,14 +264,14 @@ def set_photon_energy_tender(
     enpostender.enable_macro(wait_for_completion=True)
     print('setting undulator gap')
     yield from mv(en, energySP)
-    yield from tune_x2pitch()
+    yield from tune_x2pitch() 
     yield from mv(dm1, 60)
 
 
 @add_to_plan_list
 #@suspend_decorator(suspendUS_tender)
 @check_tender_beam
-def align_beam_xps(PlaneMirror=False,spy=349,spx=429):
+def align_beam_xps(PlaneMirror=False,spy=150,spx=345):
 
     x2finepitch = bl["x2finepitch"]
     x2fineroll = bl["x2fineroll"]
@@ -280,33 +289,33 @@ def align_beam_xps(PlaneMirror=False,spy=349,spx=429):
     yield from stop_feedback()
     yield from reset_feedback()  # resets permit latch in case shutter was closed
     yield from mv(x2finepitch, 0, x2fineroll, 0)
-    if not PlaneMirror:
-        yield from fs4.close()
-        yield from mv(dm1, 60)
-        yield from sleep(5.0)
 
-        #pre-check:
-        yield from BPM4cent.adjust_gain()
-        beam_x = BPM4cent.centX.get()
-        print(f'Current x position is {beam_x}; set-point is {spx}')
-        beam_y = BPM4cent.centY.get()
-        print(f'Current y position is {beam_y}; set-point is {spy}')
+    yield from fs4.close()
+    yield from mv(dm1, 60)
+    yield from sleep(5.0)
 
-        if beam_x <= spx-10 or beam_x >= spx+10:
-            align_x = True
-            print("Align x")
-        else:
-            align_x = False
-        if beam_y <= spy-2 or beam_y >= spy+2:
-            align_y = True
-            print("Align y")
-        else:
-            align_y = False
+    #pre-check:
+    yield from BPM4cent.adjust_gain()
+    beam_x = BPM4cent.centX.get()
+    print(f'Current x position is {beam_x}; set-point is {spx}')
+    beam_y = BPM4cent.centY.get()
+    print(f'Current y position is {beam_y}; set-point is {spy}')
 
-        if align_y:
-            yield from yalign_fs4_xps(spy=spy)
-        if align_x:
-            yield from xalign_fs4(spx=spx)
+    if beam_x <= spx-10 or beam_x >= spx+10:
+        align_x = True
+        print("Align x")
+    else:
+        align_x = False
+    if beam_y <= spy-2 or beam_y >= spy+2:
+        align_y = True
+        print("Align y")
+    else:
+        align_y = False
+
+    if align_y:
+        yield from yalign_fs4_xps(spy=spy,PlaneMirror=PlaneMirror)
+    if align_x:
+        yield from xalign_fs4(spx=spx)
 
     yield from fs4.open()
     yield from xcoursealign_i0()

@@ -318,8 +318,12 @@ def generate_file_name(run, extension):
         if cl != "Unknown":
             EC = EC + f"{cl}"
     elif "scantype" in run.start.keys() and run.start["scantype"] == "xas":
+        EC = "_"
+        el = get_md(run, "element")
+        if el != "Unknown":
+            EC = EC+f"{el}"
         cl = get_md(run, "edge")
-        EC = f"_{cl}"
+        EC = EC+f"{cl}"
     else:
         EC = ""
 

@@ -94,6 +94,14 @@ class energypos(Device):
 
     macro_enable = Cpt(EpicsSignal, "MACROControl-RB", write_pv="MACROControl-SP", name="Macro Enable")
     
+    def check_macro_status(self):
+        if int(self.macro_enable.get()) & 4:
+            return "Enabled"
+        elif int(self.macro_enable.get()) & 2:
+            return "Disabled"
+        else:
+            return "Unknown"
+
     def enable_macro(self,wait_for_completion=False):
         # Read status
         print("Enable undulator sync")
