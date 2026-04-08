@@ -15,7 +15,7 @@ from haxpes.devices.dcm_settings import dcmranges, offsetdict, gonilatdict, x2ro
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
-from nbs_bl.hw import beamselection, gonilateral
+from nbs_bl.hw import beamselection
 from nbs_bl.utils import merge_func
 from nbs_bl.plans.plan_stubs import set_exposure
 
@@ -46,6 +46,7 @@ def check_tender_beam(func):
 def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
     psh1 = bl["psh1"]
+    gonilateral = bl["gonilateral"]
     yield from mv(dcm.crystal, crystalSP)
     inpos = dcm.crystalstatus.get()
     if inpos == 0:
