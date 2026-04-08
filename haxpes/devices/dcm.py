@@ -70,6 +70,7 @@ class DCM(Device):
     para_default = Cpt(Signal, value=7.5, kind="config")
     crystalstatus = Cpt(EpicsSignalRO, ":XTAL_STS", kind="config")
 
+    dcm_energy = Cpt(EpicsSignal, ":ENERGY_MON", write_pv=":ENERGY_SP", kind="config")
     # motors:
     bragg = Cpt(DeadbandEpicsMotor, "Bragg}Mtr", kind="normal")
     x2perp = Cpt(DeadbandEpicsMotor, "Per2}Mtr", tolerance=0.001, kind="normal")

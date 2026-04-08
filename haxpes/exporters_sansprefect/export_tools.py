@@ -182,6 +182,7 @@ def get_mono_md(run):
                 run, "SST2 Energy", "harmonic"
             )
             metadata["Filter Position"] = get_baseline(run, "nBPM Filter")
+    """
         elif beamselect == "Soft":
             metadata["CFF"] = get_baseline_config(run, "en", "monoen_cff")
             metadata["Grating"] = get_baseline_config(
@@ -192,6 +193,7 @@ def get_mono_md(run):
             )
             metadata["Undulator Harmonic"] = get_baseline_config(run, "en", "harmonic")
             metadata["Exit Slit Gap"] = get_baseline(run, "Exit Slit AB")
+    """
     return metadata
 
 
@@ -316,8 +318,12 @@ def generate_file_name(run, extension):
         if cl != "Unknown":
             EC = EC + f"{cl}"
     elif "scantype" in run.start.keys() and run.start["scantype"] == "xas":
+        EC = "_"
+        el = get_md(run, "element")
+        if el != "Unknown":
+            EC = EC+f"{el}"
         cl = get_md(run, "edge")
-        EC = f"_{cl}"
+        EC = EC+f"{cl}"
     else:
         EC = ""
 

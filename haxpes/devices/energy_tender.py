@@ -10,6 +10,7 @@ from ophyd import (
     Device
 )
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
+from ophyd.status import SubscriptionStatus
 from .dcm import DCM, DCM_energy
 from sst_base.energy import UndulatorMotor
 from nbs_bl.devices.motors import DeadbandPVPositioner
@@ -47,7 +48,8 @@ class flyenergy(DeadbandPVPositioner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.readback.name = self.name
-    undulator_sync_enable = Cpt(
+
+    macro_enable = Cpt(
         EpicsSignal,
         "MACROControl-RB",
         write_pv="MACROControl-SP",
@@ -85,7 +87,7 @@ class flyenergy(DeadbandPVPositioner):
     num_scans = Cpt(EpicsSignal, "EScanNScans-SP", name="num_scans", kind="config")
     scanning = Cpt(EpicsSignal, "FlyScan-Mtr.MOVN", name="scan_moving")
 
-    def enable_undulator_sync(self):
+    def enable_undulator_sync(self, wait_for_completion=False):
         # Read status
         print("Enable undulator sync")
 
@@ -95,13 +97,15 @@ class flyenergy(DeadbandPVPositioner):
             else:
                 return False
 
-        st = SubscriptionStatus(self.undulator_sync_enable, check_value, run=True)
-        status = self.undulator_sync_enable.get()
+        st = SubscriptionStatus(self.macro_enable, check_value, run=True)
+        status = self.macro_enable.get()
         if int(status) & 4:
             print("Undulator sync already enabled")
             return st
         else:
-            self.undulator_sync_enable.put(1)
+            self.macro_enable.put(1)
+            if wait_for_completion:
+                st.wait()
             print("Enable undulator sync done")
             return st
 
@@ -110,7 +114,7 @@ class flyenergy(DeadbandPVPositioner):
         self.enable_undulator_sync().wait()
         super()._setup_move(position)
 
-    def disable_undulator_sync(self):
+    def disable_undulator_sync(self, wait_for_completion=False):
         print("Disable undulator sync")
 
         def check_value(*, old_value, value, **kwargs):
@@ -119,15 +123,17 @@ class flyenergy(DeadbandPVPositioner):
             else:
                 return False
 
-        status = self.undulator_sync_enable.get()
+        status = self.macro_enable.get()
         if int(status) & 2:
             print("Undulator sync already disabled")
-            st = SubscriptionStatus(self.undulator_sync_enable, check_value, run=True)
+            st = SubscriptionStatus(self.macro_enable, check_value, run=True)
             return st
         else:
-            self.undulator_sync_enable.put(0)
+            self.macro_enable.put(0)
+            if wait_for_completion:
+                st.wait()
             print("Disable undulator sync done")
-            st = SubscriptionStatus(self.undulator_sync_enable, check_value, run=True)
+            st = SubscriptionStatus(self.macro_enable, check_value, run=True)
             return st
 
     def flymove(self, position, speed=5):
@@ -334,6 +340,31 @@ class energypos(Device):
             }
         )
         return {"energy_readback_monitor": dd}
+
+    #The following macro mode is untested----------------------------------------------------------------------------------    
+    def check_macro_status(self):
+        if int(self.energy.macro_enable.get()) & 4:
+            return "Enabled"
+        elif int(self.energy.macro_enable.get()) & 2:
+            return "Disabled"
+        else:
+            return "Unknown"
+
+    def enable_macro(self,wait_for_completion=False):
+        # Read status
+        print("Enable undulator sync")
+
+        return self.energy.enable_undulator_sync(wait_for_completion=wait_for_completion)
+
+    def disable_macro(self,wait_for_completion=False):
+        print("Disable undulator sync")
+
+        return self.energy.disable_undulator_sync(wait_for_completion=wait_for_completion)
+
+    #End untested portion-------------------------------------------------------------------------------------------------
+
+
+
 #enpos = energypos("SR:C07-ID:G1A{SST2:1}", name="SST2 Energy")
 
 
