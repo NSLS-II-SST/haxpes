@@ -37,6 +37,7 @@ offsetdict = {
     "Si(220)": 10.782,
     "Si(333)": 10.829,
     "Si(444)": 10.829,
+    "xBe(020)": 10.782
 }
 
 #dictionary for setting the goniometer lateral possition for each crystal pair
@@ -44,7 +45,8 @@ gonilatdict = {
     "Si(111)": 0, 
     "Si(220)": 35, 
     "Si(333)": 0, 
-    "Si(444)": 0
+    "Si(444)": 0,
+    "xBe(020)": -30
 }
 
 #dictionary for setting the default x2roll position for each crystal pair
@@ -52,5 +54,6 @@ x2rolldict = {
     "Si(111)": -1.9, 
     "Si(220)": 0.5, 
     "Si(333)": -1.9, 
-    "Si(444)": -1.9
+    "Si(444)": -1.9,
+    "xBe(020)": -9.6
 }

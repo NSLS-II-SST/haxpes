@@ -19,7 +19,7 @@ from bluesky.preprocessors import suspend_decorator
 from nbs_bl.beamline import GLOBAL_BEAMLINE as bl
 from haxpes.hax_monitors import run_mode
 import numpy as np
-from haxpes.hax_suspenders import suspendHAX_tender, suspendHAX_soft
+from haxpes.hax_suspenders import get_suspenders #suspendHAX_tender, suspendHAX_soft
 from bluesky.plan_stubs import mv
 
 #from haxpes.xpswriter import xpswrite_wrapper
@@ -269,7 +269,7 @@ def XAS_setup(detector_list, exposure_time):
 #        yield from scan(detector_list,en,edge_dictionary["start_energy"],\
 # edge_dictionary["stop_energy"],edge_dictionary["n_steps"])
 
-
+'''
 #@xaswrite_wrapper
 def XAS_scan(
     edge_dictionary,
@@ -328,9 +328,9 @@ def XAS_scan(
     XAS_setup(detector_list, exposure_time)
     for sweep in range(n_sweeps):
         yield from list_scan(detector_list, en, en_list, per_step=per_step, md=md)
+'''
 
-
-
+'''
 @add_to_scan_list
 def bias_scan(
     start_bias,
@@ -358,3 +358,4 @@ def bias_scan(
 
     yield from set_exposure(exposure_time)
     yield from nbs_scan(sample_bias,start_bias,stop_bias,n_steps,per_step=per_step,**kwargs)
+'''

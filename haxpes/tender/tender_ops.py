@@ -15,14 +15,14 @@ from haxpes.devices.dcm_settings import dcmranges, offsetdict, gonilatdict, x2ro
 from bluesky.plans import count
 from haxpes.optimizers_test import find_max, find_centerofmass
 from bluesky.plans import scan, rel_scan
-from nbs_bl.hw import beamselection, gonilateral, psh1
+from nbs_bl.hw import beamselection
 from nbs_bl.utils import merge_func
 from nbs_bl.plans.plan_stubs import set_exposure
 
 from nbs_bl.help import add_to_plan_list
 
 # from haxpes.scans import XPS_scan
-from haxpes.plans.scans import XPSScan, SES_XPSScan
+#from haxpes.plans.scans import XPSScan, SES_XPSScan
 from haxpes.devices.peak_settings import analyzer_sets
 
 #from bluesky.preprocessors import suspend_decorator
@@ -45,14 +45,26 @@ def check_tender_beam(func):
 
 def set_crystal(crystalSP, roll_correct=1):
     dcm = bl["mono"]
+    psh1 = bl["psh1"]
+    gonilateral = bl["gonilateral"]
+    enpostender = bl["enpostender"]
+    if enpostender.check_macro_status() == "Enabled":
+        reenable_macro = True
+        enpostender.disable_macro(wait_for_completion=True)
+    else:
+        reenable_macro = False
+
     yield from mv(dcm.crystal, crystalSP)
     inpos = dcm.crystalstatus.get()
     if inpos == 0:
         yield from psh1.close()
         yield from mv(dcm.x2roll, x2rolldict[crystalSP])
+        yield from mv(dcm.x2roll.kill,1)
         yield from mv(dcm.bragg.user_offset, offsetdict[crystalSP])
         yield from mv(gonilateral, gonilatdict[crystalSP])
         yield from psh1.open()
+    if reenable_macro:
+        enpostender.enable_macro(wait_for_completion=True)
 
 
 ####
@@ -65,6 +77,14 @@ def tune_x2pitch():
     """
     
     dm1 = bl["dm1"]
+
+    #kill feedback first
+    x2finepitch = bl["x2finepitch"]
+    x2fineroll = bl["x2fineroll"]
+
+    yield from stop_feedback()
+    yield from reset_feedback()  # resets permit latch in case shutter was closed
+    yield from mv(x2finepitch, 0, x2fineroll, 0)
 
     #collect DM1 initial position; return to this position once scan is done
     dm1_initial_position = dm1.position
@@ -99,12 +119,16 @@ def tune_x2pitch():
         max_channel=max_channel,
         md=md,
     )
+
+    print('Disabling x2pitch motor')
+    yield from mv(x2pitch.kill,1)
+
     print(f'Returning DM1 to initial position {dm1_initial_position}')
     yield from mv(dm1,dm1_initial_position)
     if defer_after:
         bl.defer_device('Idm1')
 
-
+'''
 @check_tender_beam
 def run_XPS_tender(sample_list, close_shutter=False):
 
@@ -147,8 +171,9 @@ def run_XPS_tender(sample_list, close_shutter=False):
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
+'''
 
-
+'''
 @check_tender_beam
 def run_peakXPS_tender(sample_list, close_shutter=False):
 
@@ -203,7 +228,7 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
                     yield from fs4.close()
         else:
             print("Skipping sample " + str(i))
-
+'''
 
 @add_to_plan_list
 @check_tender_beam
@@ -216,8 +241,10 @@ def set_photon_energy_tender(
     h = bl["h"]
     dcm = bl["mono"]
     en = bl["en"]
+    enpostender = bl["enpostender"]
     dm1 = bl["dm1"]
 
+    enpostender.disable_macro(wait_for_completion=True)
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from stop_feedback()
@@ -225,20 +252,26 @@ def set_photon_energy_tender(
     if use_optimal_harmonic:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
+                print(f'setting undulator harmonic to {r["harmonic"]}')
                 yield from mv(h, r["harmonic"])
     if use_optimal_crystal:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
+                print(f'setting DCM crystal to {r["crystal"]}')
                 yield from set_crystal(r["crystal"])
+    yield from mv(dcm.dcm_energy, energySP)
+    print('Setting DCM energy')
+    enpostender.enable_macro(wait_for_completion=True)
+    print('setting undulator gap')
     yield from mv(en, energySP)
-    yield from tune_x2pitch()
+    yield from tune_x2pitch() 
     yield from mv(dm1, 60)
 
 
 @add_to_plan_list
 #@suspend_decorator(suspendUS_tender)
 @check_tender_beam
-def align_beam_xps(PlaneMirror=False):
+def align_beam_xps(PlaneMirror=False,spy=150,spx=345):
 
     x2finepitch = bl["x2finepitch"]
     x2fineroll = bl["x2fineroll"]
@@ -246,32 +279,62 @@ def align_beam_xps(PlaneMirror=False):
     dm1 = bl["dm1"]
     BPM4cent = bl["BPM4cent"]
 
+#    enpostender = bl['enpostender']
+#    print('Disabling Macro Mode')
+#    enpostender.disable_macro(wait_for_completion=True)
+
+
     if run_mode.current_mode.get() != "Align":
         run_mode.current_mode.put("Align")
     yield from stop_feedback()
     yield from reset_feedback()  # resets permit latch in case shutter was closed
     yield from mv(x2finepitch, 0, x2fineroll, 0)
-    if not PlaneMirror:
-        yield from fs4.close()
-        yield from mv(dm1, 60)
-        yield from sleep(5.0)
-        yield from BPM4cent.adjust_gain()
-        yield from yalign_fs4_xps(spy=349)
-        yield from xalign_fs4(spx=429)
+
+    yield from fs4.close()
+    yield from mv(dm1, 60)
+    yield from sleep(5.0)
+
+    #pre-check:
+    yield from BPM4cent.adjust_gain()
+    beam_x = BPM4cent.centX.get()
+    print(f'Current x position is {beam_x}; set-point is {spx}')
+    beam_y = BPM4cent.centY.get()
+    print(f'Current y position is {beam_y}; set-point is {spy}')
+
+    if beam_x <= spx-10 or beam_x >= spx+10:
+        align_x = True
+        print("Align x")
+    else:
+        align_x = False
+    if beam_y <= spy-2 or beam_y >= spy+2:
+        align_y = True
+        print("Align y")
+    else:
+        align_y = False
+
+    if align_y:
+        yield from yalign_fs4_xps(spy=spy,PlaneMirror=PlaneMirror)
+    if align_x:
+        yield from xalign_fs4(spx=spx)
+
     yield from fs4.open()
     yield from xcoursealign_i0()
     yield from ycoursealign_i0()
     yield from sleep(
         5.0
-    )  # necessary to make sure pitch motor has disabled prior to using piezo
-#    if not PlaneMirror:
-#        yield from yfinealign_i0()
-#        yield from xfinealign_i0()
-#        yield from sleep(
-#            5.0
-#        )  # necessary to make sure roll motor has disabled prior to using piezo
-#    yield from set_feedback("vertical", set_new_sp=True)
-#    yield from set_feedback("horizontal", set_new_sp=True)
+    )  
+# necessary to make sure pitch motor has disabled prior to using piezo
+    
+#    print('Enabling Macro Mode')
+#    enpostender.enable_macro(wait_for_completion=True)
+    if not PlaneMirror:
+        yield from yfinealign_i0()
+        yield from xfinealign_i0()
+        yield from sleep(
+            5.0
+        )  # necessary to make sure roll motor has disabled prior to using piezo
+    yield from set_feedback("vertical", set_new_sp=True)
+    yield from set_feedback("horizontal", set_new_sp=True)
 
 @add_to_plan_list
 #@suspend_decorator(suspendUS_tender)

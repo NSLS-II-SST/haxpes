@@ -35,6 +35,11 @@ from haxpes.beam_modes import (
     enable_soft_beam,
     disable_tender_beam,
     disable_soft_beam,
+    _tender_beam_enable_hook,
+    _soft_beam_enable_hook,
+    _tender_beam_disable_hook,
+    _soft_beam_disable_hook,
+    _null_mode_enable_hook,
 )
 from haxpes.tender.tender_ops import *
 from haxpes.soft.soft_ops import *
@@ -47,6 +52,13 @@ from haxpes.plans.bl_op_plans import *
 
 S = sample_list()
 
+bl = GLOBAL_BEAMLINE
+bl.register_mode_function("Tender", _tender_beam_enable_hook, _tender_beam_disable_hook)
+bl.register_mode_function("Soft", _soft_beam_enable_hook, _soft_beam_disable_hook)
+bl.register_mode_function("None", _null_mode_enable_hook)
+
+RE = bl.run_engine
+
 from os import chdir
 
 chdir("/home/xf07id1/Documents/UserFiles/live/LiveData")
@@ -58,7 +70,7 @@ for key in GLOBAL_IMPORT_DICTIONARY:
 
 print("HAXPES Main Startup")
 
-RE = create_run_engine(setup=True)
+#RE = create_run_engine(setup=True)
 
 # RE = setup_run_engine(RE)
 
@@ -74,8 +86,8 @@ RE = create_run_engine(setup=True)
 #    GLOBAL_USER_STATUS.add_status("USER_MD", md)
 #    RE.md = md
 
-RE.md = GLOBAL_BEAMLINE.md
-RE.md["autoexport"] = False
+#RE.md = GLOBAL_BEAMLINE.md
+#RE.md["autoexport"] = False
 
 RE(set_exposure(1.0))
 
