@@ -86,7 +86,7 @@ class SST2EnergyAxes(MultiMotorModel):
 
         # Create models for real motors
         #real_axes = [obj.u42, obj.mono.bragg, obj.mono.x2roll, obj.mono.x2pitch]
-        real_axes = [obj.u42, obj.mono_en]
+        real_axes = [obj.u42, obj.monoen]
         self.real_motors = [
             MotorModel(
                 name=real_axis.name,
@@ -96,7 +96,7 @@ class SST2EnergyAxes(MultiMotorModel):
             )
             for real_axis in real_axes
         ]
-        pseudo_axes = [obj.energy]
+        pseudo_axes = [obj.flycontrol]
         # Create models for pseudo motors
         self.pseudo_motors = [
             PseudoSingleModel(

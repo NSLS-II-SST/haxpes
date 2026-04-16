@@ -12,14 +12,13 @@ from ophyd import (
 from ophyd.pseudopos import pseudo_position_argument, real_position_argument
 from ophyd.status import SubscriptionStatus
 from .dcm import DCM, DCM_energy
-from sst_base.energy import UndulatorMotor
+from sst_base.energy import UndulatorMotor, FlyControl
 from nbs_bl.devices.motors import DeadbandPVPositioner
 from time import sleep, time
 
 import numpy as np
 from datetime import datetime
 from ophyd.status import SubscriptionStatus, DeviceStatus
-import threading
 from queue import Queue, Empty
 
 
@@ -45,10 +44,6 @@ class U42(UndulatorMotor):
 
     
 class flyenergy(DeadbandPVPositioner):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.readback.name = self.name
-
     macro_enable = Cpt(
         EpicsSignal,
         "MACROControl-RB",
@@ -87,6 +82,15 @@ class flyenergy(DeadbandPVPositioner):
     num_scans = Cpt(EpicsSignal, "EScanNScans-SP", name="num_scans", kind="config")
     scanning = Cpt(EpicsSignal, "FlyScan-Mtr.MOVN", name="scan_moving")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.readback.name = self.name
+
+    def _setup_move(self, position):
+        print("Flymove initialization")
+        self.enable_undulator_sync(wait_for_completion=True)
+        super()._setup_move(position)
+
     def enable_undulator_sync(self, wait_for_completion=False):
         # Read status
         print("Enable undulator sync")
@@ -98,8 +102,7 @@ class flyenergy(DeadbandPVPositioner):
                 return False
 
         st = SubscriptionStatus(self.macro_enable, check_value, run=True)
-        status = self.macro_enable.get()
-        if int(status) & 4:
+        if st.success:
             print("Undulator sync already enabled")
             return st
         else:
@@ -108,11 +111,6 @@ class flyenergy(DeadbandPVPositioner):
                 st.wait()
             print("Enable undulator sync done")
             return st
-
-    def _setup_move(self, position):
-        print("Flymove initialization")
-        self.enable_undulator_sync().wait()
-        super()._setup_move(position)
 
     def disable_undulator_sync(self, wait_for_completion=False):
         print("Disable undulator sync")
@@ -123,17 +121,16 @@ class flyenergy(DeadbandPVPositioner):
             else:
                 return False
 
-        status = self.macro_enable.get()
-        if int(status) & 2:
+        st = SubscriptionStatus(self.macro_enable, check_value, run=True)
+
+        if st.success:
             print("Undulator sync already disabled")
-            st = SubscriptionStatus(self.macro_enable, check_value, run=True)
             return st
         else:
             self.macro_enable.put(0)
             if wait_for_completion:
                 st.wait()
             print("Disable undulator sync done")
-            st = SubscriptionStatus(self.macro_enable, check_value, run=True)
             return st
 
     def flymove(self, position, speed=5):
@@ -192,7 +189,7 @@ class energypos(Device):
         name="U42 Gap",
         add_prefix=[False,False]
     )
-    energy = Cpt(flyenergy,"SR:C07-ID:G1A{SST2:1}",add_prefix=[False,False])
+    energy = Cpt(FlyControl,"SR:C07-ID:G1A{SST2:1}",add_prefix=[False,False])
     offset_gap = Cpt(EpicsSignal,"EScanIDEnergyOffset-RB",write_pv="EScanIDEnergyOffset-SP",kind='config')
 
     def __init__(self, *args, **kwargs):
@@ -232,12 +229,12 @@ class energypos(Device):
         elif self._time_resolution is None:
             self._time_resolution = self._default_time_resolution
 
-        self.energy.scan_setup(flight_segments, flight_speeds, bidirectional=bidirectional, sweeps=sweeps)
+        self.flycontrol.scan_setup(flight_segments, flight_speeds, bidirectional=bidirectional, sweeps=sweeps)
 
         # flymove currently unreliable
         print(f"[{datetime.now().isoformat()}] Setting energy to start")
 
-        self.energy.flymove(start, speed=20).wait()
+        self.flycontrol.flymove(start, speed=20).wait()
         # self.energy.set(start).wait(timeout=60)
         print(f"[{datetime.now().isoformat()}] Setting energy to start... done")
         self._last_mono_value = start
@@ -286,34 +283,39 @@ class energypos(Device):
         self._flyer_queue = Queue()
         self._measuring = True
         self._flyer_buffer = []
-        threading.Thread(target=self._aggregate, daemon=True).start()
+        self._flyer_timestamp_buffer = []
+        self.mono_en.readback.subscribe(self._aggregate, run=False)
+        # threading.Thread(target=self._aggregate, daemon=True).start()
         kickoff_st.set_finished()
         return kickoff_st
 
-    def _aggregate(self):
+    def _aggregate(self, value, **kwargs):
         name = "energy_readback"
-        while self._measuring:
-            rb = self.mono_en.readback.read()
+        if self._measuring:
             t = time()
-            value = rb[self.mono_en.readback.name]["value"]
-            ts = rb[self.mono_en.readback.name]["timestamp"]
-            self._flyer_buffer.append(value)
-            event = dict()
-            event["time"] = t
-            event["data"] = dict()
-            event["timestamps"] = dict()
-            event["data"][name] = value
-            event["timestamps"][name] = ts
-            self._flyer_queue.put(event)
+
+            ts = kwargs.get("timestamp", t)
+            last_timestamp = self._flyer_timestamp_buffer[-1] if len(self._flyer_timestamp_buffer) > 0 else None
+            if last_timestamp is None or ts + self._time_resolution > last_timestamp:
+                self._flyer_buffer.append(value)
+                self._flyer_timestamp_buffer.append(ts)
+                event = dict()
+                event["time"] = t
+                event["data"] = dict()
+                event["timestamps"] = dict()
+                event["data"][name] = value
+                event["timestamps"][name] = ts
+                self._flyer_queue.put(event)
             # if abs(self._last_mono_value - value) > self._flyer_lag_ev:
             #    self._last_mono_value = value
             #    self.epugap.set(self.gap(value + self._flyer_gap_lead, self._flyer_pol, False))
-            sleep(self._time_resolution)
+            # sleep(self._time_resolution)
         return
 
     def complete(self):
         if self._measuring:
             self._measuring = False
+            self.mono_en.readback.clear_sub(self._aggregate)
         completion_status = DeviceStatus(self)
         completion_status.set_finished()
         self._time_resolution = None
@@ -343,23 +345,18 @@ class energypos(Device):
 
     #The following macro mode is untested----------------------------------------------------------------------------------    
     def check_macro_status(self):
-        if int(self.energy.macro_enable.get()) & 4:
-            return "Enabled"
-        elif int(self.energy.macro_enable.get()) & 2:
-            return "Disabled"
-        else:
-            return "Unknown"
+        return self.flycontrol.check_macro_status()
 
     def enable_macro(self,wait_for_completion=False):
         # Read status
         print("Enable undulator sync")
 
-        return self.energy.enable_undulator_sync(wait_for_completion=wait_for_completion)
+        return self.flycontrol.enable_undulator_sync(wait_for_completion=wait_for_completion)
 
     def disable_macro(self,wait_for_completion=False):
         print("Disable undulator sync")
 
-        return self.energy.disable_undulator_sync(wait_for_completion=wait_for_completion)
+        return self.flycontrol.disable_undulator_sync(wait_for_completion=wait_for_completion)
 
     #End untested portion-------------------------------------------------------------------------------------------------
 
