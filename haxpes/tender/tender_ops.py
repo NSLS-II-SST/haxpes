@@ -236,7 +236,7 @@ def set_photon_energy_tender(
     energySP, 
     harmonic: int = 0,
     crystal: str = "default",
-    tune_x2pitch: bool = True
+    do_tune_x2pitch: bool = True
 ):
 
     x2finepitch = bl["x2finepitch"]
@@ -292,9 +292,8 @@ def set_photon_energy_tender(
     enpostender.enable_macro(wait_for_completion=True)
     print('setting undulator gap')
     yield from mv(en, energySP)
-    if tune_x2pitch:
+    if do_tune_x2pitch:
         yield from tune_x2pitch() 
-    yield from mv(dm1, 60)
 
 
 @add_to_plan_list
@@ -320,7 +319,6 @@ def align_beam_xps(PlaneMirror=False,spy=150,spx=345):
     yield from mv(x2finepitch, 0, x2fineroll, 0)
 
     yield from fs4.close()
-    yield from mv(dm1, 60)
     yield from sleep(5.0)
 
     #pre-check:
