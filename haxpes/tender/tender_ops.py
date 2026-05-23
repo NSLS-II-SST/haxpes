@@ -233,7 +233,10 @@ def run_peakXPS_tender(sample_list, close_shutter=False):
 @add_to_plan_list
 @check_tender_beam
 def set_photon_energy_tender(
-    energySP, use_optimal_harmonic=True, use_optimal_crystal=True
+    energySP, 
+    harmonic: int = 0,
+    crystal: str = "default",
+    tune_x2pitch: bool = True
 ):
 
     x2finepitch = bl["x2finepitch"]
@@ -249,22 +252,48 @@ def set_photon_energy_tender(
         run_mode.current_mode.put("Align")
     yield from stop_feedback()
     yield from mv(x2finepitch, 0, x2fineroll, 0)
+    if harmonic == 0:
+        print("use default harmonic")
+        for r in dcmranges:
+            if r["energymin"] <= energySP < r["energymax"]:
+                h_sp = r["harmonic"]
+    else:
+        if harmonic % 2 != 0:
+            h_sp = harmonic
+        else:
+            raise ValueError("harmonic must be an odd number or 0")
+    print(f'setting undulator harmonic to {h_sp}')
+    yield from mv(h, h_sp)    
+    """
     if use_optimal_harmonic:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
                 print(f'setting undulator harmonic to {r["harmonic"]}')
                 yield from mv(h, r["harmonic"])
+    """
+    if crystal.lower() == 'default':
+        print("use default crystal")
+        for r in dcmranges:
+            if r["energymin"] <= energySP < r["energymax"]:
+                xtal_sp = r["crystal"]
+    else:
+        xtal_sp = crystal
+    print(f'setting DCM crystal to {xtal_sp}')
+    yield from set_crystal(xtal_sp)
+    """    
     if use_optimal_crystal:
         for r in dcmranges:
             if r["energymin"] <= energySP < r["energymax"]:
                 print(f'setting DCM crystal to {r["crystal"]}')
                 yield from set_crystal(r["crystal"])
+    """
     yield from mv(dcm.dcm_energy, energySP)
     print('Setting DCM energy')
     enpostender.enable_macro(wait_for_completion=True)
     print('setting undulator gap')
     yield from mv(en, energySP)
-    yield from tune_x2pitch() 
+    if tune_x2pitch:
+        yield from tune_x2pitch() 
     yield from mv(dm1, 60)
 
 

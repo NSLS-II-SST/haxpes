@@ -237,6 +237,10 @@ def XPSScan(
         nbs_sweeps, energy=energy, md=_md, **kwargs
     )  # think about extra dets
     print("resetting I0")
+    if analyzer_type == "peak":
+        bl.defer_device("peak_analyzer")
+    elif analyzer_type == "ses":
+        bl.defer_device("ses")
     yield from set_exposure(I0initexp)
 
 
