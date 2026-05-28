@@ -299,13 +299,23 @@ def set_photon_energy_tender(
 @add_to_plan_list
 #@suspend_decorator(suspendUS_tender)
 @check_tender_beam
-def align_beam_xps(PlaneMirror=False,spy=150,spx=345):
+def align_beam_xps(spy=150,spx=345):
 
     x2finepitch = bl["x2finepitch"]
     x2fineroll = bl["x2fineroll"]
     fs4 = bl["fs4"]
     dm1 = bl["dm1"]
     BPM4cent = bl["BPM4cent"]
+
+    #check which L2 is in place
+    L2mirror = bl["L2type"]
+    if L2mirror.get() == "Plane":
+        PlaneMirror = True
+    elif L2mirror.get() == "Toroid":
+        PlaneMirror = False
+    else:
+        raise ValueError(f"L2 mirror type is {L2mirror.get()}.  Set L2 to Plane or Toroidal mirror before alignment.")
+    print(f"L2 mirror: {L2mirror.get()}")
 
 #    enpostender = bl['enpostender']
 #    print('Disabling Macro Mode')
