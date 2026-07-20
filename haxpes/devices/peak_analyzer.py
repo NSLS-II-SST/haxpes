@@ -54,7 +54,7 @@ class PeakAnalyzer(Device):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._peakclient = peak.PeakClient("http://xf07id-ws11.nsls2.bnl.local:8087")
+        self._peakclient = peak.PeakClient("http://xf07id-ws29-713.nsls2.bnl.gov:8087")
         self._peakclient.connect()
         self._acqclient = peak.AcquireSpectrumClient(self._peakclient)
         self._acqclient.connect()
