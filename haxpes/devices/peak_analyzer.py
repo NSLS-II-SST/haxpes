@@ -52,9 +52,9 @@ class PeakAnalyzer(Device):
     opt_val = Cpt(Signal, name="alignment optimizer", value=0)
     opt_par = Cpt(Signal, name="optimization parameter", value=0.5)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, peak_url="http://xf07id-ws29-713.nsls2.bnl.gov:8087", **kwargs):
         super().__init__(*args, **kwargs)
-        self._peakclient = peak.PeakClient("http://xf07id-ws29-713.nsls2.bnl.gov:8087")
+        self._peakclient = peak.PeakClient(peak_url)
         self._peakclient.connect()
         self._acqclient = peak.AcquireSpectrumClient(self._peakclient)
         self._acqclient.connect()
