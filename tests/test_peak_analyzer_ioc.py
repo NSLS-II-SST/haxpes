@@ -48,7 +48,8 @@ def ioc():
 def analyzer(ioc):
     from haxpes.devices.peak_analyzer_ioc import PeakAnalyzerIOC
 
-    analyzer = PeakAnalyzerIOC(PREFIX, name="PeakAnalyzer", timeout=30)
+    analyzer = PeakAnalyzerIOC(PREFIX, name="PeakAnalyzer", timeout=30,
+                               preposition_wait=0)
     analyzer.wait_for_connection(timeout=30)
     deadline = time.monotonic() + 30
     while analyzer.measurement_state.get() == "Disconnected":
@@ -117,6 +118,22 @@ def test_xps_count_matches_old_document_keys(analyzer, run_count):
 
     # unstage finished the measurement and powered down.
     assert analyzer.measure.get() == "Stop"
+    assert analyzer.active.get() == "Off"
+
+
+def test_stage_uses_live_mode_like_peak_analyzer(analyzer):
+    analyzer.setup_from_dictionary(XPS_REGION, SETTINGS)
+    analyzer.stage()
+    try:
+        assert analyzer.active.get() == "On"
+        assert analyzer.preposition.get() == "Off"
+        assert analyzer.measure.get() == "Start"
+        # The live energy went to the low end of the region.
+        assert analyzer.live_energy.get() == pytest.approx(1997.0)
+        assert analyzer.live_pass_energy.get() == 100
+        assert analyzer.live_lens_mode.get() == "Transmission"
+    finally:
+        analyzer.unstage()
     assert analyzer.active.get() == "Off"
 
 

@@ -7,8 +7,12 @@ data and configuration keys (``PeakAnalyzer_edc``, ``PeakAnalyzer_pass_energy``,
 ...) and the HAXPES plans keep working. The analyzer itself is driven by the
 IOC (https://github.com/xraygui/peak-ioc); the settings components are the
 IOC's setpoint PVs, so, as before, they hold the requested values and reach
-the analyzer at ``stage()``.
+the analyzer at ``stage()``. ``stage()`` follows ``PeakAnalyzer.stage()`` step
+by step: live mode on, live pass energy, lens mode and energy, a settling
+wait, then the spectrum setup, with the IOC's own prepositioning turned off.
 """
+
+from time import sleep
 
 from ophyd import Component as Cpt
 from ophyd import Device, EpicsSignal, EpicsSignalRO, Signal
@@ -69,6 +73,7 @@ class PeakAnalyzerIOC(Device):
     active = Cpt(EpicsSignal, "Active", string=True, put_complete=True,
                  kind="omitted")
     accumulate = Cpt(EpicsSignal, "Accumulate", string=True, kind="omitted")
+    preposition = Cpt(EpicsSignal, "Preposition", string=True, kind="omitted")
     read_settings = Cpt(EpicsSignal, "ReadSettings", put_complete=True,
                         kind="omitted")
     live_energy = Cpt(EpicsSignal, "LiveEnergy", put_complete=True,
@@ -81,10 +86,15 @@ class PeakAnalyzerIOC(Device):
                           kind="omitted")
 
     def __init__(self, prefix="", *, name="PeakAnalyzer", timeout=600,
-                 **kwargs):
-        """``timeout`` bounds staging and each acquisition, in seconds."""
+                 preposition_wait=8, **kwargs):
+        """
+        ``timeout`` bounds staging and each acquisition, in seconds.
+        ``preposition_wait`` is the settling time in ``stage()``, as the
+        ``sleep(8)`` in ``PeakAnalyzer.stage()``.
+        """
         super().__init__(prefix, name=name, **kwargs)
         self.timeout = timeout
+        self.preposition_wait = preposition_wait
 
     def _getparameters(self):
         """Copy the analyzer's current settings to the settings components."""
@@ -101,7 +111,14 @@ class PeakAnalyzerIOC(Device):
 
     def stage(self):
         staged = super().stage()
-        # Powers up, prepositions and sets up the spectrum in the IOC.
+        self.start_live_mode()
+        ELo = self.energy_center.get() - (self.energy_width.get() / 2)
+        self.set_live_pass_energy(self.pass_energy.get())
+        self.set_live_lens_mode(self.lens_mode.get())
+        self.set_live_energy_center(ELo)
+        sleep(self.preposition_wait)
+        # Only sets up the spectrum: the steps above did the IOC's preposition.
+        self.preposition.set("Off").wait(self.timeout)
         self.measure.set("Start").wait(self.timeout)
         return staged
 
